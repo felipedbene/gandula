@@ -1,0 +1,17 @@
+[package]
+name = "gandula-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "gandula_core"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+rand = { workspace = true, default-features = false }
+rand_chacha = { workspace = true, default-features = false }
+thiserror = { workspace = true }
