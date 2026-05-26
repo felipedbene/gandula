@@ -75,7 +75,8 @@ export interface MatchResult {
 export interface Match {
   home: number;
   away: number;
-  seed: number;
+  // u64 — comes through as BigInt because per-match derived seeds exceed 2^53.
+  seed: bigint;
   result: MatchResult;
   events: MatchEvent[];
 }
