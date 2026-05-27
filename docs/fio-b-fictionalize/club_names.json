@@ -1,0 +1,54 @@
+{
+  "_comment": "Curated parafrastic Brazilian-flavored club names for the Gandula fictionalize pass. Order matters: clubs higher in 'curated' are picked first by the deterministic mapper. Companion file player_names.json provides first names + surnames.",
+  "_decided_2026_05_26": "Approved v2 with Felipe.",
+
+  "curated": [
+    "Flamenguinho FC",
+    "Palmeiral EC",
+    "Santos Imperial",
+    "Corintianos",
+    "Botafagonia",
+    "Atlético Maranhão",
+    "Cruzeirão",
+    "Internazional",
+    "Grêmio Caxiense",
+    "São Pedro FC",
+    "Fluminato",
+    "Almirante FC",
+    "Bahiano EC",
+    "Fortalezense",
+    "Atlético do Pinhão",
+    "Ipanema Atlético",
+    "Ferroviário do Sul",
+    "Imperial do Vale",
+    "Náutico Recifense",
+    "Sertão EC",
+    "Real Madri",
+    "Barceloneta",
+    "Baviera FC",
+    "Mancesteres United",
+    "Liverpolis",
+    "Paris Saint-Jorge",
+    "Juventina",
+    "Milanesa AC",
+    "Boquita Juniors",
+    "Atlético Madri"
+  ],
+
+  "_procedural_pools_note": "When curated names are exhausted (>30 clubs), the fictionalizer generates from procedural pools below. Two-part name: prefix + locator.",
+
+  "procedural_prefixes": [
+    "Atlético", "Sport", "Esporte Clube", "EC", "FC",
+    "Imperial", "Ferroviário", "União", "Associação Atlética",
+    "Náutico", "Operário", "Industrial", "Comercial", "Real"
+  ],
+
+  "procedural_locators": [
+    "do Vale", "da Serra", "do Sertão", "do Pampa", "do Litoral",
+    "do Pantanal", "do Cerrado", "Mineiro", "Paulista", "Carioca",
+    "Gaúcho", "Baiano", "Pernambucano", "Cearense", "Paraense",
+    "Catarinense", "Capixaba", "Maranhense", "Sulista", "Nortista",
+    "do Recôncavo", "da Mantiqueira", "do Iguaçu", "do Paraíba",
+    "Bandeirante", "Sertanejo", "Caboclo", "Jangadeiro"
+  ]
+}

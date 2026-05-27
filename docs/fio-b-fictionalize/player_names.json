@@ -1,0 +1,39 @@
+{
+  "_comment": "Brazilian player name pools for the Gandula fictionalize pass. Decision (2026-05-26): players use FIRST + LAST (e.g. 'Tarsílio Almeida'). The match feed/narration will use first-name-only ('Tarsílio passes to Antônio') to keep line widths under 80 columns; full name appears in rosters and stats tables.",
+  "_decided_2026_05_26": "Format: nome + sobrenome. Pools below combine A/B/C from the planning notes.",
+
+  "first_names_common": [
+    "Antônio", "Bruno", "Carlos", "Daniel", "Eduardo",
+    "Fernando", "Gustavo", "Hélio", "Igor", "João",
+    "Lucas", "Marcelo", "Nélson", "Otávio", "Paulo",
+    "Rafael", "Sérgio", "Thiago", "Vagner", "Wesley"
+  ],
+
+  "first_names_football": [
+    "Tarsílio", "Otacílio", "Edmílson", "Edinho", "Edson",
+    "Wladimir", "Geraldo", "Mauro", "Ronaldo", "Romário",
+    "Sócrates", "Zico", "Túlio", "Bebeto", "Donizete",
+    "Marquinhos", "Júnior", "Dunga", "Adílson", "Careca"
+  ],
+
+  "first_names_interior": [
+    "Quincas", "Ubaldo", "Ximenes", "Yuri", "Zacarias",
+    "Salvador", "Roque", "Ferraz", "Inácio", "Romeu",
+    "Maurício", "Olavo", "Hermano", "Aristides", "Cândido",
+    "Florêncio", "Benedito", "Anacleto", "Gervásio", "Sebastião"
+  ],
+
+  "surnames": [
+    "Almeida", "Barros", "Costa", "Diniz", "Esteves",
+    "Fonseca", "Guimarães", "Henriques", "Iglesias", "Justino",
+    "Klein", "Lopes", "Magalhães", "Neves", "Oliveira",
+    "Pereira", "Queiroz", "Ribeiro", "Sampaio", "Tavares",
+    "Uchôa", "Vasconcelos", "Werneck", "Xavier", "Zampieri",
+    "Andrade", "Bittencourt", "Cardoso", "Drummond", "Espíndola",
+    "Falcão", "Galvão", "Holanda", "Junqueira", "Lacerda",
+    "Mascarenhas", "Nogueira", "Pacheco", "Quintão", "Resende",
+    "Soares", "Teixeira", "Valença", "Wanderley", "Zaluar"
+  ],
+
+  "_pool_size_note": "60 first names × 45 surnames = 2,700 unique combinations before any RNG considerations. Plenty of headroom for hundreds of clubs × 16 players each."
+}

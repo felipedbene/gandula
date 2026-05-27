@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gandula — mockup DOS</title>
+<style>
+  html, body { margin:0; padding:0; background:#000; min-height:100vh; }
+  body {
+    display:flex; align-items:flex-start; justify-content:center;
+    padding: 24px 16px;
+  }
+  .crt {
+    background: #0a0a0a;
+    color: #33ff33;
+    font-family: "VT323", ui-monospace, "Courier New", monospace;
+    font-size: 17px;
+    line-height: 1.25;
+    padding: 28px 32px;
+    white-space: pre;
+    text-shadow: 0 0 2px rgba(51, 255, 51, 0.6), 0 0 8px rgba(51, 255, 51, 0.25);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #143b14;
+    box-shadow: 0 0 40px rgba(51,255,51,0.15) inset, 0 0 30px rgba(51,255,51,0.2);
+    max-width: 1000px;
+    width: 100%;
+  }
+  .crt::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.22) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+  .crt::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 3;
+  }
+  .body { position: relative; z-index: 1; }
+  .dim { color: #1c8a1c; text-shadow: 0 0 1px rgba(51,255,51,0.4); }
+  .gol { color: #aaff66; text-shadow: 0 0 4px #aaff66, 0 0 12px rgba(170,255,102,0.55); font-weight: bold; }
+  .red { color: #ff4040; text-shadow: 0 0 4px #ff4040, 0 0 10px rgba(255,64,64,0.5); font-weight: bold; }
+  .yel { color: #ffd633; text-shadow: 0 0 3px #ffd633; }
+  .sub { color: #66ccff; text-shadow: 0 0 2px #66ccff; font-style: italic; }
+  .hi  { color: #ffffff; text-shadow: 0 0 2px #fff, 0 0 6px rgba(255,255,255,0.4); }
+  .menu-active { background: #33ff33; color: #0a0a0a; text-shadow: none; padding: 0 4px; }
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    background: #33ff33;
+    color: #0a0a0a;
+    animation: blink 1.1s steps(2, start) infinite;
+  }
+  @keyframes blink { to { visibility: hidden; } }
+</style>
+</head>
+<body>
+<div class="crt"><div class="body">╔════════════════════════════════════════════════════════════════════════════╗
+║  <span class="hi">GANDULA</span>  v0.5         <span class="dim">simulador de futebol em texto</span>          [F1]=AJUDA  ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║  [ <span class="menu-active">PARTIDA</span> ]  [ TEMPORADA ]                                  semente: 1998  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+  ┌─ CONFRONTO ──────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  MANDANTE  : <span class="hi">Santos Imperial</span>   ◄►   VISITANTE : <span class="hi">Flamenguinho FC</span>   ◄►   │
+  │  FORMACAO  : F433 atacante           FORMACAO  : F442 equilibrado        │
+  │  FORCA MED : 78                      FORCA MED : 68                      │
+  │                                                                          │
+  │                       [ <span class="menu-active"> JOGAR </span> ]   [ SAIR ]                              │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+  ╔══ <span class="hi">SANTOS IMPERIAL  4 x 0  FLAMENGUINHO FC</span> ═════════════════════════════════╗
+  ║                                                                          ║
+  ║  <span class="dim">11'</span>  <span class="gol">►►► GOOOL DO SANTOS IMPERIAL!  Tarsílio (assist: Antônio)</span>          ║
+  ║  <span class="dim">22'</span>  Júnior arrisca de longe... <span class="dim">pra fora!</span>                            ║
+  ║  <span class="dim">30'</span>  Roque arrisca de longe... <span class="dim">pra fora!</span>                             ║
+  ║  <span class="dim">42'</span>  Antônio chuta no gol... <span class="hi">defendeu Olavo!</span>                          ║
+  ║  <span class="dim">45'</span>  <span class="hi">─── INTERVALO ───  Santos 1 x 0 Flamenguinho</span>                     ║
+  ║  <span class="dim">60'</span>  <span class="gol">►►► GOOOL DO SANTOS IMPERIAL!  Júnior (assist: Bruno)</span>             ║
+  ║  <span class="dim">70'</span>  <span class="gol">►►► GOOOL DO SANTOS IMPERIAL!  Antônio balança a rede!</span>           ║
+  ║  <span class="dim">70'</span>  <span class="sub">↔ Sub Santos       : sai Maurício, entra Otacílio</span>               ║
+  ║  <span class="dim">70'</span>  <span class="sub">↔ Sub Flamenguinho : sai Inácio, entra Romeu</span>                    ║
+  ║  <span class="dim">78'</span>  Ferraz comete falta em Maurício                                      ║
+  ║  <span class="dim">78'</span>  <span class="red">██ CARTÃO VERMELHO!  Ferraz expulso de campo!</span>                   ║
+  ║  <span class="dim">83'</span>  <span class="yel">▓ amarelo para Salvador (reclamação)</span>                            ║
+  ║  <span class="dim">88'</span>  <span class="gol">►►► GOOOL DO SANTOS IMPERIAL!  Tarsílio (assist: Júnior)</span>          ║
+  ║  <span class="dim">90'</span>  <span class="hi">─── FIM DE JOGO ───  Santos Imperial 4 x 0 Flamenguinho FC</span>       ║
+  ║                                                                          ║
+  ╚══════════════════════════════════════════════ <span class="dim">[↑↓] rolar  [ESC] voltar</span> ══╝
+
+  <span class="dim">> partida concluída em 47ms  ·  seed 1998  ·  build wasm-37c4a1</span><span class="cursor">&nbsp;</span>
+
+  ┌─ TABELA — Brasileirão Imaginário 2026 ───────────────────────────────────┐
+  │                                                                          │
+  │  POS  TIME                       P    V    E    D   GP   GC    SG   PTS │
+  │  ───  ─────────────────────────  ──   ──   ──   ──  ──   ──   ───   ─── │
+  │   1.  <span class="hi">Santos Imperial</span>             4    3    0    1    7    1   +6     <span class="hi">9</span> │
+  │   2.  Flamenguinho FC            4    2    1    1    5    2   +3     7  │
+  │   3.  Ipanema Atlético           4    0    1    3    1   10   -9     1  │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+</div></div>
+</body>
+</html>
