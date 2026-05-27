@@ -5,6 +5,7 @@ import type { SeasonRecord, TeamStats } from "../types";
 import { computeStandings, goalDifference, points } from "../types";
 import { clearSeason, loadSeason, saveSeason, type SavedSeason } from "../persistence";
 import Card from "../srcl/Card";
+import RevealRound from "./RevealRound";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
@@ -19,7 +20,8 @@ type Phase =
   | { tag: "loading" }
   | { tag: "form" }
   | { tag: "picking"; pendingRecord: SeasonRecord }
-  | { tag: "running"; saved: SavedSeason };
+  | { tag: "running"; saved: SavedSeason }
+  | { tag: "revealing"; saved: SavedSeason };
 
 export function SeasonView({ onStatus }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
@@ -114,6 +116,28 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     }
   }
 
+  /**
+   * Persist the incremented save FIRST, then enter reveal. If the user
+   * hits F5 mid-animation, autoload sees the new currentRoundIdx and goes
+   * straight to running — the reveal animation is lost but state is intact.
+   * That's the right trade: state correctness > eye candy.
+   */
+  async function advanceRound(saved: SavedSeason) {
+    const newSaved: SavedSeason = {
+      ...saved,
+      currentRoundIdx: saved.currentRoundIdx + 1,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      await saveSeason(newSaved);
+      onStatus(`avançando para rodada ${newSaved.currentRoundIdx + 1}`);
+      setPhase({ tag: "revealing", saved: newSaved });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar avanço: ${e}`);
+    }
+  }
+
   return (
     <div className="season-view">
       {phase.tag === "loading" && <p className="muted">Carregando save…</p>}
@@ -135,7 +159,17 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         />
       )}
       {phase.tag === "running" && (
-        <CampeonatoEmCurso saved={phase.saved} onReset={resetSeason} />
+        <CampeonatoEmCurso
+          saved={phase.saved}
+          onReset={resetSeason}
+          onAdvance={() => advanceRound(phase.saved)}
+        />
+      )}
+      {phase.tag === "revealing" && (
+        <RevealRound
+          saved={phase.saved}
+          onDone={() => setPhase({ tag: "running", saved: phase.saved })}
+        />
       )}
       {error && <pre className="error">{error}</pre>}
     </div>
@@ -252,9 +286,11 @@ function TeamPicker({
 function CampeonatoEmCurso({
   saved,
   onReset,
+  onAdvance,
 }: {
   saved: SavedSeason;
   onReset: () => void;
+  onAdvance: () => void;
 }) {
   const team = teamById(saved.controlledTeamId);
   const teamName = team?.name ?? `Time ${saved.controlledTeamId}`;
@@ -312,7 +348,15 @@ function CampeonatoEmCurso({
         highlightTeamId={saved.controlledTeamId}
       />
 
-      <div className="form-actions">
+      <div className="form-actions form-actions--pair">
+        <button
+          type="button"
+          className="btn"
+          onClick={onAdvance}
+          disabled={isFinished}
+        >
+          [ AVANÇAR RODADA ]
+        </button>
         <button type="button" className="btn" onClick={onReset}>
           [ NOVA TEMPORADA ]
         </button>

@@ -431,6 +431,48 @@ fieldset legend {
   width: calc(var(--char-w) * 3);
 }
 
+/* C3.3 reveal phase ──────────────────────────────────────────────────────── */
+
+/* Ambient header above the user-match + OUTROS JOGOS cards during reveal.
+   On a bye round the same strip carries the "SEU TIME DESCANSA" suffix so
+   it doesn't look like a missing card. */
+.reveal-header {
+  margin-bottom: 12px;
+}
+
+/* OUTROS JOGOS card body — monospace alignment, no list bullets, no margin
+   that fights the surrounding Card padding. */
+.other-matches {
+  white-space: pre;
+  margin: 0;
+}
+
+/* Single row per parallel match. `white-space: pre` keeps the padEnd
+   alignment that the JSX sets up. */
+.other-matches__row {
+  display: block;
+  white-space: pre;
+}
+
+/* Revealed score — bright register, matches the goal-line color register
+   in the standings highlight. */
+.other-matches__score {
+  color: var(--fg-hi);
+  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
+}
+
+/* Pending row — dim `×` placeholder reads as "not yet decided". */
+.other-matches__pending {
+  color: var(--fg-dim);
+}
+
+/* Two action buttons side by side (AVANÇAR + NOVA TEMPORADA) instead of
+   centered single button. Override .form-actions's justify-content. */
+.form-actions--pair {
+  justify-content: center;
+  gap: calc(var(--char-w) * 2);
+}
+
 /* Brief specified `steps(2, start)` + `to { visibility: hidden }` but that
    combination leaves the cursor permanently hidden (per CSS discrete
    visibility interpolation at step boundaries — both step values resolve
