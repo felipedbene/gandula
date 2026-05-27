@@ -305,32 +305,18 @@ fieldset legend {
 }
 
 .standings {
-  border-collapse: collapse;
-  width: 100%;
-  background: white;
-  border: 1px solid var(--line);
+  margin: 0;
+  font: inherit;
+  white-space: pre;
 }
 
-.standings th, .standings td {
-  padding: 6px 10px;
-  text-align: right;
-  border-bottom: 1px solid var(--pale);
+.standings-dim {
+  color: var(--fg-dim);
 }
 
-.standings th {
-  background: var(--pale);
-  color: var(--muted);
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.standings .left {
-  text-align: left;
-}
-
-.standings .pts {
-  font-weight: bold;
+.standings-hi {
+  color: var(--fg-hi);
+  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
 .link-button {
@@ -348,48 +334,17 @@ fieldset legend {
 }
 
 .rounds {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 8px;
 }
 
-.round h3 {
-  font-size: 13px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 8px;
+.round-match {
+  white-space: pre;
 }
 
-.matches {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-
-.match-line {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--pale);
-  gap: 8px;
-}
-
-.match-line:last-child {
-  border-bottom: none;
-}
-
-.match-line .score {
-  font-weight: bold;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.match-line .team-name:first-of-type {
-  text-align: right;
+.round-match__score {
+  color: var(--fg-hi);
+  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
 }

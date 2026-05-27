@@ -3,6 +3,7 @@ import { run_season } from "../wasm/gandula_wasm.js";
 import { SAMPLE_TEAMS, teamById } from "../teams";
 import type { SeasonRecord, TeamStats } from "../types";
 import { goalDifference, points } from "../types";
+import { AsciiBox } from "./AsciiBox";
 
 export function SeasonView() {
   const [selected, setSelected] = useState<Set<number>>(
@@ -107,28 +108,7 @@ function SeasonResult({
 
   return (
     <div className="season-result">
-      <h2>{record.league_name}</h2>
-      <table className="standings">
-        <thead>
-          <tr>
-            <th>Pos</th>
-            <th className="left">Time</th>
-            <th>P</th>
-            <th>V</th>
-            <th>E</th>
-            <th>D</th>
-            <th>GP</th>
-            <th>GC</th>
-            <th>SG</th>
-            <th>Pts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {record.standings.map((s, i) => (
-            <StandingsRow key={s.team_id} pos={i + 1} stats={s} />
-          ))}
-        </tbody>
-      </table>
+      <StandingsTable standings={record.standings} leagueName={record.league_name} />
 
       <button className="link-button" onClick={onToggleMatches}>
         {showMatches ? "[ ESCONDER PARTIDAS ]" : "[ MOSTRAR PARTIDAS ]"}
@@ -137,23 +117,26 @@ function SeasonResult({
       {showMatches && (
         <div className="rounds">
           {byRound.map(([round, indices]) => (
-            <div key={round} className="round">
-              <h3>Rodada {round + 1}</h3>
-              <ul className="matches">
-                {indices.map((i) => {
-                  const m = record.matches[i];
-                  return (
-                    <li key={i} className="match-line">
-                      <span className="team-name">{teamById(m.home)?.name ?? `Time ${m.home}`}</span>
-                      <span className="score">
-                        {m.result.home_goals} - {m.result.away_goals}
-                      </span>
-                      <span className="team-name">{teamById(m.away)?.name ?? `Time ${m.away}`}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            <AsciiBox key={round} title={`RODADA ${round + 1}`}>
+              {indices.map((i) => {
+                const m = record.matches[i];
+                const home = teamById(m.home)?.name ?? `Time ${m.home}`;
+                const away = teamById(m.away)?.name ?? `Time ${m.away}`;
+                return (
+                  <div key={i} className="round-match">
+                    {pad(home, 30)}
+                    {"  "}
+                    <span className="round-match__score">
+                      {String(m.result.home_goals).padStart(2)}
+                      {" - "}
+                      {String(m.result.away_goals).padEnd(2)}
+                    </span>
+                    {"  "}
+                    {pad(away, 30, "L")}
+                  </div>
+                );
+              })}
+            </AsciiBox>
           ))}
         </div>
       )}
@@ -161,22 +144,86 @@ function SeasonResult({
   );
 }
 
-function StandingsRow({ pos, stats }: { pos: number; stats: TeamStats }) {
-  const team = teamById(stats.team_id);
-  const gd = goalDifference(stats);
-  const gdStr = gd > 0 ? `+${gd}` : String(gd);
+function pad(v: string | number, w: number, dir: "L" | "R" = "R"): string {
+  return dir === "L" ? String(v).padEnd(w) : String(v).padStart(w);
+}
+
+const COL_GAP = "  ";
+
+function StandingsTable({
+  standings,
+  leagueName,
+}: {
+  standings: TeamStats[];
+  leagueName: string;
+}) {
+  const headerLine = [
+    pad("POS", 3),
+    pad("TIME", 24, "L"),
+    pad("P", 3),
+    pad("V", 3),
+    pad("E", 3),
+    pad("D", 3),
+    pad("GP", 3),
+    pad("GC", 3),
+    pad("SG", 4),
+    pad("PTS", 3),
+  ].join(COL_GAP);
+
+  const dividerLine = [
+    "───",
+    "─".repeat(24),
+    "──",
+    "──",
+    "──",
+    "──",
+    "──",
+    "──",
+    "───",
+    "──",
+  ].map((s, i) => (i === 1 ? s : pad(s, [3, 24, 3, 3, 3, 3, 3, 3, 4, 3][i])))
+    .join(COL_GAP);
+
   return (
-    <tr>
-      <td>{pos}.</td>
-      <td className="left">{team?.name ?? `Time ${stats.team_id}`}</td>
-      <td>{stats.played}</td>
-      <td>{stats.won}</td>
-      <td>{stats.drawn}</td>
-      <td>{stats.lost}</td>
-      <td>{stats.goals_for}</td>
-      <td>{stats.goals_against}</td>
-      <td>{gdStr}</td>
-      <td className="pts">{points(stats)}</td>
-    </tr>
+    <AsciiBox title={`TABELA — ${leagueName}`}>
+      <pre className="standings">
+        <span className="standings-dim">{headerLine}</span>
+        {"\n"}
+        <span className="standings-dim">{dividerLine}</span>
+        {"\n"}
+        {standings.map((s, i) => {
+          const team = teamById(s.team_id);
+          const name = team?.name ?? `Time ${s.team_id}`;
+          const gd = goalDifference(s);
+          const gdStr = gd > 0 ? `+${gd}` : String(gd);
+          const pts = points(s);
+          const hi = i === 0 ? "standings-hi" : "";
+          return (
+            <span key={s.team_id}>
+              {pad(`${i + 1}.`, 3)}
+              {COL_GAP}
+              <span className={hi}>{pad(name, 24, "L")}</span>
+              {COL_GAP}
+              {pad(s.played, 3)}
+              {COL_GAP}
+              {pad(s.won, 3)}
+              {COL_GAP}
+              {pad(s.drawn, 3)}
+              {COL_GAP}
+              {pad(s.lost, 3)}
+              {COL_GAP}
+              {pad(s.goals_for, 3)}
+              {COL_GAP}
+              {pad(s.goals_against, 3)}
+              {COL_GAP}
+              {pad(gdStr, 4)}
+              {COL_GAP}
+              <span className={hi}>{pad(pts, 3)}</span>
+              {"\n"}
+            </span>
+          );
+        })}
+      </pre>
+    </AsciiBox>
   );
 }
