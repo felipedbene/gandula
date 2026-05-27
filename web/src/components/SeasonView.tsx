@@ -74,8 +74,8 @@ export function SeasonView() {
             onChange={(e) => setSeed(Number(e.target.value))}
           />
         </label>
-        <button type="submit" disabled={selected.size < 2}>
-          Rodar temporada
+        <button type="submit" className="btn" disabled={selected.size < 2}>
+          [ RODAR TEMPORADA ]
         </button>
       </form>
 
@@ -131,7 +131,7 @@ function SeasonResult({
       </table>
 
       <button className="link-button" onClick={onToggleMatches}>
-        {showMatches ? "Esconder partidas" : "Mostrar partidas"}
+        {showMatches ? "[ ESCONDER PARTIDAS ]" : "[ MOSTRAR PARTIDAS ]"}
       </button>
 
       {showMatches && (

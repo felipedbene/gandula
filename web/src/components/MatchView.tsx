@@ -3,6 +3,7 @@ import { play_match } from "../wasm/gandula_wasm.js";
 import { SAMPLE_TEAMS, teamById } from "../teams";
 import type { Match, MatchEvent } from "../types";
 import { eventKindName } from "../types";
+import { AsciiBox } from "./AsciiBox";
 
 export function MatchView() {
   const [homeId, setHomeId] = useState<number>(SAMPLE_TEAMS[0].id);
@@ -28,51 +29,53 @@ export function MatchView() {
 
   return (
     <div className="match-view">
-      <form
-        className="form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          play();
-        }}
-      >
-        <label>
-          <span>Mandante</span>
-          <select
-            value={homeId}
-            onChange={(e) => setHomeId(Number(e.target.value))}
-          >
-            {SAMPLE_TEAMS.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Visitante</span>
-          <select
-            value={awayId}
-            onChange={(e) => setAwayId(Number(e.target.value))}
-          >
-            {SAMPLE_TEAMS.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span>Semente</span>
-          <input
-            type="number"
-            value={seed}
-            onChange={(e) => setSeed(Number(e.target.value))}
-          />
-        </label>
-        <button type="submit" disabled={homeId === awayId}>
-          Jogar
-        </button>
-      </form>
+      <AsciiBox title="CONFRONTO">
+        <form
+          className="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            play();
+          }}
+        >
+          <label>
+            <span>Mandante</span>
+            <select
+              value={homeId}
+              onChange={(e) => setHomeId(Number(e.target.value))}
+            >
+              {SAMPLE_TEAMS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Visitante</span>
+            <select
+              value={awayId}
+              onChange={(e) => setAwayId(Number(e.target.value))}
+            >
+              {SAMPLE_TEAMS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Semente</span>
+            <input
+              type="number"
+              value={seed}
+              onChange={(e) => setSeed(Number(e.target.value))}
+            />
+          </label>
+          <button type="submit" className="btn" disabled={homeId === awayId}>
+            [ JOGAR ]
+          </button>
+        </form>
+      </AsciiBox>
 
       {homeId === awayId && (
         <p className="muted">Escolha times diferentes.</p>
