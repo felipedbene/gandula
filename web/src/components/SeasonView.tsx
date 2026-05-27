@@ -1,9 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { run_season } from "../wasm/gandula_wasm.js";
 import { ALL_TEAMS, teamById } from "../teams";
 import type { SeasonRecord, TeamStats } from "../types";
 import { computeStandings, goalDifference, points } from "../types";
 import { clearSeason, loadSeason, saveSeason, type SavedSeason } from "../persistence";
+import {
+  biggestWin,
+  buildPlayerLookup,
+  cardLeader,
+  topAssister,
+  topScorer,
+} from "../util/season-stats";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 
@@ -300,6 +307,13 @@ function CampeonatoEmCurso({
       : Math.max(...saved.record.fixtures.map((f) => f.round)) + 1;
   const isFinished = saved.currentRoundIdx >= totalRounds;
 
+  // Once the season's done, hand off to the finale view. It owns its own
+  // header / cards / button layout; the in-progress branch below stays
+  // untouched.
+  if (isFinished) {
+    return <SeasonFinale saved={saved} totalRounds={totalRounds} onReset={onReset} />;
+  }
+
   const teamIds = saved.record.standings.map((s) => s.team_id);
   const standings = computeStandings(
     saved.record.matches,
@@ -308,40 +322,30 @@ function CampeonatoEmCurso({
     teamIds,
   );
 
-  const roundLabel = isFinished
-    ? `ENCERRADA · ${totalRounds} / ${totalRounds}`
-    : `RODADA ${saved.currentRoundIdx + 1} / ${totalRounds}`;
-
   return (
     <>
       <p className="campeonato-header muted">
         LIGA: {saved.record.league_name} · SEMENTE: {saved.seed.toString()} ·
-        {" "}TIME: {teamName} · {roundLabel}
+        {" "}TIME: {teamName} · RODADA {saved.currentRoundIdx + 1} / {totalRounds}
       </p>
 
-      {isFinished ? (
-        <Card title="CAMPEONATO ENCERRADO">
-          <p>Todas as rodadas foram jogadas.</p>
-        </Card>
-      ) : (
-        <Card title={`RODADA ${saved.currentRoundIdx + 1}`}>
-          <div className="round-list">
-            {currentRoundFixtures(saved).map((row, i) => (
-              <div
-                key={i}
-                className={`round-list__row${row.isUser ? " round-list__row--user" : ""}`}
-              >
-                <span className="round-list__glyph">{row.isUser ? "►" : " "}</span>
-                <span>
-                  {row.homeName.padEnd(24)}
-                  {"×  "}
-                  {row.awayName}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      <Card title={`RODADA ${saved.currentRoundIdx + 1}`}>
+        <div className="round-list">
+          {currentRoundFixtures(saved).map((row, i) => (
+            <div
+              key={i}
+              className={`round-list__row${row.isUser ? " round-list__row--user" : ""}`}
+            >
+              <span className="round-list__glyph">{row.isUser ? "►" : " "}</span>
+              <span>
+                {row.homeName.padEnd(24)}
+                {"×  "}
+                {row.awayName}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       <StandingsTable
         standings={standings}
@@ -349,14 +353,110 @@ function CampeonatoEmCurso({
       />
 
       <div className="form-actions form-actions--pair">
-        <button
-          type="button"
-          className="btn"
-          onClick={onAdvance}
-          disabled={isFinished}
-        >
+        <button type="button" className="btn" onClick={onAdvance}>
           [ AVANÇAR RODADA ]
         </button>
+        <button type="button" className="btn" onClick={onReset}>
+          [ NOVA TEMPORADA ]
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ─── Phase: running (finale) ────────────────────────────────────────────────
+// Renders when the season is over (currentRoundIdx >= totalRounds). Owns its
+// own layout — champion card, season highlights, final standings, reset.
+function SeasonFinale({
+  saved,
+  totalRounds,
+  onReset,
+}: {
+  saved: SavedSeason;
+  totalRounds: number;
+  onReset: () => void;
+}) {
+  const champion = saved.record.standings[0];
+  const champTeam = champion ? teamById(champion.team_id) : undefined;
+  const champName = champTeam?.name ?? `Time ${champion?.team_id ?? "?"}`;
+  const isUserChamp = champion?.team_id === saved.controlledTeamId;
+
+  const userIdx = saved.record.standings.findIndex(
+    (s) => s.team_id === saved.controlledTeamId,
+  );
+  const userStats = userIdx >= 0 ? saved.record.standings[userIdx] : undefined;
+  const userTeamName =
+    teamById(saved.controlledTeamId)?.name ?? `Time ${saved.controlledTeamId}`;
+
+  // Build the player lookup once per season — every stat helper needs it,
+  // and walking ~17 rosters every render would be wasted work.
+  const playerLookup = useMemo(() => buildPlayerLookup(saved.record), [saved.record]);
+  const scorer = useMemo(() => topScorer(saved.record, playerLookup), [saved.record, playerLookup]);
+  const assister = useMemo(() => topAssister(saved.record, playerLookup), [saved.record, playerLookup]);
+  const biggest = useMemo(() => biggestWin(saved.record), [saved.record]);
+  const cards = useMemo(() => cardLeader(saved.record, playerLookup), [saved.record, playerLookup]);
+
+  return (
+    <>
+      <p className="campeonato-header muted">
+        LIGA: {saved.record.league_name} · SEMENTE: {saved.seed.toString()} ·
+        {" "}TIME: {userTeamName} · ENCERRADA · {totalRounds} / {totalRounds}
+      </p>
+
+      <Card title={isUserChamp ? "*** CAMPEÃO ***" : "CAMPEÃO"}>
+        {isUserChamp ? (
+          <p className="finale-champ">
+            PARABÉNS! {champName} venceu o {saved.record.league_name}.
+          </p>
+        ) : (
+          <p>{champName}</p>
+        )}
+      </Card>
+
+      <Card title="DESTAQUES DA TEMPORADA">
+        <ul className="finale-stats">
+          {scorer && (
+            <li>
+              Artilheiro: {scorer.name} ({scorer.teamName}) — {scorer.goals} gols
+            </li>
+          )}
+          {assister && (
+            <li>
+              Líder de assistências: {assister.name} ({assister.teamName}) —{" "}
+              {assister.assists} assistências
+            </li>
+          )}
+          {biggest && (
+            <li>
+              Maior goleada:{" "}
+              {teamById(biggest.match.home)?.name ?? `Time ${biggest.match.home}`}{" "}
+              {biggest.match.result.home_goals} x {biggest.match.result.away_goals}{" "}
+              {teamById(biggest.match.away)?.name ?? `Time ${biggest.match.away}`}{" "}
+              (rodada {biggest.round + 1})
+            </li>
+          )}
+          {cards && (
+            <li>
+              Mais cartões: {cards.name} ({cards.teamName}) — {cards.yellow}{" "}
+              amarelos, {cards.red} vermelhos
+            </li>
+          )}
+          {userStats && !isUserChamp && (
+            <li className="finale-stats__user">
+              Sua colocação: {userTeamName} — {userIdx + 1}º lugar,{" "}
+              {points(userStats)} pts, {userStats.won}V {userStats.drawn}E{" "}
+              {userStats.lost}D
+            </li>
+          )}
+        </ul>
+      </Card>
+
+      <StandingsTable
+        standings={saved.record.standings}
+        highlightTeamId={saved.controlledTeamId}
+      />
+
+      <div className="form-actions">
         <button type="button" className="btn" onClick={onReset}>
           [ NOVA TEMPORADA ]
         </button>
