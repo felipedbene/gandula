@@ -13,6 +13,7 @@ import {
 } from "../util/season-stats";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
+import TacticsView from "./TacticsView";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
@@ -28,7 +29,8 @@ type Phase =
   | { tag: "form" }
   | { tag: "picking"; pendingRecord: SeasonRecord }
   | { tag: "running"; saved: SavedSeason }
-  | { tag: "revealing"; saved: SavedSeason };
+  | { tag: "revealing"; saved: SavedSeason }
+  | { tag: "tactics"; saved: SavedSeason };
 
 export function SeasonView({ onStatus }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
@@ -123,6 +125,39 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     }
   }
 
+  function openTactics(saved: SavedSeason) {
+    const teamName =
+      teamById(saved.controlledTeamId)?.name ?? `Time ${saved.controlledTeamId}`;
+    onStatus(`editando tática · ${teamName}`);
+    setPhase({ tag: "tactics", saved });
+  }
+
+  function backFromTactics(saved: SavedSeason) {
+    onStatus("sem alterações");
+    setPhase({ tag: "running", saved });
+  }
+
+  async function applyTactics(
+    newSaved: SavedSeason,
+    resimMs: number,
+    resimCount: number,
+  ) {
+    try {
+      await saveSeason(newSaved);
+      const teamName =
+        teamById(newSaved.controlledTeamId)?.name ??
+        `Time ${newSaved.controlledTeamId}`;
+      const plural = resimCount === 1 ? "" : "s";
+      onStatus(
+        `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms`,
+      );
+      setPhase({ tag: "running", saved: newSaved });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar tática: ${e}`);
+    }
+  }
+
   /**
    * Persist the incremented save FIRST, then enter reveal. If the user
    * hits F5 mid-animation, autoload sees the new currentRoundIdx and goes
@@ -170,12 +205,20 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           saved={phase.saved}
           onReset={resetSeason}
           onAdvance={() => advanceRound(phase.saved)}
+          onTactics={() => openTactics(phase.saved)}
         />
       )}
       {phase.tag === "revealing" && (
         <RevealRound
           saved={phase.saved}
           onDone={() => setPhase({ tag: "running", saved: phase.saved })}
+        />
+      )}
+      {phase.tag === "tactics" && (
+        <TacticsView
+          saved={phase.saved}
+          onApply={applyTactics}
+          onBack={() => backFromTactics(phase.saved)}
         />
       )}
       {error && <pre className="error">{error}</pre>}
@@ -294,10 +337,12 @@ function CampeonatoEmCurso({
   saved,
   onReset,
   onAdvance,
+  onTactics,
 }: {
   saved: SavedSeason;
   onReset: () => void;
   onAdvance: () => void;
+  onTactics: () => void;
 }) {
   const team = teamById(saved.controlledTeamId);
   const teamName = team?.name ?? `Time ${saved.controlledTeamId}`;
@@ -352,9 +397,12 @@ function CampeonatoEmCurso({
         highlightTeamId={saved.controlledTeamId}
       />
 
-      <div className="form-actions form-actions--pair">
+      <div className="form-actions form-actions--triple">
         <button type="button" className="btn" onClick={onAdvance}>
           [ AVANÇAR RODADA ]
+        </button>
+        <button type="button" className="btn" onClick={onTactics}>
+          [ TÁTICA ]
         </button>
         <button type="button" className="btn" onClick={onReset}>
           [ NOVA TEMPORADA ]

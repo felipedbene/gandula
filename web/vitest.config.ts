@@ -17,6 +17,15 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     globals: true,
+    setupFiles: ["./src/test-setup.ts"],
+    // Note: happy-dom resolves import.meta.url differently based on extension:
+    //   .test.ts  → http://localhost:3000/... (fileURLToPath throws)
+    //   .test.tsx → file:///... (file-anchor works directly)
+    // Tests loading the WASM binary must therefore either:
+    //   (a) use .tsx + fileURLToPath(import.meta.url)
+    //   (b) use .ts + cwd-relative path (resolve("src/wasm/..."))
+    //   (c) add `// @vitest-environment node` at file top
+    // See resimulate.test.ts (pattern c) and TacticsView.test.tsx (pattern a).
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     exclude: ["node_modules", "src/wasm/**"],
   },

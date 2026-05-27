@@ -462,9 +462,16 @@ fieldset legend {
   color: var(--fg-dim);
 }
 
-/* Two action buttons side by side (AVANÇAR + NOVA TEMPORADA) instead of
-   centered single button. Override .form-actions's justify-content. */
+/* Two action buttons side by side (APLICAR + VOLTAR in TacticsView).
+   Override .form-actions's justify-content with the same value plus a gap. */
 .form-actions--pair {
+  justify-content: center;
+  gap: calc(var(--char-w) * 2);
+}
+
+/* Three action buttons inline (AVANÇAR + TÁTICA + NOVA TEMPORADA on the
+   running phase). Same treatment as --pair — flex handles the extra child. */
+.form-actions--triple {
   justify-content: center;
   gap: calc(var(--char-w) * 2);
 }
