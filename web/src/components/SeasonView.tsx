@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { run_season } from "../wasm/gandula_wasm.js";
-import { SAMPLE_TEAMS, teamById } from "../teams";
+import { ALL_TEAMS, teamById } from "../teams";
 import type { SeasonRecord, TeamStats } from "../types";
 import { goalDifference, points } from "../types";
 import Card from "../srcl/Card";
@@ -10,8 +10,11 @@ type SeasonViewProps = {
 };
 
 export function SeasonView({ onStatus }: SeasonViewProps) {
+  // Default selection: every available team (3 samples + 14 fictional
+  // Brasileirão Imaginário). User can uncheck whatever they don't want
+  // before running. Minimum 2 to enable [ RODAR TEMPORADA ].
   const [selected, setSelected] = useState<Set<number>>(
-    () => new Set(SAMPLE_TEAMS.map((t) => t.id))
+    () => new Set(ALL_TEAMS.map((t) => t.id))
   );
   const [seed, setSeed] = useState<number>(1998);
   const [name, setName] = useState<string>("Brasileirão Imaginário 2026");
@@ -32,7 +35,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     setError(null);
     setRecord(null);
     try {
-      const teams = SAMPLE_TEAMS.filter((t) => selected.has(t.id));
+      const teams = ALL_TEAMS.filter((t) => selected.has(t.id));
       if (teams.length < 2) throw new Error("Selecione pelo menos 2 times.");
       const start = performance.now();
       const raw = run_season(teams, BigInt(seed), name);
@@ -57,7 +60,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         >
           <fieldset>
             <legend>Times</legend>
-            {SAMPLE_TEAMS.map((t) => (
+            {ALL_TEAMS.map((t) => (
               <label key={t.id} className="checkbox">
                 <input
                   type="checkbox"

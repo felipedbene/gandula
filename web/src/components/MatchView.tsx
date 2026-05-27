@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { play_match } from "../wasm/gandula_wasm.js";
-import { SAMPLE_TEAMS, teamById } from "../teams";
+import { ALL_TEAMS, SAMPLE_TEAMS, teamById } from "../teams";
 import type { Match, MatchEvent, Player, Team } from "../types";
 import { eventKindName } from "../types";
 import Card from "../srcl/Card";
@@ -52,7 +52,7 @@ export function MatchView({ onStatus }: MatchViewProps) {
               value={homeId}
               onChange={(e) => setHomeId(Number(e.target.value))}
             >
-              {SAMPLE_TEAMS.map((t) => (
+              {ALL_TEAMS.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
                 </option>
@@ -65,7 +65,7 @@ export function MatchView({ onStatus }: MatchViewProps) {
               value={awayId}
               onChange={(e) => setAwayId(Number(e.target.value))}
             >
-              {SAMPLE_TEAMS.map((t) => (
+              {ALL_TEAMS.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
                 </option>
