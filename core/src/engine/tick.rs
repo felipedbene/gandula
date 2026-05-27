@@ -5,7 +5,8 @@
 //! top.
 
 use crate::domain::{
-    Match, MatchEvent, MatchEventKind, MatchResult, Player, PlayerId, Position, Side, Team,
+    Match, MatchEvent, MatchEventKind, MatchResult, NearMissKind, Player, PlayerId, Position,
+    Side, Team,
 };
 use crate::engine::narration::{self, NarrationContext};
 use crate::engine::strength::{
@@ -61,6 +62,13 @@ pub const PENALTY_CONVERSION_BASE: f64 = 0.75;
 pub const PENALTY_CONVERSION_SCALE: f64 = 0.005;
 pub const PENALTY_CONVERSION_MIN: f64 = 0.50;
 pub const PENALTY_CONVERSION_MAX: f64 = 0.95;
+
+/// Fraction of off-target shots that get promoted to a `NearMiss` event
+/// (post, crossbar, or just wide). Wide shots fire ~7-8 times per match on
+/// average, so 0.50 yields ~3.5-4 near-misses per match — sits at the upper
+/// half of the brief's "1.5-2× goal rate" range (avg ~2.5 goals/match).
+/// Doesn't affect score or cards; purely drama density.
+pub const NEAR_MISS_PROMOTION_RATE: f64 = 0.50;
 
 // ─── State ──────────────────────────────────────────────────────────────────
 /// Penalty awarded last tick, kick to be taken next tick. The intervening
@@ -479,16 +487,34 @@ fn resolve_shot(state: &mut MatchState, rng: &mut MatchRng, minute: u16, side: S
 
     if !on_target {
         let ctx = ctx_for(state, side, minute);
-        let text = narration::narrate_shot_wide(&ctx, rng, minute, &shooter.name);
-        state.events.push(MatchEvent {
-            minute,
-            side: Some(side),
-            kind: MatchEventKind::Shot {
-                shooter: shooter_id,
-                on_target: false,
-            },
-            text,
-        });
+        if rng.chance(NEAR_MISS_PROMOTION_RATE) {
+            let kind = match rng.range_u32(0, 3) {
+                0 => NearMissKind::Post,
+                1 => NearMissKind::Crossbar,
+                _ => NearMissKind::JustWide,
+            };
+            let text = narration::narrate_near_miss(&ctx, rng, minute, &shooter.name, kind);
+            state.events.push(MatchEvent {
+                minute,
+                side: Some(side),
+                kind: MatchEventKind::NearMiss {
+                    shooter: shooter_id,
+                    kind,
+                },
+                text,
+            });
+        } else {
+            let text = narration::narrate_shot_wide(&ctx, rng, minute, &shooter.name);
+            state.events.push(MatchEvent {
+                minute,
+                side: Some(side),
+                kind: MatchEventKind::Shot {
+                    shooter: shooter_id,
+                    on_target: false,
+                },
+                text,
+            });
+        }
         return;
     }
 

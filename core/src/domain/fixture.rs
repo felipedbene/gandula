@@ -18,6 +18,20 @@ impl Side {
     }
 }
 
+/// Kind of near-miss. Carries no score or card impact; purely narrative
+/// flavour. Kept separate from `Shot` so the UI / stats layer can distinguish
+/// a forgettable wide shot from a "carimbou a trave" beat without parsing the
+/// narration string.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NearMissKind {
+    /// Bola na trave (post).
+    Post,
+    /// Bola no travessão (crossbar).
+    Crossbar,
+    /// Passou raspando — ball goes just wide.
+    JustWide,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MatchEventKind {
     Shot {
@@ -52,6 +66,13 @@ pub enum MatchEventKind {
     /// them merged because no consumer needs to branch on the difference yet.
     PenaltyMissed {
         taker: PlayerId,
+    },
+    /// "Almost" moment — shot hit the woodwork or went just wide. Promoted
+    /// from what would otherwise have been an off-target `Shot`. No score
+    /// impact, no card impact; purely narrative drama density.
+    NearMiss {
+        shooter: PlayerId,
+        kind: NearMissKind,
     },
     HalfTime,
     FullTime,

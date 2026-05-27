@@ -48,6 +48,8 @@ export interface Team {
   bench?: number[];
 }
 
+export type NearMissKind = "Post" | "Crossbar" | "JustWide";
+
 // MatchEventKind is a serde-tagged enum: an object with one key naming the
 // variant and the variant's data inside.
 export type MatchEventKind =
@@ -59,6 +61,7 @@ export type MatchEventKind =
   | { Substitution: { off: number; on: number } }
   | { PenaltyAwarded: { taker: number } }
   | { PenaltyMissed: { taker: number } }
+  | { NearMiss: { shooter: number; kind: NearMissKind } }
   | "HalfTime"
   | "FullTime";
 

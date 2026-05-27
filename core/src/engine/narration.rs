@@ -14,6 +14,7 @@
 //! given seed — that's fine; the determinism contract is "same seed twice =
 //! same output," not "same seed across versions."
 
+use crate::domain::NearMissKind;
 use crate::rng::MatchRng;
 
 /// Per-event context for phrasing selection.
@@ -222,9 +223,36 @@ pub(crate) fn narrate_penalty_scored(
     }
 }
 
+// ─── Near-miss — post / crossbar / just wide ────────────────────────────────
+// Lower-stakes drama. Promoted from what would otherwise have been a wide
+// shot; tone leans into the frustration/relief beat ("Na trave!", "QUASE!").
+pub(crate) fn narrate_near_miss(
+    _ctx: &NarrationContext,
+    rng: &mut MatchRng,
+    minute: u16,
+    shooter: &str,
+    kind: NearMissKind,
+) -> String {
+    match kind {
+        NearMissKind::Post => match rng.range_u32(0, 3) {
+            0 => format!("{minute}' NA TRAVE! {shooter} carimbou o poste!"),
+            1 => format!("{minute}' QUE ISSO! {shooter} bate firme e a bola explode na trave!"),
+            _ => format!("{minute}' NA MADEIRA! {shooter} acerta o pé da trave!"),
+        },
+        NearMissKind::Crossbar => match rng.range_u32(0, 3) {
+            0 => format!("{minute}' NO TRAVESSÃO! {shooter} bate por cima e a bola volta!"),
+            1 => format!("{minute}' QUASE! {shooter} acerta o travessão e a bola sai!"),
+            _ => format!("{minute}' {shooter} chuta e a bola explode no travessão!"),
+        },
+        NearMissKind::JustWide => match rng.range_u32(0, 3) {
+            0 => format!("{minute}' QUASE! {shooter} chuta rente à trave!"),
+            1 => format!("{minute}' Passou raspando! {shooter} quase marca!"),
+            _ => format!("{minute}' {shooter} chuta com perigo... passou perto demais!"),
+        },
+    }
+}
+
 // ─── Substitution ───────────────────────────────────────────────────────────
-// Commit 1 ships 2 phrasings (satisfies the "every existing event gets ≥1
-// variant" rule). Commit 3 expands this to 3–4 when the near-miss work lands.
 pub(crate) fn narrate_substitution(
     _ctx: &NarrationContext,
     rng: &mut MatchRng,
@@ -233,9 +261,11 @@ pub(crate) fn narrate_substitution(
     off: &str,
     on: &str,
 ) -> String {
-    match rng.range_u32(0, 2) {
+    match rng.range_u32(0, 4) {
         0 => format!("{minute}' Substituição no {team}: sai {off}, entra {on}."),
-        _ => format!("{minute}' Mexe o {team}: sai {off}, entra {on}."),
+        1 => format!("{minute}' Mexe o {team}: sai {off}, entra {on}."),
+        2 => format!("{minute}' {team} mexe: {off} dá lugar a {on}."),
+        _ => format!("{minute}' O técnico tira {off} e coloca {on} no {team}."),
     }
 }
 
