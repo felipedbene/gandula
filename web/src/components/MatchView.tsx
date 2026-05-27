@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { play_match } from "../wasm/gandula_wasm.js";
 import { SAMPLE_TEAMS, teamById } from "../teams";
-import type { Match, MatchEvent } from "../types";
+import type { Match, MatchEvent, Player, Team } from "../types";
 import { eventKindName } from "../types";
 import { AsciiBox } from "./AsciiBox";
 
@@ -79,9 +79,12 @@ export function MatchView({ onStatus }: MatchViewProps) {
               onChange={(e) => setSeed(Number(e.target.value))}
             />
           </label>
-          <button type="submit" className="btn" disabled={homeId === awayId}>
-            [ JOGAR ]
-          </button>
+          <pre className="match-meta">{matchMetaLines(homeId, awayId)}</pre>
+          <div className="form-actions">
+            <button type="submit" className="btn" disabled={homeId === awayId}>
+              [ JOGAR ]
+            </button>
+          </div>
         </form>
       </AsciiBox>
 
@@ -212,4 +215,41 @@ function eventGlyph(e: MatchEvent): string {
     default:
       return "";
   }
+}
+
+/** Average overall of a team's starting XI: per-player overall is the mean
+ *  of pace+technique+passing+defending+finishing+stamina (6 attributes),
+ *  then averaged across the 11 starters, rounded. */
+function avgStrength(team: Team): number {
+  const starters = team.starting_xi
+    .map((id) => team.roster.find((p) => p.id === id))
+    .filter((p): p is Player => p !== undefined);
+  if (starters.length === 0) return 0;
+  const sum = starters.reduce((acc, p) => {
+    const a = p.attributes;
+    return (
+      acc +
+      (a.pace + a.technique + a.passing + a.defending + a.finishing + a.stamina) /
+        6
+    );
+  }, 0);
+  return Math.round(sum / starters.length);
+}
+
+/** Pre-game meta lines for the CONFRONTO box: two columns showing FORMACAO
+ *  and FORCA MED for home and away. Padding via padEnd guarantees column 2
+ *  starts at the same char position on both lines. */
+function matchMetaLines(homeId: number, awayId: number): string {
+  const home = teamById(homeId);
+  const away = teamById(awayId);
+  const homeFor = home?.formation ?? "";
+  const awayFor = away?.formation ?? "";
+  const homeStr = home ? avgStrength(home) : 0;
+  const awayStr = away ? avgStrength(away) : 0;
+  const COL = 35;
+  const line1 =
+    `FORMACAO  : ${homeFor}`.padEnd(COL) + `FORMACAO  : ${awayFor}`;
+  const line2 =
+    `FORCA MED : ${homeStr}`.padEnd(COL) + `FORCA MED : ${awayStr}`;
+  return line1 + "\n" + line2;
 }

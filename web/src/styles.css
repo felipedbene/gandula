@@ -104,7 +104,8 @@ body {
 }
 
 .ascii-box__top,
-.ascii-box__bottom {
+.ascii-box__bottom,
+.ascii-box__divider {
   white-space: pre;
 }
 
@@ -249,6 +250,40 @@ fieldset legend {
   text-transform: none !important;
   margin-right: 12px;
   min-width: 0;
+}
+
+/* Wrapper for the form's action button(s). flex-basis: 100% forces this
+   row to its own line inside the parent .form (which is itself flex-wrap),
+   and the inner flex centers the button without making it full-width
+   clickable. */
+.form-actions {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* Pre-game meta info inside CONFRONTO box: two columns (home / away) of
+   FORMACAO + FORCA MED, alignment via padEnd in JSX rather than CSS grid
+   because PxPlus is true monospace and char counts are exact. */
+.match-meta {
+  flex-basis: 100%;
+  white-space: pre;
+  margin: 8px 0;
+}
+
+/* GANDULA header row: three flex items (title left, tagline middle, version
+   right) distributed by space-between. Per-item color set via .hi / .muted /
+   defaults inherited from .ascii-box__content. */
+.gandula-header {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(var(--char-w) * 2);
+}
+
+.hi {
+  color: var(--fg-hi);
+  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
 .error {

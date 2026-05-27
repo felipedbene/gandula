@@ -46,25 +46,31 @@ export function App() {
   return (
     <div className="crt">
       <main className="app">
-        <AsciiBox double title="GANDULA">
-          <p className="muted">
-            Simulador de futebol em texto — homenagem aos jogos PT-BR dos anos 90.
-          </p>
+        <AsciiBox
+          double
+          header={
+            <div className="gandula-header">
+              <span className="hi">GANDULA</span>
+              <span className="muted">Simulador de futebol em texto</span>
+              <span>v0.5</span>
+            </div>
+          }
+        >
+          <nav className="tabs">
+            <button
+              className={tab === "match" ? "tab active" : "tab"}
+              onClick={() => setTab("match")}
+            >
+              [ PARTIDA ]
+            </button>
+            <button
+              className={tab === "season" ? "tab active" : "tab"}
+              onClick={() => setTab("season")}
+            >
+              [ TEMPORADA ]
+            </button>
+          </nav>
         </AsciiBox>
-        <nav className="tabs">
-          <button
-            className={tab === "match" ? "tab active" : "tab"}
-            onClick={() => setTab("match")}
-          >
-            [ PARTIDA ]
-          </button>
-          <button
-            className={tab === "season" ? "tab active" : "tab"}
-            onClick={() => setTab("season")}
-          >
-            [ TEMPORADA ]
-          </button>
-        </nav>
         <section className="content">
           {tab === "match" ? (
             <MatchView onStatus={setStatus} />
