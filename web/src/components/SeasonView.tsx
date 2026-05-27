@@ -1,26 +1,61 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { run_season } from "../wasm/gandula_wasm.js";
 import { ALL_TEAMS, teamById } from "../teams";
-import type { SeasonRecord, TeamStats } from "../types";
-import { goalDifference, points } from "../types";
+import type { SeasonRecord } from "../types";
+import { clearSeason, loadSeason, saveSeason, type SavedSeason } from "../persistence";
 import Card from "../srcl/Card";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
 };
 
+/**
+ * The view is a 4-phase state machine bundled into a single useState so the
+ * phase tag and its associated data can't drift apart (you literally can't
+ * be in `picking` without a `pendingRecord` — type-narrowing enforces it).
+ */
+type Phase =
+  | { tag: "loading" }
+  | { tag: "form" }
+  | { tag: "picking"; pendingRecord: SeasonRecord }
+  | { tag: "running"; saved: SavedSeason };
+
 export function SeasonView({ onStatus }: SeasonViewProps) {
-  // Default selection: every available team (3 samples + 14 fictional
-  // Brasileirão Imaginário). User can uncheck whatever they don't want
-  // before running. Minimum 2 to enable [ RODAR TEMPORADA ].
+  const [phase, setPhase] = useState<Phase>({ tag: "loading" });
+
+  // Form-field state — only relevant in `phase.tag === "form"`. Kept as
+  // independent useStates because they're standard controlled-input concerns
+  // with no transitions of their own.
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(ALL_TEAMS.map((t) => t.id))
   );
   const [seed, setSeed] = useState<number>(1998);
   const [name, setName] = useState<string>("Brasileirão Imaginário 2026");
-  const [record, setRecord] = useState<SeasonRecord | null>(null);
-  const [showMatches, setShowMatches] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Autoload once on mount. `onStatus` is App-owned useState setState, stable
+  // in practice — but `[]` makes the "load once" intent explicit instead of
+  // relying on that stability.
+  useEffect(() => {
+    loadSeason()
+      .then((saved) => {
+        if (saved) {
+          const teamName = teamById(saved.controlledTeamId)?.name ?? `Time ${saved.controlledTeamId}`;
+          onStatus(`save carregado · ${teamName} · rodada ${saved.currentRoundIdx}`);
+          setPhase({ tag: "running", saved });
+        } else {
+          setPhase({ tag: "form" });
+        }
+      })
+      .catch((e) => {
+        // IDB unavailable (private mode, quota exhausted, etc.) — fail open
+        // to the form, surface the reason in the status line, don't block
+        // the UI from rendering.
+        onStatus(`erro ao carregar save: ${e}`);
+        setPhase({ tag: "form" });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function toggle(id: number) {
     setSelected((prev) => {
@@ -33,212 +68,212 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 
   function run() {
     setError(null);
-    setRecord(null);
     try {
       const teams = ALL_TEAMS.filter((t) => selected.has(t.id));
       if (teams.length < 2) throw new Error("Selecione pelo menos 2 times.");
       const start = performance.now();
-      const raw = run_season(teams, BigInt(seed), name);
+      const pendingRecord = run_season(teams, BigInt(seed), name) as SeasonRecord;
       const ms = Math.round(performance.now() - start);
-      setRecord(raw as SeasonRecord);
-      onStatus(`temporada concluída em ${ms}ms · seed ${seed}`);
+      onStatus(`temporada simulada em ${ms}ms · seed ${seed}`);
+      setPhase({ tag: "picking", pendingRecord });
     } catch (e) {
       setError(String(e));
       onStatus(`erro: ${e}`);
     }
   }
 
+  async function confirmTeam(pendingRecord: SeasonRecord, teamId: number) {
+    const saved: SavedSeason = {
+      schemaVersion: 1,
+      savedAt: new Date().toISOString(),
+      seed: BigInt(seed),
+      controlledTeamId: teamId,
+      currentRoundIdx: 0,
+      record: pendingRecord,
+    };
+    try {
+      await saveSeason(saved);
+      const teamName = teamById(teamId)?.name ?? `Time ${teamId}`;
+      onStatus(`campeonato iniciado · ${teamName} · seed ${seed}`);
+      setPhase({ tag: "running", saved });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar: ${e}`);
+    }
+  }
+
+  async function resetSeason() {
+    try {
+      await clearSeason();
+      onStatus("nova temporada");
+      setPhase({ tag: "form" });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao limpar: ${e}`);
+    }
+  }
+
   return (
     <div className="season-view">
-      <Card title="NOVA TEMPORADA">
-        <form
-          className="form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            run();
-          }}
-        >
-          <fieldset>
-            <legend>Times</legend>
-            {ALL_TEAMS.map((t) => (
-              <label key={t.id} className="checkbox">
-                <input
-                  type="checkbox"
-                  checked={selected.has(t.id)}
-                  onChange={() => toggle(t.id)}
-                />
-                {t.name}
-              </label>
-            ))}
-          </fieldset>
-          <label>
-            <span>Liga</span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <label>
-            <span>Semente</span>
-            <input
-              type="number"
-              value={seed}
-              onChange={(e) => setSeed(Number(e.target.value))}
-            />
-          </label>
-          <div className="form-actions">
-            <button type="submit" className="btn" disabled={selected.size < 2}>
-              [ RODAR TEMPORADA ]
-            </button>
-          </div>
-        </form>
-      </Card>
-
+      {phase.tag === "loading" && <p className="muted">Carregando save…</p>}
+      {phase.tag === "form" && (
+        <NewSeasonForm
+          selected={selected}
+          onToggle={toggle}
+          name={name}
+          onNameChange={setName}
+          seed={seed}
+          onSeedChange={setSeed}
+          onSubmit={run}
+        />
+      )}
+      {phase.tag === "picking" && (
+        <TeamPicker
+          record={phase.pendingRecord}
+          onConfirm={(teamId) => confirmTeam(phase.pendingRecord, teamId)}
+        />
+      )}
+      {phase.tag === "running" && (
+        <CampeonatoEmCurso saved={phase.saved} onReset={resetSeason} />
+      )}
       {error && <pre className="error">{error}</pre>}
-
-      {record && <SeasonResult record={record} showMatches={showMatches} onToggleMatches={() => setShowMatches((v) => !v)} />}
     </div>
   );
 }
 
-function SeasonResult({
+// ─── Phase: form ────────────────────────────────────────────────────────────
+function NewSeasonForm({
+  selected,
+  onToggle,
+  name,
+  onNameChange,
+  seed,
+  onSeedChange,
+  onSubmit,
+}: {
+  selected: Set<number>;
+  onToggle: (id: number) => void;
+  name: string;
+  onNameChange: (s: string) => void;
+  seed: number;
+  onSeedChange: (n: number) => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <Card title="NOVA TEMPORADA">
+      <form
+        className="form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit();
+        }}
+      >
+        <fieldset>
+          <legend>Times</legend>
+          {ALL_TEAMS.map((t) => (
+            <label key={t.id} className="checkbox">
+              <input
+                type="checkbox"
+                checked={selected.has(t.id)}
+                onChange={() => onToggle(t.id)}
+              />
+              {t.name}
+            </label>
+          ))}
+        </fieldset>
+        <label>
+          <span>Liga</span>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+          />
+        </label>
+        <label>
+          <span>Semente</span>
+          <input
+            type="number"
+            value={seed}
+            onChange={(e) => onSeedChange(Number(e.target.value))}
+          />
+        </label>
+        <div className="form-actions">
+          <button type="submit" className="btn" disabled={selected.size < 2}>
+            [ RODAR TEMPORADA ]
+          </button>
+        </div>
+      </form>
+    </Card>
+  );
+}
+
+// ─── Phase: picking ─────────────────────────────────────────────────────────
+// Lists every team that ran in the season — derived from record.standings
+// (canonical team set for the season). Clicking a button commits the save
+// and transitions to "running".
+function TeamPicker({
   record,
-  showMatches,
-  onToggleMatches,
+  onConfirm,
 }: {
   record: SeasonRecord;
-  showMatches: boolean;
-  onToggleMatches: () => void;
+  onConfirm: (teamId: number) => void;
 }) {
-  const byRound = useMemo(() => {
-    const map = new Map<number, number[]>();
-    record.fixtures.forEach((f, i) => {
-      const arr = map.get(f.round) ?? [];
-      arr.push(i);
-      map.set(f.round, arr);
-    });
-    return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
-  }, [record]);
-
   return (
-    <div className="season-result">
-      <StandingsTable standings={record.standings} leagueName={record.league_name} />
-
-      <button className="link-button" onClick={onToggleMatches}>
-        {showMatches ? "[ ESCONDER PARTIDAS ]" : "[ MOSTRAR PARTIDAS ]"}
-      </button>
-
-      {showMatches && (
-        <div className="rounds">
-          {byRound.map(([round, indices]) => (
-            <Card key={round} title={`RODADA ${round + 1}`}>
-              {indices.map((i) => {
-                const m = record.matches[i];
-                const home = teamById(m.home)?.name ?? `Time ${m.home}`;
-                const away = teamById(m.away)?.name ?? `Time ${m.away}`;
-                return (
-                  <div key={i} className="round-match">
-                    {pad(home, 30)}
-                    {"  "}
-                    <span className="round-match__score">
-                      {String(m.result.home_goals).padStart(2)}
-                      {" - "}
-                      {String(m.result.away_goals).padEnd(2)}
-                    </span>
-                    {"  "}
-                    {pad(away, 30, "L")}
-                  </div>
-                );
-              })}
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+    <Card title="ESCOLHA SEU TIME">
+      <p className="muted">
+        Temporada {record.league_name} simulada. Escolha qual time você quer controlar:
+      </p>
+      <div className="team-picker">
+        {record.standings.map((s) => {
+          const t = teamById(s.team_id);
+          const label = t?.name ?? `Time ${s.team_id}`;
+          return (
+            <button
+              key={s.team_id}
+              type="button"
+              className="btn team-picker__btn"
+              onClick={() => onConfirm(s.team_id)}
+            >
+              [ {label} ]
+            </button>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
-function pad(v: string | number, w: number, dir: "L" | "R" = "R"): string {
-  return dir === "L" ? String(v).padEnd(w) : String(v).padStart(w);
-}
-
-const COL_GAP = "  ";
-
-function StandingsTable({
-  standings,
-  leagueName,
+// ─── Phase: running ─────────────────────────────────────────────────────────
+// Placeholder for the per-round reveal screen that lands in C3.2. Shows just
+// enough metadata to confirm autoload + save state are wired correctly.
+function CampeonatoEmCurso({
+  saved,
+  onReset,
 }: {
-  standings: TeamStats[];
-  leagueName: string;
+  saved: SavedSeason;
+  onReset: () => void;
 }) {
-  const headerLine = [
-    pad("POS", 3),
-    pad("TIME", 24, "L"),
-    pad("P", 3),
-    pad("V", 3),
-    pad("E", 3),
-    pad("D", 3),
-    pad("GP", 3),
-    pad("GC", 3),
-    pad("SG", 4),
-    pad("PTS", 3),
-  ].join(COL_GAP);
-
-  const dividerLine = [
-    "───",
-    "─".repeat(24),
-    "──",
-    "──",
-    "──",
-    "──",
-    "──",
-    "──",
-    "───",
-    "──",
-  ].map((s, i) => (i === 1 ? s : pad(s, [3, 24, 3, 3, 3, 3, 3, 3, 4, 3][i])))
-    .join(COL_GAP);
+  const team = teamById(saved.controlledTeamId);
+  const teamName = team?.name ?? `Time ${saved.controlledTeamId}`;
+  const totalRounds =
+    saved.record.fixtures.length === 0
+      ? 0
+      : Math.max(...saved.record.fixtures.map((f) => f.round)) + 1;
 
   return (
-    <Card title={`TABELA — ${leagueName}`}>
-      <pre className="standings">
-        <span className="standings-dim">{headerLine}</span>
-        {"\n"}
-        <span className="standings-dim">{dividerLine}</span>
-        {"\n"}
-        {standings.map((s, i) => {
-          const team = teamById(s.team_id);
-          const name = team?.name ?? `Time ${s.team_id}`;
-          const gd = goalDifference(s);
-          const gdStr = gd > 0 ? `+${gd}` : String(gd);
-          const pts = points(s);
-          const hi = i === 0 ? "standings-hi" : "";
-          return (
-            <span key={s.team_id}>
-              {pad(`${i + 1}.`, 3)}
-              {COL_GAP}
-              <span className={hi}>{pad(name, 24, "L")}</span>
-              {COL_GAP}
-              {pad(s.played, 3)}
-              {COL_GAP}
-              {pad(s.won, 3)}
-              {COL_GAP}
-              {pad(s.drawn, 3)}
-              {COL_GAP}
-              {pad(s.lost, 3)}
-              {COL_GAP}
-              {pad(s.goals_for, 3)}
-              {COL_GAP}
-              {pad(s.goals_against, 3)}
-              {COL_GAP}
-              {pad(gdStr, 4)}
-              {COL_GAP}
-              <span className={hi}>{pad(pts, 3)}</span>
-              {"\n"}
-            </span>
-          );
-        })}
+    <Card title="CAMPEONATO EM CURSO">
+      <pre className="campeonato-meta">
+        {`Liga              : ${saved.record.league_name}\n`}
+        {`Semente           : ${saved.seed.toString()}\n`}
+        {`Time controlado   : ${teamName}\n`}
+        {`Rodada atual      : ${saved.currentRoundIdx} / ${totalRounds}`}
       </pre>
+      <p className="muted">Tela de rodada chega no C3.2.</p>
+      <div className="form-actions">
+        <button type="button" className="btn" onClick={onReset}>
+          [ NOVA TEMPORADA ]
+        </button>
+      </div>
     </Card>
   );
 }
