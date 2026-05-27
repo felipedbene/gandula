@@ -54,7 +54,7 @@ html, body {
 
 /* Brief: "Fixed-width 80-column desktop layout. No mobile responsive in v1."
    Force body to at least 80 cols (720px @ 16px). On narrower viewports the
-   browser shows a horizontal scrollbar instead of squeezing the AsciiBoxes. */
+   browser shows a horizontal scrollbar instead of squeezing the cards. */
 body {
   min-width: calc(var(--char-w) * 80);
 }
@@ -106,45 +106,6 @@ body {
   max-width: calc(var(--char-w) * 80);
   margin: 0 auto;
   padding: 24px var(--char-w);
-}
-
-.ascii-box {
-  color: var(--fg-dim);
-  margin-bottom: 12px;
-}
-
-.ascii-box__top,
-.ascii-box__bottom,
-.ascii-box__divider {
-  white-space: pre;
-}
-
-.ascii-box__title {
-  color: var(--fg-hi);
-  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
-}
-
-.ascii-box__body {
-  position: relative;
-  padding: 0 calc(var(--char-w) * 2);
-  min-height: calc(var(--font-size) * var(--line-height));
-}
-
-.ascii-box__edge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  white-space: pre;
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-}
-
-.ascii-box__edge--left { left: 0; }
-.ascii-box__edge--right { right: 0; }
-
-.ascii-box__content {
-  color: var(--fg);
 }
 
 .muted {

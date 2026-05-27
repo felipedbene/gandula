@@ -3,7 +3,7 @@ import { run_season } from "../wasm/gandula_wasm.js";
 import { SAMPLE_TEAMS, teamById } from "../teams";
 import type { SeasonRecord, TeamStats } from "../types";
 import { goalDifference, points } from "../types";
-import { AsciiBox } from "./AsciiBox";
+import Card from "../srcl/Card";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
@@ -47,7 +47,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 
   return (
     <div className="season-view">
-      <AsciiBox title="NOVA TEMPORADA">
+      <Card title="NOVA TEMPORADA">
         <form
           className="form"
           onSubmit={(e) => {
@@ -90,7 +90,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             </button>
           </div>
         </form>
-      </AsciiBox>
+      </Card>
 
       {error && <pre className="error">{error}</pre>}
 
@@ -129,7 +129,7 @@ function SeasonResult({
       {showMatches && (
         <div className="rounds">
           {byRound.map(([round, indices]) => (
-            <AsciiBox key={round} title={`RODADA ${round + 1}`}>
+            <Card key={round} title={`RODADA ${round + 1}`}>
               {indices.map((i) => {
                 const m = record.matches[i];
                 const home = teamById(m.home)?.name ?? `Time ${m.home}`;
@@ -148,7 +148,7 @@ function SeasonResult({
                   </div>
                 );
               })}
-            </AsciiBox>
+            </Card>
           ))}
         </div>
       )}
@@ -197,7 +197,7 @@ function StandingsTable({
     .join(COL_GAP);
 
   return (
-    <AsciiBox title={`TABELA — ${leagueName}`}>
+    <Card title={`TABELA — ${leagueName}`}>
       <pre className="standings">
         <span className="standings-dim">{headerLine}</span>
         {"\n"}
@@ -236,6 +236,6 @@ function StandingsTable({
           );
         })}
       </pre>
-    </AsciiBox>
+    </Card>
   );
 }
