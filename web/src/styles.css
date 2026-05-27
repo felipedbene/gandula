@@ -105,7 +105,10 @@ body {
 .app {
   max-width: calc(var(--char-w) * 80);
   margin: 0 auto;
-  padding: 24px var(--char-w);
+  /* Extra bottom padding so the fixed PULAR bar (during reveal) and the
+     fixed status bar don't cover content when scrolled to the end.
+     ~88px = ~36px PULAR row + ~28px status + breathing room. */
+  padding: 24px var(--char-w) 88px;
 }
 
 .muted {
@@ -238,7 +241,10 @@ fieldset legend {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 480px;
+  /* Altura fixa em 20 linhas — janela tipo terminal Elifoot. Events rolam
+     DENTRO deste container; página em volta não dança conforme novos events
+     chegam. Auto-scroll no JS (MatchReveal) mantém o último event visível. */
+  height: calc(var(--line-height) * 20 * var(--font-size));
   overflow-y: auto;
 }
 
@@ -339,7 +345,17 @@ fieldset legend {
 }
 
 .status {
-  margin-top: 16px;
+  /* Pinned to viewport bottom so it stays in place regardless of how tall
+     the page content grows during reveal / season views. The CRT scanlines
+     and vignette (z-index 2/3 on .crt::before / ::after) still paint over
+     it — no z-index here, the bar stays part of the screen treatment. */
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 4px var(--char-w);
+  background: var(--bg);
   color: var(--fg-dim);
 }
 
@@ -445,6 +461,20 @@ fieldset legend {
 .form-actions--pair {
   justify-content: center;
   gap: calc(var(--char-w) * 2);
+}
+
+/* PULAR row during reveal — pinned to viewport bottom just above the
+   fixed status bar so it's always reachable even when feed + OUTROS JOGOS
+   push the page past the viewport. Solid bg so content scrolling underneath
+   is hidden. Like .status, no z-index — the CRT scanlines paint over. */
+.form-actions--reveal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  margin: 0;
+  padding: 8px var(--char-w);
+  background: var(--bg);
 }
 
 /* C3.4 finale ─────────────────────────────────────────────────────────────── */

@@ -18,10 +18,10 @@ export const HALFTIME_PAUSE_MS = 1500;
 
 type MatchRevealProps = {
   match: Match;
-  /** Fires once when reveal completes (naturally or via skipAll). When set,
-   *  the internal [ PULAR ] button is suppressed — parent owns the skip
-   *  control (e.g. RevealRound during AVANÇAR). */
-  onComplete?: () => void;
+  /** Fires once when reveal completes (naturally or via skipAll). The parent
+   *  owns the skip control (RevealRound's [ PULAR ] covers user-match +
+   *  parallel matches together). */
+  onComplete: () => void;
   /** External skip signal. Flipping to `true` jumps reveal to the end and
    *  triggers onComplete on the next tick. */
   skipAll?: boolean;
@@ -60,9 +60,18 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   useEffect(() => {
     if (!completedRef.current && revealed >= match.events.length && match.events.length > 0) {
       completedRef.current = true;
-      onComplete?.();
+      onComplete();
     }
   }, [revealed, match.events.length, onComplete]);
+
+  // Keep the most recent event in view as new ones land. Effect fires after
+  // React commits the new <li>, so scrollHeight already reflects it.
+  const feedRef = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    if (feedRef.current) {
+      feedRef.current.scrollTop = feedRef.current.scrollHeight;
+    }
+  }, [revealed]);
 
   const visible = match.events.slice(0, revealed);
   const runningHome = visible.filter(
@@ -75,13 +84,10 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   const title =
     `${home.toUpperCase()}  ${runningHome} x ${runningAway}  ${away.toUpperCase()}  ${clock}'`;
 
-  const isPlaying = revealed < match.events.length;
-  const skip = () => setRevealed(match.events.length);
-
   return (
     <div className="match-result">
       <CardDouble title={title}>
-        <ol className="feed">
+        <ol className="feed" ref={feedRef}>
           {visible.map((e, i) => {
             const side = e.side === "Away" ? " event--away" : "";
             const klass = `event ${eventClass(e)}${side}`;
@@ -106,14 +112,6 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
           })}
         </ol>
       </CardDouble>
-      {/* Standalone use shows its own PULAR. When `onComplete` is provided
-          the parent owns the skip control (so a season-level button can
-          skip user-match + parallel matches together). */}
-      {isPlaying && onComplete === undefined && (
-        <button className="btn" onClick={skip}>
-          [ PULAR ]
-        </button>
-      )}
     </div>
   );
 }
