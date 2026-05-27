@@ -20,6 +20,7 @@ import {
   topScorer,
 } from "../util/season-stats";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
+import { computePromotionRelegation } from "../util/promotion";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -568,6 +569,15 @@ function SeasonFinale({
     () => cardLeader(userDiv.record, playerLookup),
     [userDiv.record, playerLookup],
   );
+  // Promotion/relegation is computed from BOTH divisions' final standings,
+  // so it lives outside the per-division stat helpers above. The helper
+  // throws if either division isn't done — at SeasonFinale time both
+  // always are (Série A finishes round 14 < user's Série B 18), but the
+  // throw is a defensive guarantee for E.1.c when the user can be in
+  // either tier.
+  const prResult = useMemo(() => computePromotionRelegation(saved), [saved]);
+  const tierASize =
+    saved.divisions.find((d) => d.tier === 1)?.record.standings.length ?? 0;
 
   return (
     <>
@@ -621,6 +631,58 @@ function SeasonFinale({
               {userStats.lost}D
             </li>
           )}
+        </ul>
+      </Card>
+
+      <Card title="PROMOÇÃO E REBAIXAMENTO">
+        {prResult.userPromoted && (
+          <p className="pr-banner pr-banner--promoted">
+            *** SEU TIME SUBIU PARA A SÉRIE A! ***
+          </p>
+        )}
+        {prResult.userRelegated && (
+          <p className="pr-banner pr-banner--relegated">
+            *** SEU TIME FOI REBAIXADO PARA A SÉRIE B ***
+          </p>
+        )}
+
+        <p className="pr-section-title">▲ SOBEM PARA A SÉRIE A:</p>
+        <ul className="pr-list">
+          {prResult.promoted.map((s, i) => {
+            const team = teamById(s.team_id);
+            const name = team?.name ?? `Time ${s.team_id}`;
+            const isUser = s.team_id === saved.controlledTeamId;
+            return (
+              <li
+                key={s.team_id}
+                className={isUser ? "pr-list__item standings-hi" : "pr-list__item"}
+              >
+                {i + 1}º {name} ({points(s)} pts)
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="pr-section-title">▼ DESCEM PARA A SÉRIE B:</p>
+        <ul className="pr-list">
+          {prResult.relegated.map((s, i) => {
+            const team = teamById(s.team_id);
+            const name = team?.name ?? `Time ${s.team_id}`;
+            const isUser = s.team_id === saved.controlledTeamId;
+            // Position in Série A's standings: with 8 teams and 2 relegated,
+            // relegated[0] is 7º, relegated[1] is 8º. Derive from tier A's
+            // standings length so the same code works if RELEGATION_SLOTS
+            // ever changes.
+            const positionInTierA = tierASize - prResult.relegated.length + i + 1;
+            return (
+              <li
+                key={s.team_id}
+                className={isUser ? "pr-list__item standings-hi" : "pr-list__item"}
+              >
+                {positionInTierA}º {name} ({points(s)} pts)
+              </li>
+            );
+          })}
         </ul>
       </Card>
 

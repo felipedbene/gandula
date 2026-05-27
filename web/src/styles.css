@@ -580,6 +580,50 @@ fieldset legend {
   margin: 4px 0;
 }
 
+/* E.1.b — Promotion / Relegation card on SeasonFinale ─────────────────────── */
+
+/* Top-of-card banner highlighting the user's outcome. Centered, bold,
+   bracket-emphasis matching the existing CAMPEÃO body register. The
+   promoted variant reuses --accent-gol (the same green the engine uses
+   for goal events and champion text — semantic "good thing"); the
+   relegated variant uses --accent-red. */
+.pr-banner {
+  text-align: center;
+  margin: 4px 0 12px 0;
+  font-weight: bold;
+}
+
+.pr-banner--promoted {
+  color: var(--accent-gol);
+  text-shadow: 0 0 4px var(--accent-gol);
+}
+
+.pr-banner--relegated {
+  color: var(--accent-red);
+  text-shadow: 0 0 4px var(--accent-red);
+}
+
+/* Section heading inside the card — "▲ SOBEM…" / "▼ DESCEM…". Dim
+   register, small top margin so the two lists read as separate blocks. */
+.pr-section-title {
+  margin: 8px 0 4px 0;
+  color: var(--fg-dim);
+}
+
+/* Promoted / relegated team list — flat, no bullets (the ▲/▼ arrows
+   already mark the section). Position prefixes the row. User's row gets
+   .standings-hi appended in the JSX so the highlight stays consistent
+   with the StandingsTable below. */
+.pr-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px 0;
+}
+
+.pr-list__item {
+  padding: 1px 0;
+}
+
 /* D.1.f — Bench editor (BANCO section header + ADICIONAR JOGADOR area) */
 
 /* Section header sitting above the bench list, with the count fraction
