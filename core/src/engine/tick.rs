@@ -45,7 +45,32 @@ pub const CARD_NONE: f64 = 0.70;
 pub const CARD_YELLOW: f64 = 0.25;
 pub const CARD_RED: f64 = 0.05;
 
+/// Probability that a foul is "inside the box" and therefore awarded as a
+/// penalty. With foul rate ≈ 0.027/min × 95 min ≈ 2.7 fouls per match,
+/// 0.04 → ~1 penalty every 9 matches, inside the 8–12 range the brief asked
+/// for. If `stronger_wins.rs` starts failing because penalties skew toward
+/// weaker teams (they tend to defend more, foul more in their own box —
+/// realistic but tilts a balance-test), the right response is to surface
+/// that tension in a code comment, not silently lower this constant.
+pub const PENALTY_FOUL_RATE: f64 = 0.04;
+
+/// Base conversion rate for a taken penalty, adjusted by the taker's
+/// finishing minus the keeper's defending. Real-world penalty conversion
+/// hovers around 75%; this stays in that neighborhood after clamping.
+pub const PENALTY_CONVERSION_BASE: f64 = 0.75;
+pub const PENALTY_CONVERSION_SCALE: f64 = 0.005;
+pub const PENALTY_CONVERSION_MIN: f64 = 0.50;
+pub const PENALTY_CONVERSION_MAX: f64 = 0.95;
+
 // ─── State ──────────────────────────────────────────────────────────────────
+/// Penalty awarded last tick, kick to be taken next tick. The intervening
+/// minute is the dramatic beat between award and outcome.
+#[derive(Clone, Copy)]
+pub(crate) struct PendingPenalty {
+    pub side: Side,
+    pub taker: PlayerId,
+}
+
 pub(crate) struct MatchState<'a> {
     pub home: &'a Team,
     pub away: &'a Team,
@@ -64,6 +89,9 @@ pub(crate) struct MatchState<'a> {
     pub home_goals: u8,
     pub away_goals: u8,
     pub events: Vec<MatchEvent>,
+    /// Penalty awarded in the previous tick, resolved at the start of the
+    /// next tick. `None` outside the one-minute resolution window.
+    pub pending_penalty: Option<PendingPenalty>,
 }
 
 impl<'a> MatchState<'a> {
@@ -98,6 +126,7 @@ impl<'a> MatchState<'a> {
             home_goals: 0,
             away_goals: 0,
             events: Vec::new(),
+            pending_penalty: None,
         }
     }
 
@@ -118,6 +147,13 @@ impl<'a> MatchState<'a> {
 // ─── Per-tick drive ─────────────────────────────────────────────────────────
 pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     drain_stamina(state);
+
+    // A pending penalty awarded last tick consumes this entire minute —
+    // play is stopped while the kick is taken, no other events fire.
+    if let Some(pen) = state.pending_penalty.take() {
+        resolve_penalty(state, rng, minute, pen);
+        return;
+    }
 
     let home_str = current_strength(state, Side::Home);
     let away_str = current_strength(state, Side::Away);
@@ -297,6 +333,99 @@ fn goalkeeper<'a>(
         }
     }
     None
+}
+
+// ─── Penalty taker + resolution ─────────────────────────────────────────────
+/// Best available finisher on `side` — picks the on-field outfielder with the
+/// highest `finishing` attribute. Designated-taker logic (team-defined kicker)
+/// is future work; for v1 the algorithmic best-finisher is plenty.
+fn pick_penalty_taker(state: &MatchState, side: Side) -> Option<PlayerId> {
+    let (team, current_xi, on_field) = match side {
+        Side::Home => (state.home, &state.home_current_xi, &state.home_on_field),
+        Side::Away => (state.away, &state.away_current_xi, &state.away_on_field),
+    };
+    let mut best: Option<(PlayerId, u8)> = None;
+    for (i, id) in current_xi.iter().enumerate() {
+        if !on_field[i] {
+            continue;
+        }
+        let Some(p) = team.lookup(*id) else { continue };
+        if p.position == Position::GK {
+            continue;
+        }
+        if best
+            .map(|(_, f)| p.attributes.finishing > f)
+            .unwrap_or(true)
+        {
+            best = Some((*id, p.attributes.finishing));
+        }
+    }
+    best.map(|(id, _)| id)
+}
+
+fn resolve_penalty(
+    state: &mut MatchState,
+    rng: &mut MatchRng,
+    minute: u16,
+    pen: PendingPenalty,
+) {
+    let (att_team, def_team, def_current_xi, def_on_field) = match pen.side {
+        Side::Home => (
+            state.home,
+            state.away,
+            state.away_current_xi,
+            state.away_on_field,
+        ),
+        Side::Away => (
+            state.away,
+            state.home,
+            state.home_current_xi,
+            state.home_on_field,
+        ),
+    };
+    let Some(taker) = att_team.lookup(pen.taker) else {
+        return;
+    };
+    let gk = goalkeeper(def_team, &def_current_xi, &def_on_field);
+    let keeper_def = gk.map(|g| g.attributes.defending as f64).unwrap_or(50.0);
+    let keeper_name = gk.map(|g| g.name.clone()).unwrap_or_else(|| "o goleiro".to_string());
+    let taker_name = taker.name.clone();
+    let team_name = att_team.name.clone();
+
+    let mut conv_p = PENALTY_CONVERSION_BASE
+        + (taker.attributes.finishing as f64 - keeper_def) * PENALTY_CONVERSION_SCALE;
+    if conv_p < PENALTY_CONVERSION_MIN {
+        conv_p = PENALTY_CONVERSION_MIN;
+    } else if conv_p > PENALTY_CONVERSION_MAX {
+        conv_p = PENALTY_CONVERSION_MAX;
+    }
+
+    if rng.chance(conv_p) {
+        match pen.side {
+            Side::Home => state.home_goals = state.home_goals.saturating_add(1),
+            Side::Away => state.away_goals = state.away_goals.saturating_add(1),
+        }
+        let ctx = ctx_for(state, pen.side, minute);
+        let text = narration::narrate_penalty_scored(&ctx, rng, minute, &team_name, &taker_name);
+        state.events.push(MatchEvent {
+            minute,
+            side: Some(pen.side),
+            kind: MatchEventKind::Goal {
+                scorer: pen.taker,
+                assist: None,
+            },
+            text,
+        });
+    } else {
+        let ctx = ctx_for(state, pen.side, minute);
+        let text = narration::narrate_penalty_missed(&ctx, rng, minute, &taker_name, &keeper_name);
+        state.events.push(MatchEvent {
+            minute,
+            side: Some(pen.side),
+            kind: MatchEventKind::PenaltyMissed { taker: pen.taker },
+            text,
+        });
+    }
 }
 
 // ─── Shot resolution ────────────────────────────────────────────────────────
@@ -483,6 +612,34 @@ fn resolve_foul(state: &mut MatchState, rng: &mut MatchRng, minute: u16, attacke
         },
         text: foul_text,
     });
+
+    // Penalty check: a small fraction of fouls are "inside the box" and get
+    // awarded as penalties. The penalty replaces the card roll for this foul
+    // (real football routes the consequence to the spot kick, not a yellow).
+    if rng.chance(PENALTY_FOUL_RATE) {
+        if let Some(taker_id) = pick_penalty_taker(state, attacker_side) {
+            let taker_team = team_for(state, attacker_side);
+            let taker_name = taker_team
+                .lookup(taker_id)
+                .map(|p| p.name.clone())
+                .unwrap_or_default();
+            let pen_ctx = ctx_for(state, attacker_side, minute);
+            let text = narration::narrate_penalty_awarded(&pen_ctx, rng, minute, &taker_name);
+            state.events.push(MatchEvent {
+                minute,
+                side: Some(attacker_side),
+                kind: MatchEventKind::PenaltyAwarded { taker: taker_id },
+                text,
+            });
+            state.pending_penalty = Some(PendingPenalty {
+                side: attacker_side,
+                taker: taker_id,
+            });
+            return;
+        }
+        // No eligible taker (degenerate case — all FWDs/MIDs off, GK only):
+        // fall through to regular card logic so the foul still gets resolved.
+    }
 
     let r = rng.unit();
     let pressing_bias = match def_team.tactics.pressing {

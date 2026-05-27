@@ -152,6 +152,76 @@ pub(crate) fn narrate_red(
     }
 }
 
+// ─── Penalty — awarded (referee points to the spot) ────────────────────────
+// Late and tied/losing situations get their own register; otherwise default.
+pub(crate) fn narrate_penalty_awarded(
+    ctx: &NarrationContext,
+    rng: &mut MatchRng,
+    minute: u16,
+    taker: &str,
+) -> String {
+    if ctx.is_late() && ctx.score_diff <= 0 {
+        // 85'+ and tied or trailing — every clock-tick matters
+        return match rng.range_u32(0, 2) {
+            0 => format!("{minute}' PÊNALTI! Decisivo, no fim! {taker} vai pra cobrança..."),
+            _ => format!("{minute}' PÊNALTI NO FIM! Tudo nas mãos de {taker}..."),
+        };
+    }
+    match rng.range_u32(0, 3) {
+        0 => format!("{minute}' Pênalti! O árbitro aponta para a marca. {taker} pega a bola..."),
+        1 => format!("{minute}' PÊNALTI! {taker} se prepara para a cobrança..."),
+        _ => format!("{minute}' É pênalti! {taker} ajeita a bola na marca da cal..."),
+    }
+}
+
+// ─── Penalty — missed (saved or off target, merged at the data layer) ───────
+// Three of the four phrasings frame a save; one frames "off target" — keeps
+// the saved-penalty drama density above generic-save narration without forcing
+// the data variant to branch.
+pub(crate) fn narrate_penalty_missed(
+    _ctx: &NarrationContext,
+    rng: &mut MatchRng,
+    minute: u16,
+    taker: &str,
+    keeper: &str,
+) -> String {
+    match rng.range_u32(0, 4) {
+        0 => format!("{minute}' PEGOU! {keeper} defende o pênalti de {taker}!"),
+        1 => format!("{minute}' QUE DEFESA! {keeper} voa e agarra a cobrança de {taker}!"),
+        2 => format!("{minute}' {taker} bate fraco... {keeper} pega sem dificuldade."),
+        _ => format!("{minute}' PRA FORA! {taker} manda por cima do gol!"),
+    }
+}
+
+// ─── Penalty — scored (emitted as a Goal kind, but narrated as a penalty) ──
+// Late equalizer / late winner remain salient; default register leans on the
+// "balança a rede da marca da cal" register specific to penalties.
+pub(crate) fn narrate_penalty_scored(
+    ctx: &NarrationContext,
+    rng: &mut MatchRng,
+    minute: u16,
+    team: &str,
+    taker: &str,
+) -> String {
+    if ctx.is_late() && ctx.score_diff == 0 {
+        return match rng.range_u32(0, 2) {
+            0 => format!("{minute}' GOOOL DE PÊNALTI! {taker} empata pro {team} no fim!"),
+            _ => format!("{minute}' É EMPATE! {taker} converte a cobrança nos acréscimos!"),
+        };
+    }
+    if ctx.is_late() && ctx.score_diff == 1 {
+        return match rng.range_u32(0, 2) {
+            0 => format!("{minute}' GOOOL DE PÊNALTI! {taker} desempata pro {team}!"),
+            _ => format!("{minute}' {taker} bate firme da marca da cal! {team} VIRA NO FIM!"),
+        };
+    }
+    match rng.range_u32(0, 3) {
+        0 => format!("{minute}' GOOOL! {taker} converte o pênalti pro {team}!"),
+        1 => format!("{minute}' BALANÇA A REDE! {taker} bate firme no canto. Gol de {team}!"),
+        _ => format!("{minute}' {taker} cobra com categoria! Gol de pênalti pro {team}!"),
+    }
+}
+
 // ─── Substitution ───────────────────────────────────────────────────────────
 // Commit 1 ships 2 phrasings (satisfies the "every existing event gets ≥1
 // variant" rule). Commit 3 expands this to 3–4 when the near-miss work lands.

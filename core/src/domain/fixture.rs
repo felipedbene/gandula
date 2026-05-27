@@ -42,6 +42,17 @@ pub enum MatchEventKind {
         off: PlayerId,
         on: PlayerId,
     },
+    /// Referee has pointed to the spot — taker named, no outcome yet. Always
+    /// paired with either a `Goal` or a `PenaltyMissed` event one tick later.
+    PenaltyAwarded {
+        taker: PlayerId,
+    },
+    /// Penalty kick taken but didn't result in a goal — either saved or off
+    /// target. The narration string distinguishes which; the data model keeps
+    /// them merged because no consumer needs to branch on the difference yet.
+    PenaltyMissed {
+        taker: PlayerId,
+    },
     HalfTime,
     FullTime,
 }

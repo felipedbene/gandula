@@ -57,6 +57,8 @@ export type MatchEventKind =
   | { YellowCard: { player: number } }
   | { RedCard: { player: number } }
   | { Substitution: { off: number; on: number } }
+  | { PenaltyAwarded: { taker: number } }
+  | { PenaltyMissed: { taker: number } }
   | "HalfTime"
   | "FullTime";
 
