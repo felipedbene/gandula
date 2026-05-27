@@ -1,0 +1,257 @@
+{
+  "id": 287,
+  "name": "Imperial do Vale",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    28701,
+    28702,
+    28703,
+    28704,
+    28705,
+    28706,
+    28707,
+    28708,
+    28709,
+    28710,
+    28711
+  ],
+  "bench": [
+    28712,
+    28713,
+    28714,
+    28715,
+    28716
+  ],
+  "roster": [
+    {
+      "id": 28701,
+      "name": "Aristides Soares",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 41,
+        "technique": 52,
+        "passing": 58,
+        "defending": 75,
+        "finishing": 46,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 28702,
+      "name": "Zacarias Zaluar",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 71,
+        "technique": 70,
+        "passing": 69,
+        "defending": 74,
+        "finishing": 64,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 28703,
+      "name": "Tarsílio Barros",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 66,
+        "passing": 62,
+        "defending": 74,
+        "finishing": 48,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 28704,
+      "name": "Edson Barros",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 72,
+        "passing": 67,
+        "defending": 72,
+        "finishing": 53,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 28705,
+      "name": "Edmílson Barros",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 42,
+        "technique": 72,
+        "passing": 73,
+        "defending": 74,
+        "finishing": 19,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 28706,
+      "name": "Salvador Fonseca",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 68,
+        "passing": 70,
+        "defending": 75,
+        "finishing": 57,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 28707,
+      "name": "Otávio Almeida",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 80,
+        "technique": 74,
+        "passing": 72,
+        "defending": 43,
+        "finishing": 68,
+        "stamina": 57
+      }
+    },
+    {
+      "id": 28708,
+      "name": "Otacílio Lacerda",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 67,
+        "passing": 71,
+        "defending": 52,
+        "finishing": 66,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 28709,
+      "name": "Olavo Valença",
+      "age": 36,
+      "position": "MID",
+      "attributes": {
+        "pace": 81,
+        "technique": 75,
+        "passing": 71,
+        "defending": 44,
+        "finishing": 71,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 28710,
+      "name": "Carlos Esteves",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 73,
+        "passing": 70,
+        "defending": 68,
+        "finishing": 58,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 28711,
+      "name": "Rafael Sampaio",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 76,
+        "passing": 73,
+        "defending": 37,
+        "finishing": 70,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 28712,
+      "name": "Wesley Falcão",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 16,
+        "technique": 73,
+        "passing": 69,
+        "defending": 68,
+        "finishing": 23,
+        "stamina": 25
+      }
+    },
+    {
+      "id": 28713,
+      "name": "Bebeto Quintão",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 57,
+        "passing": 71,
+        "defending": 66,
+        "finishing": 55,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 28714,
+      "name": "Donizete Barros",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 80,
+        "technique": 72,
+        "passing": 68,
+        "defending": 38,
+        "finishing": 58,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 28715,
+      "name": "Ronaldo Costa",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 61,
+        "technique": 37,
+        "passing": 47,
+        "defending": 70,
+        "finishing": 34,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 28716,
+      "name": "Olavo Resende",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 69,
+        "technique": 66,
+        "passing": 67,
+        "defending": 64,
+        "finishing": 51,
+        "stamina": 72
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 73,
+  "name": "Atlético Madri",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    7301,
+    7302,
+    7303,
+    7304,
+    7305,
+    7306,
+    7307,
+    7308,
+    7309,
+    7310,
+    7311
+  ],
+  "bench": [
+    7312,
+    7313,
+    7314,
+    7315,
+    7316
+  ],
+  "roster": [
+    {
+      "id": 7301,
+      "name": "Edmílson Esteves",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 81,
+        "passing": 65,
+        "defending": 28,
+        "finishing": 79,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 7302,
+      "name": "Edson Barros",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 81,
+        "passing": 71,
+        "defending": 32,
+        "finishing": 71,
+        "stamina": 54
+      }
+    },
+    {
+      "id": 7303,
+      "name": "Bruno Werneck",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 70,
+        "passing": 70,
+        "defending": 73,
+        "finishing": 68,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 7304,
+      "name": "Bruno Iglesias",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 64,
+        "passing": 66,
+        "defending": 74,
+        "finishing": 44,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 7305,
+      "name": "Júnior Lacerda",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 61,
+        "technique": 63,
+        "passing": 67,
+        "defending": 71,
+        "finishing": 53,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 7306,
+      "name": "Igor Barros",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 65,
+        "technique": 63,
+        "passing": 65,
+        "defending": 70,
+        "finishing": 54,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 7307,
+      "name": "Bebeto Fonseca",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 68,
+        "passing": 65,
+        "defending": 72,
+        "finishing": 51,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 7308,
+      "name": "Rafael Nogueira",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 24,
+        "technique": 72,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 20,
+        "stamina": 35
+      }
+    },
+    {
+      "id": 7309,
+      "name": "Ferraz Espíndola",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 64,
+        "technique": 68,
+        "passing": 60,
+        "defending": 29,
+        "finishing": 73,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 7310,
+      "name": "Paulo Werneck",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 74,
+        "passing": 73,
+        "defending": 42,
+        "finishing": 64,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 7311,
+      "name": "Júnior Espíndola",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 73,
+        "passing": 73,
+        "defending": 36,
+        "finishing": 65,
+        "stamina": 46
+      }
+    },
+    {
+      "id": 7312,
+      "name": "Nélson Andrade",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 71,
+        "passing": 62,
+        "defending": 68,
+        "finishing": 44,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 7313,
+      "name": "Gustavo Guimarães",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 56,
+        "passing": 58,
+        "defending": 72,
+        "finishing": 46,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 7314,
+      "name": "Bruno Uchôa",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 57,
+        "passing": 65,
+        "defending": 72,
+        "finishing": 52,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 7315,
+      "name": "Gervásio Zampieri",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 50,
+        "technique": 60,
+        "passing": 63,
+        "defending": 66,
+        "finishing": 49,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 7316,
+      "name": "Fernando Fonseca",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 70,
+        "passing": 62,
+        "defending": 33,
+        "finishing": 62,
+        "stamina": 56
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 161,
+  "name": "Sertão EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    16101,
+    16102,
+    16103,
+    16104,
+    16105,
+    16106,
+    16107,
+    16108,
+    16109,
+    16110,
+    16111
+  ],
+  "bench": [
+    16112,
+    16113,
+    16114,
+    16115,
+    16116
+  ],
+  "roster": [
+    {
+      "id": 16101,
+      "name": "Igor Werneck",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 76,
+        "passing": 76,
+        "defending": 82,
+        "finishing": 57,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 16102,
+      "name": "Aristides Galvão",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 78,
+        "passing": 72,
+        "defending": 77,
+        "finishing": 51,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 16103,
+      "name": "Geraldo Wanderley",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 69,
+        "passing": 64,
+        "defending": 31,
+        "finishing": 82,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 16104,
+      "name": "Marquinhos Lopes",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 44,
+        "technique": 70,
+        "passing": 77,
+        "defending": 74,
+        "finishing": 21,
+        "stamina": 42
+      }
+    },
+    {
+      "id": 16105,
+      "name": "Mauro Werneck",
+      "age": 36,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 65,
+        "passing": 70,
+        "defending": 74,
+        "finishing": 49,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 16106,
+      "name": "Rafael Lacerda",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 72,
+        "passing": 68,
+        "defending": 74,
+        "finishing": 45,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 16107,
+      "name": "Ferraz Lacerda",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 73,
+        "passing": 62,
+        "defending": 29,
+        "finishing": 74,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 16108,
+      "name": "Daniel Justino",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 63,
+        "technique": 73,
+        "passing": 73,
+        "defending": 61,
+        "finishing": 71,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 16109,
+      "name": "Otávio Andrade",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 48,
+        "technique": 63,
+        "passing": 70,
+        "defending": 74,
+        "finishing": 46,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 16110,
+      "name": "Roque Uchôa",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 69,
+        "passing": 62,
+        "defending": 69,
+        "finishing": 48,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 16111,
+      "name": "Roque Ribeiro",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 73,
+        "passing": 69,
+        "defending": 58,
+        "finishing": 66,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 16112,
+      "name": "Marcelo Bittencourt",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 76,
+        "passing": 64,
+        "defending": 43,
+        "finishing": 71,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 16113,
+      "name": "Edson Junqueira",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 63,
+        "technique": 61,
+        "passing": 64,
+        "defending": 71,
+        "finishing": 50,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 16114,
+      "name": "Carlos Lopes",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 57,
+        "technique": 71,
+        "passing": 73,
+        "defending": 64,
+        "finishing": 69,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 16115,
+      "name": "Antônio Soares",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 35,
+        "technique": 70,
+        "passing": 74,
+        "defending": 70,
+        "finishing": 17,
+        "stamina": 41
+      }
+    },
+    {
+      "id": 16116,
+      "name": "João Esteves",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 71,
+        "technique": 70,
+        "passing": 69,
+        "defending": 46,
+        "finishing": 70,
+        "stamina": 64
+      }
+    }
+  ]
+}

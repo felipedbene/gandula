@@ -1,0 +1,257 @@
+{
+  "id": 168,
+  "name": "Fluminato",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    16801,
+    16802,
+    16803,
+    16804,
+    16805,
+    16806,
+    16807,
+    16808,
+    16809,
+    16810,
+    16811
+  ],
+  "bench": [
+    16812,
+    16813,
+    16814,
+    16815,
+    16816
+  ],
+  "roster": [
+    {
+      "id": 16801,
+      "name": "João Mascarenhas",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 52,
+        "technique": 77,
+        "passing": 77,
+        "defending": 76,
+        "finishing": 27,
+        "stamina": 54
+      }
+    },
+    {
+      "id": 16802,
+      "name": "Sebastião Teixeira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 68,
+        "passing": 73,
+        "defending": 73,
+        "finishing": 56,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 16803,
+      "name": "Otávio Queiroz",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 72,
+        "passing": 65,
+        "defending": 74,
+        "finishing": 53,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 16804,
+      "name": "Antônio Resende",
+      "age": 36,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 73,
+        "passing": 61,
+        "defending": 30,
+        "finishing": 76,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 16805,
+      "name": "Eduardo Tavares",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 74,
+        "passing": 68,
+        "defending": 76,
+        "finishing": 57,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 16806,
+      "name": "Quincas Oliveira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 41,
+        "technique": 49,
+        "passing": 57,
+        "defending": 74,
+        "finishing": 48,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 16807,
+      "name": "Wladimir Sampaio",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 65,
+        "technique": 77,
+        "passing": 75,
+        "defending": 35,
+        "finishing": 69,
+        "stamina": 57
+      }
+    },
+    {
+      "id": 16808,
+      "name": "Bebeto Pereira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 76,
+        "passing": 70,
+        "defending": 31,
+        "finishing": 68,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 16809,
+      "name": "Zacarias Ribeiro",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 76,
+        "passing": 61,
+        "defending": 31,
+        "finishing": 68,
+        "stamina": 50
+      }
+    },
+    {
+      "id": 16810,
+      "name": "Romário Wanderley",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 70,
+        "passing": 59,
+        "defending": 70,
+        "finishing": 56,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 16811,
+      "name": "Geraldo Pereira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 61,
+        "passing": 67,
+        "defending": 72,
+        "finishing": 47,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 16812,
+      "name": "Ximenes Lopes",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 57,
+        "passing": 56,
+        "defending": 67,
+        "finishing": 42,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 16813,
+      "name": "Antônio Cardoso",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 44,
+        "technique": 70,
+        "passing": 65,
+        "defending": 71,
+        "finishing": 57,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 16814,
+      "name": "Zico Lacerda",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 83,
+        "technique": 75,
+        "passing": 71,
+        "defending": 39,
+        "finishing": 57,
+        "stamina": 52
+      }
+    },
+    {
+      "id": 16815,
+      "name": "Gustavo Almeida",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 69,
+        "technique": 56,
+        "passing": 58,
+        "defending": 68,
+        "finishing": 49,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 16816,
+      "name": "Anacleto Nogueira",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 87,
+        "technique": 74,
+        "passing": 64,
+        "defending": 32,
+        "finishing": 56,
+        "stamina": 53
+      }
+    }
+  ]
+}

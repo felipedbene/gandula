@@ -1,0 +1,257 @@
+{
+  "id": 430,
+  "name": "Mancesteres United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    43001,
+    43002,
+    43003,
+    43004,
+    43005,
+    43006,
+    43007,
+    43008,
+    43009,
+    43010,
+    43011
+  ],
+  "bench": [
+    43012,
+    43013,
+    43014,
+    43015,
+    43016
+  ],
+  "roster": [
+    {
+      "id": 43001,
+      "name": "Salvador Esteves",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 34,
+        "technique": 87,
+        "passing": 85,
+        "defending": 81,
+        "finishing": 26,
+        "stamina": 54
+      }
+    },
+    {
+      "id": 43002,
+      "name": "Florêncio Tavares",
+      "age": 32,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 74,
+        "passing": 64,
+        "defending": 39,
+        "finishing": 80,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 43003,
+      "name": "Wesley Galvão",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 81,
+        "technique": 76,
+        "passing": 74,
+        "defending": 36,
+        "finishing": 63,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 43004,
+      "name": "Yuri Falcão",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 73,
+        "passing": 72,
+        "defending": 75,
+        "finishing": 54,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 43005,
+      "name": "Gustavo Iglesias",
+      "age": 36,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 74,
+        "passing": 76,
+        "defending": 74,
+        "finishing": 72,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 43006,
+      "name": "Fernando Uchôa",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 77,
+        "passing": 76,
+        "defending": 26,
+        "finishing": 73,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 43007,
+      "name": "Aristides Espíndola",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 69,
+        "passing": 70,
+        "defending": 74,
+        "finishing": 62,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 43008,
+      "name": "Romeu Cardoso",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 66,
+        "technique": 62,
+        "passing": 56,
+        "defending": 76,
+        "finishing": 40,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 43009,
+      "name": "Otacílio Lacerda",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 75,
+        "passing": 55,
+        "defending": 31,
+        "finishing": 76,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 43010,
+      "name": "Careca Cardoso",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 76,
+        "passing": 74,
+        "defending": 54,
+        "finishing": 65,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 43011,
+      "name": "Hélio Werneck",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 76,
+        "passing": 78,
+        "defending": 56,
+        "finishing": 69,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 43012,
+      "name": "Bruno Falcão",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 76,
+        "passing": 78,
+        "defending": 56,
+        "finishing": 69,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 43013,
+      "name": "Ferraz Klein",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 77,
+        "passing": 76,
+        "defending": 29,
+        "finishing": 68,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 43014,
+      "name": "Igor Mascarenhas",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 69,
+        "passing": 64,
+        "defending": 72,
+        "finishing": 57,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 43015,
+      "name": "Rafael Holanda",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 77,
+        "passing": 69,
+        "defending": 66,
+        "finishing": 68,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 43016,
+      "name": "Wladimir Xavier",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 58,
+        "technique": 51,
+        "passing": 59,
+        "defending": 75,
+        "finishing": 50,
+        "stamina": 69
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 582,
+  "name": "Juventina",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    58201,
+    58202,
+    58203,
+    58204,
+    58205,
+    58206,
+    58207,
+    58208,
+    58209,
+    58210,
+    58211
+  ],
+  "bench": [
+    58212,
+    58213,
+    58214,
+    58215,
+    58216
+  ],
+  "roster": [
+    {
+      "id": 58201,
+      "name": "Gervásio Holanda",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 81,
+        "technique": 81,
+        "passing": 82,
+        "defending": 23,
+        "finishing": 72,
+        "stamina": 60
+      }
+    },
+    {
+      "id": 58202,
+      "name": "Paulo Resende",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 70,
+        "passing": 67,
+        "defending": 74,
+        "finishing": 52,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 58203,
+      "name": "Roque Bittencourt",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 71,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 63,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 58204,
+      "name": "Eduardo Zampieri",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 67,
+        "technique": 66,
+        "passing": 67,
+        "defending": 73,
+        "finishing": 45,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 58205,
+      "name": "Wladimir Nogueira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 86,
+        "technique": 81,
+        "passing": 73,
+        "defending": 39,
+        "finishing": 64,
+        "stamina": 56
+      }
+    },
+    {
+      "id": 58206,
+      "name": "João Fonseca",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 74,
+        "passing": 70,
+        "defending": 38,
+        "finishing": 72,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 58207,
+      "name": "Ubaldo Sampaio",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 64,
+        "technique": 66,
+        "passing": 55,
+        "defending": 25,
+        "finishing": 76,
+        "stamina": 57
+      }
+    },
+    {
+      "id": 58208,
+      "name": "Igor Xavier",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 75,
+        "passing": 72,
+        "defending": 49,
+        "finishing": 63,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 58209,
+      "name": "Sérgio Zaluar",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 34,
+        "technique": 64,
+        "passing": 62,
+        "defending": 72,
+        "finishing": 17,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 58210,
+      "name": "Marcelo Diniz",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 70,
+        "passing": 71,
+        "defending": 66,
+        "finishing": 65,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 58211,
+      "name": "Otávio Valença",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 70,
+        "passing": 68,
+        "defending": 71,
+        "finishing": 39,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 58212,
+      "name": "Daniel Drummond",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 94,
+        "technique": 73,
+        "passing": 64,
+        "defending": 27,
+        "finishing": 61,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 58213,
+      "name": "Rafael Justino",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 63,
+        "passing": 62,
+        "defending": 71,
+        "finishing": 58,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 58214,
+      "name": "Thiago Lacerda",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 67,
+        "passing": 61,
+        "defending": 32,
+        "finishing": 72,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 58215,
+      "name": "Paulo Valença",
+      "age": 32,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 73,
+        "passing": 60,
+        "defending": 25,
+        "finishing": 63,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 58216,
+      "name": "Wesley Xavier",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 73,
+        "passing": 66,
+        "defending": 34,
+        "finishing": 64,
+        "stamina": 60
+      }
+    }
+  ]
+}

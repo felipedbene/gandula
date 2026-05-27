@@ -1,0 +1,257 @@
+{
+  "id": 66,
+  "name": "Paris Saint-Jorge",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    6601,
+    6602,
+    6603,
+    6604,
+    6605,
+    6606,
+    6607,
+    6608,
+    6609,
+    6610,
+    6611
+  ],
+  "bench": [
+    6612,
+    6613,
+    6614,
+    6615,
+    6616
+  ],
+  "roster": [
+    {
+      "id": 6601,
+      "name": "Túlio Nogueira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 83,
+        "passing": 79,
+        "defending": 52,
+        "finishing": 73,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 6602,
+      "name": "Gustavo Magalhães",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 78,
+        "passing": 77,
+        "defending": 74,
+        "finishing": 54,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 6603,
+      "name": "Yuri Sampaio",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 62,
+        "passing": 57,
+        "defending": 82,
+        "finishing": 61,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 6604,
+      "name": "Wesley Klein",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 89,
+        "technique": 77,
+        "passing": 72,
+        "defending": 74,
+        "finishing": 58,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 6605,
+      "name": "Edson Costa",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 65,
+        "technique": 63,
+        "passing": 72,
+        "defending": 76,
+        "finishing": 65,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 6606,
+      "name": "Quincas Barros",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 77,
+        "passing": 77,
+        "defending": 36,
+        "finishing": 68,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 6607,
+      "name": "João Zaluar",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 73,
+        "passing": 61,
+        "defending": 24,
+        "finishing": 77,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 6608,
+      "name": "Salvador Andrade",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 77,
+        "passing": 69,
+        "defending": 72,
+        "finishing": 20,
+        "stamina": 38
+      }
+    },
+    {
+      "id": 6609,
+      "name": "Roque Junqueira",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 55,
+        "technique": 70,
+        "passing": 59,
+        "defending": 36,
+        "finishing": 75,
+        "stamina": 55
+      }
+    },
+    {
+      "id": 6610,
+      "name": "Eduardo Justino",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 75,
+        "passing": 71,
+        "defending": 74,
+        "finishing": 48,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 6611,
+      "name": "Daniel Junqueira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 65,
+        "technique": 61,
+        "passing": 66,
+        "defending": 74,
+        "finishing": 53,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 6612,
+      "name": "Hélio Quintão",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 59,
+        "passing": 59,
+        "defending": 79,
+        "finishing": 36,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 6613,
+      "name": "Marcelo Lopes",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 56,
+        "technique": 48,
+        "passing": 62,
+        "defending": 76,
+        "finishing": 50,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 6614,
+      "name": "Ferraz Guimarães",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 52,
+        "technique": 46,
+        "passing": 64,
+        "defending": 73,
+        "finishing": 41,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 6615,
+      "name": "Eduardo Vasconcelos",
+      "age": 36,
+      "position": "GK",
+      "attributes": {
+        "pace": 46,
+        "technique": 68,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 23,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 6616,
+      "name": "Benedito Almeida",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 63,
+        "passing": 67,
+        "defending": 69,
+        "finishing": 55,
+        "stamina": 66
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 629,
+  "name": "Real Madri",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    62901,
+    62902,
+    62903,
+    62904,
+    62905,
+    62906,
+    62907,
+    62908,
+    62909,
+    62910,
+    62911
+  ],
+  "bench": [
+    62912,
+    62913,
+    62914,
+    62915,
+    62916
+  ],
+  "roster": [
+    {
+      "id": 62901,
+      "name": "Sérgio Tavares",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 54,
+        "technique": 60,
+        "passing": 66,
+        "defending": 74,
+        "finishing": 45,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 62902,
+      "name": "Sérgio Werneck",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 75,
+        "passing": 73,
+        "defending": 29,
+        "finishing": 72,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 62903,
+      "name": "Eduardo Quintão",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 66,
+        "passing": 64,
+        "defending": 69,
+        "finishing": 44,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 62904,
+      "name": "Carlos Galvão",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 70,
+        "passing": 72,
+        "defending": 73,
+        "finishing": 55,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 62905,
+      "name": "Júnior Vasconcelos",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 74,
+        "passing": 72,
+        "defending": 32,
+        "finishing": 61,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 62906,
+      "name": "Sebastião Andrade",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 48,
+        "technique": 47,
+        "passing": 58,
+        "defending": 72,
+        "finishing": 45,
+        "stamina": 56
+      }
+    },
+    {
+      "id": 62907,
+      "name": "João Werneck",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 76,
+        "passing": 59,
+        "defending": 29,
+        "finishing": 69,
+        "stamina": 57
+      }
+    },
+    {
+      "id": 62908,
+      "name": "Túlio Neves",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 39,
+        "technique": 62,
+        "passing": 75,
+        "defending": 68,
+        "finishing": 23,
+        "stamina": 46
+      }
+    },
+    {
+      "id": 62909,
+      "name": "Maurício Lacerda",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 64,
+        "technique": 57,
+        "passing": 48,
+        "defending": 24,
+        "finishing": 69,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 62910,
+      "name": "Olavo Werneck",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 71,
+        "passing": 66,
+        "defending": 64,
+        "finishing": 55,
+        "stamina": 55
+      }
+    },
+    {
+      "id": 62911,
+      "name": "Yuri Drummond",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 64,
+        "technique": 55,
+        "passing": 64,
+        "defending": 68,
+        "finishing": 54,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 62912,
+      "name": "Daniel Lopes",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 56,
+        "passing": 56,
+        "defending": 69,
+        "finishing": 53,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 62913,
+      "name": "Marcelo Oliveira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 68,
+        "passing": 64,
+        "defending": 64,
+        "finishing": 59,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 62914,
+      "name": "Gervásio Zaluar",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 69,
+        "passing": 69,
+        "defending": 33,
+        "finishing": 63,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 62915,
+      "name": "Marquinhos Vasconcelos",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 69,
+        "passing": 62,
+        "defending": 33,
+        "finishing": 69,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 62916,
+      "name": "Rafael Barros",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 61,
+        "passing": 64,
+        "defending": 64,
+        "finishing": 52,
+        "stamina": 66
+      }
+    }
+  ]
+}

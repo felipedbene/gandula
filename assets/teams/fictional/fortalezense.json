@@ -1,0 +1,257 @@
+{
+  "id": 259,
+  "name": "Fortalezense",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    25901,
+    25902,
+    25903,
+    25904,
+    25905,
+    25906,
+    25907,
+    25908,
+    25909,
+    25910,
+    25911
+  ],
+  "bench": [
+    25912,
+    25913,
+    25914,
+    25915,
+    25916
+  ],
+  "roster": [
+    {
+      "id": 25901,
+      "name": "Otávio Uchôa",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 83,
+        "passing": 78,
+        "defending": 26,
+        "finishing": 72,
+        "stamina": 54
+      }
+    },
+    {
+      "id": 25902,
+      "name": "João Xavier",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 76,
+        "passing": 76,
+        "defending": 78,
+        "finishing": 62,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 25903,
+      "name": "Eduardo Zaluar",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 76,
+        "passing": 74,
+        "defending": 71,
+        "finishing": 63,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 25904,
+      "name": "Daniel Tavares",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 36,
+        "technique": 76,
+        "passing": 61,
+        "defending": 75,
+        "finishing": 16,
+        "stamina": 53
+      }
+    },
+    {
+      "id": 25905,
+      "name": "Fernando Iglesias",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 68,
+        "passing": 62,
+        "defending": 71,
+        "finishing": 49,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 25906,
+      "name": "Mauro Resende",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 67,
+        "technique": 72,
+        "passing": 69,
+        "defending": 38,
+        "finishing": 75,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 25907,
+      "name": "Benedito Almeida",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 68,
+        "passing": 70,
+        "defending": 75,
+        "finishing": 63,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 25908,
+      "name": "Zacarias Klein",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 46,
+        "technique": 74,
+        "passing": 74,
+        "defending": 24,
+        "finishing": 73,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 25909,
+      "name": "Careca Ribeiro",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 67,
+        "technique": 65,
+        "passing": 53,
+        "defending": 23,
+        "finishing": 72,
+        "stamina": 54
+      }
+    },
+    {
+      "id": 25910,
+      "name": "Cândido Zampieri",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 46,
+        "technique": 51,
+        "passing": 59,
+        "defending": 74,
+        "finishing": 41,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 25911,
+      "name": "Lucas Teixeira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 70,
+        "passing": 62,
+        "defending": 74,
+        "finishing": 61,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 25912,
+      "name": "Rafael Quintão",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 73,
+        "passing": 72,
+        "defending": 38,
+        "finishing": 63,
+        "stamina": 58
+      }
+    },
+    {
+      "id": 25913,
+      "name": "Carlos Wanderley",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 35,
+        "technique": 77,
+        "passing": 76,
+        "defending": 70,
+        "finishing": 19,
+        "stamina": 50
+      }
+    },
+    {
+      "id": 25914,
+      "name": "Inácio Quintão",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 63,
+        "passing": 70,
+        "defending": 68,
+        "finishing": 57,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 25915,
+      "name": "Thiago Diniz",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 52,
+        "technique": 63,
+        "passing": 59,
+        "defending": 66,
+        "finishing": 51,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 25916,
+      "name": "Dunga Werneck",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 63,
+        "technique": 61,
+        "passing": 70,
+        "defending": 26,
+        "finishing": 65,
+        "stamina": 70
+      }
+    }
+  ]
+}
