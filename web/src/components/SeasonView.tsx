@@ -39,46 +39,48 @@ export function SeasonView() {
 
   return (
     <div className="season-view">
-      <form
-        className="form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          run();
-        }}
-      >
-        <fieldset>
-          <legend>Times</legend>
-          {SAMPLE_TEAMS.map((t) => (
-            <label key={t.id} className="checkbox">
-              <input
-                type="checkbox"
-                checked={selected.has(t.id)}
-                onChange={() => toggle(t.id)}
-              />
-              {t.name}
-            </label>
-          ))}
-        </fieldset>
-        <label>
-          <span>Liga</span>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-        <label>
-          <span>Semente</span>
-          <input
-            type="number"
-            value={seed}
-            onChange={(e) => setSeed(Number(e.target.value))}
-          />
-        </label>
-        <button type="submit" className="btn" disabled={selected.size < 2}>
-          [ RODAR TEMPORADA ]
-        </button>
-      </form>
+      <AsciiBox title="NOVA TEMPORADA">
+        <form
+          className="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            run();
+          }}
+        >
+          <fieldset>
+            <legend>Times</legend>
+            {SAMPLE_TEAMS.map((t) => (
+              <label key={t.id} className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={selected.has(t.id)}
+                  onChange={() => toggle(t.id)}
+                />
+                {t.name}
+              </label>
+            ))}
+          </fieldset>
+          <label>
+            <span>Liga</span>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Semente</span>
+            <input
+              type="number"
+              value={seed}
+              onChange={(e) => setSeed(Number(e.target.value))}
+            />
+          </label>
+          <button type="submit" className="btn" disabled={selected.size < 2}>
+            [ RODAR TEMPORADA ]
+          </button>
+        </form>
+      </AsciiBox>
 
       {error && <pre className="error">{error}</pre>}
 
