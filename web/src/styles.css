@@ -264,6 +264,10 @@ fieldset legend {
   margin-top: 8px;
 }
 
+.match-result .btn {
+  margin-top: 8px;
+}
+
 .feed {
   list-style: none;
   padding: 0;
@@ -274,6 +278,10 @@ fieldset legend {
 
 .feed .event {
   padding: 0;
+}
+
+.feed .event--away {
+  padding-left: calc(var(--char-w) * 4);
 }
 
 .event.goal {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { play_match } from "../wasm/gandula_wasm.js";
 import { SAMPLE_TEAMS, teamById } from "../teams";
 import type { Match, MatchEvent } from "../types";
@@ -96,18 +96,56 @@ export function MatchView({ onStatus }: MatchViewProps) {
   );
 }
 
+/** Tick-by-tick reveal pacing: ms of wall-clock per minute of match time.
+ *  80ms/min → 90' match unrolls in ~7.2s, with dense periods (e.g. three
+ *  subs at min 70) appearing in a burst and calm stretches sitting still.
+ *  Elifoot 98 vibe — the engine resolves the match in <5ms but the UI
+ *  pretends to be a 1998 PC discovering the result tick by tick. */
+const REVEAL_MS_PER_MIN = 80;
+
+/** Extra wall-clock delay added to second-half events so the feed pauses
+ *  briefly at halftime — matches the "intervalo" beat from Elifoot where
+ *  you registered "ah, primeiro tempo acabou" before the second half rolled. */
+const HALFTIME_PAUSE_MS = 1500;
+
 function MatchResult({ result }: { result: Match }) {
   const home = teamById(result.home)?.name ?? `Time ${result.home}`;
   const away = teamById(result.away)?.name ?? `Time ${result.away}`;
+
+  const [revealed, setRevealed] = useState(0);
+
+  useEffect(() => {
+    setRevealed(0);
+    const timers = result.events.map((e, i) => {
+      const delay =
+        e.minute * REVEAL_MS_PER_MIN +
+        (e.minute > 45 ? HALFTIME_PAUSE_MS : 0);
+      return window.setTimeout(() => setRevealed(i + 1), delay);
+    });
+    return () => timers.forEach(window.clearTimeout);
+  }, [result]);
+
+  const visible = result.events.slice(0, revealed);
+  const runningHome = visible.filter(
+    (e) => eventKindName(e.kind) === "Goal" && e.side === "Home",
+  ).length;
+  const runningAway = visible.filter(
+    (e) => eventKindName(e.kind) === "Goal" && e.side === "Away",
+  ).length;
+  const clock = visible.length > 0 ? visible[visible.length - 1].minute : 0;
   const title =
-    `${home.toUpperCase()}  ${result.result.home_goals} x ${result.result.away_goals}  ${away.toUpperCase()}`;
+    `${home.toUpperCase()}  ${runningHome} x ${runningAway}  ${away.toUpperCase()}  ${clock}'`;
+
+  const isPlaying = revealed < result.events.length;
+  const skip = () => setRevealed(result.events.length);
 
   return (
     <div className="match-result">
       <AsciiBox double title={title} hint="[↑↓] rolar  [ESC] voltar">
         <ol className="feed">
-          {result.events.map((e, i) => {
-            const klass = `event ${eventClass(e)}`;
+          {visible.map((e, i) => {
+            const side = e.side === "Away" ? " event--away" : "";
+            const klass = `event ${eventClass(e)}${side}`;
             const glyph = eventGlyph(e);
             const m = e.text.match(/^(\d+'?)\s+(.*)$/);
             if (m) {
@@ -129,6 +167,11 @@ function MatchResult({ result }: { result: Match }) {
           })}
         </ol>
       </AsciiBox>
+      {isPlaying && (
+        <button className="btn" onClick={skip}>
+          [ PULAR ]
+        </button>
+      )}
     </div>
   );
 }
