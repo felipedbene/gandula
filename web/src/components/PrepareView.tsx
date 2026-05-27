@@ -17,6 +17,10 @@ import TacticsForm, {
   tacticsFormStateEquals,
   tacticsFormStateToOverride,
 } from "./TacticsForm";
+import LineupEditor, {
+  type LineupState,
+  lineupStateEquals,
+} from "./LineupEditor";
 import { countUserMatchesFromRound } from "./TacticsView";
 
 type PrepareViewProps = {
@@ -65,9 +69,25 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
     };
   }, [saved.userTactics, baseTeam]);
 
+  const initialLineup: LineupState = useMemo(() => {
+    if (saved.userTactics) {
+      return {
+        starting_xi: saved.userTactics.starting_xi.slice(),
+        bench: saved.userTactics.bench.slice(),
+      };
+    }
+    return {
+      starting_xi: baseTeam?.starting_xi.slice() ?? [],
+      bench: baseTeam?.bench?.slice() ?? [],
+    };
+  }, [saved.userTactics, baseTeam]);
+
   const [current, setCurrent] = useState<TacticsFormState>(initial);
+  const [currentLineup, setCurrentLineup] = useState<LineupState>(initialLineup);
   const [error, setError] = useState<string | null>(null);
-  const dirty = !tacticsFormStateEquals(initial, current);
+  const dirty =
+    !tacticsFormStateEquals(initial, current) ||
+    !lineupStateEquals(initialLineup, currentLineup);
 
   // User's fixture in the current round (null on bye rounds — 17-team
   // odd-N schedule gives every team 2 byes per season).
@@ -102,8 +122,8 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
     const override: UserTactics = {
       formation,
       tactics,
-      starting_xi: baseTeam.starting_xi.slice(),
-      bench: baseTeam.bench?.slice() ?? [],
+      starting_xi: currentLineup.starting_xi.slice(),
+      bench: currentLineup.bench.slice(),
     };
     try {
       const start = performance.now();
@@ -145,6 +165,13 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
           }}
         >
           <TacticsForm state={current} onChange={setCurrent} />
+          {baseTeam && (
+            <LineupEditor
+              team={baseTeam}
+              state={currentLineup}
+              onChange={setCurrentLineup}
+            />
+          )}
           {error && <pre className="error">{error}</pre>}
           <div className="form-actions form-actions--pair">
             <button type="submit" className="btn">

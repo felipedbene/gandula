@@ -483,6 +483,92 @@ fieldset legend {
   margin: 0;
 }
 
+/* D.1.e — Lineup editor (starting XI) ─────────────────────────────────────── */
+
+/* Container for the 11-row XI list. */
+.lineup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 0;
+}
+
+/* Each slot is its own column so the expanded candidates can sit directly
+   beneath their slot without breaking the monospace alignment of the row
+   above. */
+.lineup-slot {
+  display: flex;
+  flex-direction: column;
+}
+
+.lineup-slot__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--char-w);
+  white-space: pre;
+}
+
+.lineup-slot__glyph {
+  display: inline-block;
+  width: calc(var(--char-w) * 2);
+}
+
+.lineup-slot__pos {
+  display: inline-block;
+  width: calc(var(--char-w) * 4);
+  color: var(--fg-dim);
+}
+
+.lineup-slot__name {
+  display: inline-block;
+  width: calc(var(--char-w) * 26);
+  /* Truncate overflow with ellipsis so a long name can't push the STAM /
+     button columns out of alignment. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lineup-slot__stam {
+  display: inline-block;
+  width: calc(var(--char-w) * 10);
+  color: var(--fg-dim);
+}
+
+.lineup-slot__btn {
+  flex: 0 0 auto;
+}
+
+/* Expanded candidate list directly under the active slot; dim border on
+   the left nests it visually inside the parent slot. */
+.lineup-candidates {
+  margin-left: calc(var(--char-w) * 2);
+  padding: 4px 0 8px calc(var(--char-w) * 2);
+  border-left: 1px solid var(--fg-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lineup-candidates__title {
+  margin: 0 0 4px 0;
+}
+
+.lineup-candidates__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--char-w);
+  white-space: pre;
+}
+
+/* Lineup validation warnings — non-blocking, drawn in the accent-red
+   register so they read as important without halting the user flow. */
+.lineup-warning {
+  color: var(--accent-red);
+  text-shadow: 0 0 2px var(--accent-red);
+  margin: 4px 0;
+}
+
 /* C3.4 finale ─────────────────────────────────────────────────────────────── */
 
 /* Champion celebration body when the controlled team wins — uses the goal-
