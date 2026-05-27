@@ -1,4 +1,5 @@
 mod manager;
+mod narration;
 mod strength;
 mod tick;
 
@@ -19,11 +20,14 @@ pub fn simulate(home: &Team, away: &Team, seed: u64) -> Result<Match, GandulaErr
 
     for minute in 1..=45 {
         tick::tick(&mut state, &mut rng, minute);
-        manager::run_managers(&mut state, minute);
+        manager::run_managers(&mut state, &mut rng, minute);
     }
-    let half_text = format!(
-        "45' Fim do primeiro tempo. {} {}x{} {}.",
-        state.home.name, state.home_goals, state.away_goals, state.away.name
+    let half_text = narration::narrate_half_time(
+        &mut rng,
+        &state.home.name,
+        state.home_goals,
+        &state.away.name,
+        state.away_goals,
     );
     state.events.push(MatchEvent {
         minute: 45,
@@ -34,20 +38,24 @@ pub fn simulate(home: &Team, away: &Team, seed: u64) -> Result<Match, GandulaErr
 
     for minute in 46..=90 {
         tick::tick(&mut state, &mut rng, minute);
-        manager::run_managers(&mut state, minute);
+        manager::run_managers(&mut state, &mut rng, minute);
     }
 
     // 0..=4 minutes of injury time at the end of the second half.
     let injury = rng.range_u32(0, 5) as u16;
     for i in 1..=injury {
         tick::tick(&mut state, &mut rng, 90 + i);
-        manager::run_managers(&mut state, 90 + i);
+        manager::run_managers(&mut state, &mut rng, 90 + i);
     }
 
     let final_minute: u16 = 90 + injury;
-    let full_text = format!(
-        "{}' Fim de jogo. {} {}x{} {}.",
-        final_minute, state.home.name, state.home_goals, state.away_goals, state.away.name
+    let full_text = narration::narrate_full_time(
+        &mut rng,
+        final_minute,
+        &state.home.name,
+        state.home_goals,
+        &state.away.name,
+        state.away_goals,
     );
     state.events.push(MatchEvent {
         minute: final_minute,

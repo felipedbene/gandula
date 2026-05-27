@@ -7,6 +7,7 @@
 use crate::domain::{
     Match, MatchEvent, MatchEventKind, MatchResult, Player, PlayerId, Position, Side, Team,
 };
+use crate::engine::narration::{self, NarrationContext};
 use crate::engine::strength::{
     self, TeamStrength, pressing_disrupt, pressing_foul_factor, pressing_stamina_factor,
     raw_player_stats, stamina_effectiveness, tempo_event_factor, tempo_stamina_factor,
@@ -166,6 +167,20 @@ fn team_for<'a>(state: &MatchState<'a>, side: Side) -> &'a Team {
     match side {
         Side::Home => state.home,
         Side::Away => state.away,
+    }
+}
+
+/// Build a [`NarrationContext`] from the current score, from the perspective
+/// of `side`. Call this *after* any score increment so a `score_diff == 0`
+/// flag on a goal event genuinely means "this goal just equalized."
+fn ctx_for(state: &MatchState, side: Side, minute: u16) -> NarrationContext {
+    let (own, theirs) = match side {
+        Side::Home => (state.home_goals, state.away_goals),
+        Side::Away => (state.away_goals, state.home_goals),
+    };
+    NarrationContext {
+        minute,
+        score_diff: own as i8 - theirs as i8,
     }
 }
 
@@ -334,10 +349,8 @@ fn resolve_shot(state: &mut MatchState, rng: &mut MatchRng, minute: u16, side: S
     let on_target = rng.chance(on_target_p);
 
     if !on_target {
-        let text = format!(
-            "{minute}' {} arrisca de longe... pra fora!",
-            shooter.name
-        );
+        let ctx = ctx_for(state, side, minute);
+        let text = narration::narrate_shot_wide(&ctx, rng, minute, &shooter.name);
         state.events.push(MatchEvent {
             minute,
             side: Some(side),
@@ -381,16 +394,9 @@ fn resolve_shot(state: &mut MatchState, rng: &mut MatchRng, minute: u16, side: S
             Side::Away => state.away_goals = state.away_goals.saturating_add(1),
         }
 
-        let text = match assist.and_then(|id| att_team.lookup(id)) {
-            Some(a) => format!(
-                "{minute}' GOOOL do {}! {} aproveita o passe de {}!",
-                att_team.name, shooter.name, a.name
-            ),
-            None => format!(
-                "{minute}' GOOOL do {}! {} balança a rede!",
-                att_team.name, shooter.name
-            ),
-        };
+        let ctx = ctx_for(state, side, minute);
+        let assist_name = assist.and_then(|id| att_team.lookup(id)).map(|p| p.name.as_str());
+        let text = narration::narrate_goal(&ctx, rng, minute, &att_team.name, &shooter.name, assist_name);
         state.events.push(MatchEvent {
             minute,
             side: Some(side),
@@ -401,10 +407,8 @@ fn resolve_shot(state: &mut MatchState, rng: &mut MatchRng, minute: u16, side: S
             text,
         });
     } else {
-        let text = format!(
-            "{minute}' {} chuta no gol... defendeu {}!",
-            shooter.name, gk_name
-        );
+        let ctx = ctx_for(state, side, minute);
+        let text = narration::narrate_shot_saved(&ctx, rng, minute, &shooter.name, gk_name);
         state.events.push(MatchEvent {
             minute,
             side: Some(side),
@@ -467,17 +471,17 @@ fn resolve_foul(state: &mut MatchState, rng: &mut MatchRng, minute: u16, attacke
         return;
     };
 
+    let defender_side = attacker_side.flip();
+    let foul_ctx = ctx_for(state, defender_side, minute);
+    let foul_text = narration::narrate_foul(&foul_ctx, rng, minute, &offender.name, &victim.name);
     state.events.push(MatchEvent {
         minute,
-        side: Some(attacker_side.flip()),
+        side: Some(defender_side),
         kind: MatchEventKind::Foul {
             offender: offender_id,
             victim: victim_id,
         },
-        text: format!(
-            "{minute}' Falta de {} em {}.",
-            offender.name, victim.name
-        ),
+        text: foul_text,
     });
 
     let r = rng.unit();
@@ -488,27 +492,28 @@ fn resolve_foul(state: &mut MatchState, rng: &mut MatchRng, minute: u16, attacke
     if r < CARD_NONE - pressing_bias {
         return;
     } else if r < CARD_NONE - pressing_bias + CARD_YELLOW {
+        let card_ctx = ctx_for(state, defender_side, minute);
+        let text = narration::narrate_yellow(&card_ctx, rng, minute, &offender.name);
         state.events.push(MatchEvent {
             minute,
-            side: Some(attacker_side.flip()),
+            side: Some(defender_side),
             kind: MatchEventKind::YellowCard {
                 player: offender_id,
             },
-            text: format!("{minute}' Cartão amarelo para {}.", offender.name),
+            text,
         });
     } else if r < CARD_NONE - pressing_bias + CARD_YELLOW + CARD_RED + pressing_bias {
+        let card_ctx = ctx_for(state, defender_side, minute);
+        let text = narration::narrate_red(&card_ctx, rng, minute, &offender.name);
         state.events.push(MatchEvent {
             minute,
-            side: Some(attacker_side.flip()),
+            side: Some(defender_side),
             kind: MatchEventKind::RedCard {
                 player: offender_id,
             },
-            text: format!(
-                "{minute}' VERMELHO! {} expulso de campo!",
-                offender.name
-            ),
+            text,
         });
-        match attacker_side.flip() {
+        match defender_side {
             Side::Home => state.home_on_field[offender_idx] = false,
             Side::Away => state.away_on_field[offender_idx] = false,
         }

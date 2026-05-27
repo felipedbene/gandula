@@ -3,7 +3,9 @@
 //! lands later, that's when we extract a trait. Until then: concrete.
 
 use crate::domain::{MatchEvent, MatchEventKind, PlayerId, Position, Side, Team};
+use crate::engine::narration::{self, NarrationContext};
 use crate::engine::tick::MatchState;
+use crate::rng::MatchRng;
 
 // ─── Tunables ───────────────────────────────────────────────────────────────
 pub const MAX_SUBS_PER_MATCH: u8 = 3;
@@ -33,14 +35,16 @@ pub(crate) enum ManagerAction {
 }
 
 // ─── Entry point — runs both teams' managers after each minute ──────────────
-pub(crate) fn run_managers(state: &mut MatchState, minute: u16) {
+// The RNG is threaded only so the substitution narration can draw phrasings —
+// the heuristic-decide logic itself stays pure / deterministic without it.
+pub(crate) fn run_managers(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     for side in [Side::Home, Side::Away] {
         let action = {
             let view = build_view(state, side, minute);
             heuristic_decide(&view)
         };
         if let Some(action) = action {
-            apply_action(state, side, action, minute);
+            apply_action(state, rng, side, action, minute);
         }
     }
 }
@@ -225,17 +229,24 @@ fn find_on_field(view: &ManagerView, pos: Position) -> Option<usize> {
 }
 
 // ─── Apply the chosen action ────────────────────────────────────────────────
-fn apply_action(state: &mut MatchState, side: Side, action: ManagerAction, minute: u16) {
+fn apply_action(
+    state: &mut MatchState,
+    rng: &mut MatchRng,
+    side: Side,
+    action: ManagerAction,
+    minute: u16,
+) {
     match action {
         ManagerAction::Substitute {
             off_slot,
             on_bench_idx,
-        } => apply_substitution(state, side, off_slot, on_bench_idx, minute),
+        } => apply_substitution(state, rng, side, off_slot, on_bench_idx, minute),
     }
 }
 
 fn apply_substitution(
     state: &mut MatchState,
+    rng: &mut MatchRng,
     side: Side,
     off_slot: usize,
     on_bench_idx: usize,
@@ -259,6 +270,13 @@ fn apply_substitution(
             state.home_stamina[off_slot] = on_stamina;
             state.home_bench_used[on_bench_idx] = true;
             state.home_subs_used += 1;
+            let ctx = NarrationContext {
+                minute,
+                score_diff: state.home_goals as i8 - state.away_goals as i8,
+            };
+            let text = narration::narrate_substitution(
+                &ctx, rng, minute, &team_name, &off_name, &on_name,
+            );
             state.events.push(MatchEvent {
                 minute,
                 side: Some(Side::Home),
@@ -266,9 +284,7 @@ fn apply_substitution(
                     off: off_id,
                     on: on_id,
                 },
-                text: format!(
-                    "{minute}' Substituição no {team_name}: sai {off_name}, entra {on_name}."
-                ),
+                text,
             });
         }
         Side::Away => {
@@ -288,6 +304,13 @@ fn apply_substitution(
             state.away_stamina[off_slot] = on_stamina;
             state.away_bench_used[on_bench_idx] = true;
             state.away_subs_used += 1;
+            let ctx = NarrationContext {
+                minute,
+                score_diff: state.away_goals as i8 - state.home_goals as i8,
+            };
+            let text = narration::narrate_substitution(
+                &ctx, rng, minute, &team_name, &off_name, &on_name,
+            );
             state.events.push(MatchEvent {
                 minute,
                 side: Some(Side::Away),
@@ -295,9 +318,7 @@ fn apply_substitution(
                     off: off_id,
                     on: on_id,
                 },
-                text: format!(
-                    "{minute}' Substituição no {team_name}: sai {off_name}, entra {on_name}."
-                ),
+                text,
             });
         }
     }
