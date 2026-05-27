@@ -9,7 +9,7 @@ import LineupEditor, {
   type LineupState,
 } from "./LineupEditor";
 import { ALL_TEAMS } from "../teams";
-import type { Team } from "../types";
+import type { Player, Team } from "../types";
 
 const team = ALL_TEAMS.find((t) => t.name === "Baviera FC")!;
 
@@ -149,5 +149,85 @@ describe("LineupEditor", () => {
     const benchIdxOfIncoming = initial.bench.indexOf(benchCandidateId);
     expect(next.bench[benchIdxOfIncoming]).toBe(outgoingId);
     expect(next.bench.length).toBe(initial.bench.length);
+  });
+
+  // ─── D.1.f outside-path coverage ──────────────────────────────────────
+  // When the incoming player wasn't on the bench (D.1.f's BenchEditor
+  // REMOVERs surface this path), the swap function tries to spill the
+  // outgoing player back onto the bench rather than silently dropping
+  // them — but only if there's room. These tests exercise both branches.
+
+  it("swap from outside with space in bench moves outgoing to bench end", () => {
+    // bench[4] removed: 25716 (MID) is now "outside" the team.
+    const state: LineupState = {
+      starting_xi: team.starting_xi.slice(),
+      bench: [25712, 25713, 25714, 25715],
+    };
+    const onChange = vi.fn();
+    render(<LineupEditor team={team} state={state} onChange={onChange} />);
+
+    // Slot 3 in Baviera's XI is a MID (25704). MID candidates not in XI:
+    // only 25716 (since 25704/25705/25708/25711 are in XI and 25716 is
+    // the lone roster MID left outside). Pick it.
+    const trocarBtns = screen.getAllByRole("button", { name: /trocar/i });
+    fireEvent.click(trocarBtns[3]);
+    const escolherBtns = screen.getAllByRole("button", { name: /escolher/i });
+    expect(escolherBtns).toHaveLength(1);
+    fireEvent.click(escolherBtns[0]);
+
+    const next: LineupState = onChange.mock.calls[0][0];
+    expect(next.starting_xi[3]).toBe(25716);
+    expect(next.bench).toHaveLength(5);
+    // Outgoing (25704) lands at the end of the bench, originals shift up
+    // by zero (we appended).
+    expect(next.bench).toEqual([25712, 25713, 25714, 25715, 25704]);
+  });
+
+  it("swap from outside with full bench (7) drops outgoing silently", () => {
+    // Need a team big enough for bench=7 AND at least one outside player
+    // of a position matching some XI slot. Baviera has 16 players (XI=11
+    // + 5 reserves), so we extend its roster with 3 MID dummies — that
+    // gives us bench=7 (5 originals + 99000, 99001) plus 99002 outside.
+    const extras: Player[] = [];
+    for (let i = 0; i < 3; i++) {
+      extras.push({
+        id: 99000 + i,
+        name: `Extra ${i}`,
+        age: 25,
+        position: "MID",
+        attributes: {
+          pace: 50,
+          technique: 50,
+          passing: 50,
+          defending: 50,
+          finishing: 50,
+          stamina: 50,
+        },
+      });
+    }
+    const bigT: Team = { ...team, roster: [...team.roster, ...extras] };
+    const state: LineupState = {
+      starting_xi: bigT.starting_xi.slice(),
+      bench: [25712, 25713, 25714, 25715, 25716, 99000, 99001],
+    };
+    const onChange = vi.fn();
+    render(<LineupEditor team={bigT} state={state} onChange={onChange} />);
+
+    // MID slot (XI[3] = 25704). MID candidates not in XI, in roster
+    // order: [25716, 99000, 99001, 99002]. The outside one is 99002 at
+    // the end (last entry of roster).
+    const trocarBtns = screen.getAllByRole("button", { name: /trocar/i });
+    fireEvent.click(trocarBtns[3]);
+    const escolherBtns = screen.getAllByRole("button", { name: /escolher/i });
+    expect(escolherBtns).toHaveLength(4);
+    fireEvent.click(escolherBtns[3]);
+
+    const next: LineupState = onChange.mock.calls[0][0];
+    expect(next.starting_xi[3]).toBe(99002);
+    // Bench is at MAX_BENCH (7) and incoming came from outside → outgoing
+    // (25704) is silently dropped. Bench length AND contents unchanged.
+    expect(next.bench).toHaveLength(7);
+    expect(next.bench).toEqual(state.bench);
+    expect(next.bench).not.toContain(25704);
   });
 });

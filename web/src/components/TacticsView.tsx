@@ -19,6 +19,7 @@ import LineupEditor, {
   type LineupState,
   lineupStateEquals,
 } from "./LineupEditor";
+import BenchEditor from "./BenchEditor";
 
 type TacticsViewProps = {
   saved: SavedSeason;
@@ -116,11 +117,18 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
       >
         <TacticsForm state={current} onChange={setCurrent} />
         {baseTeam && (
-          <LineupEditor
-            team={baseTeam}
-            state={currentLineup}
-            onChange={setCurrentLineup}
-          />
+          <>
+            <LineupEditor
+              team={baseTeam}
+              state={currentLineup}
+              onChange={setCurrentLineup}
+            />
+            <BenchEditor
+              team={baseTeam}
+              state={currentLineup}
+              onChange={setCurrentLineup}
+            />
+          </>
         )}
         {error && <pre className="error">{error}</pre>}
         <div className="form-actions form-actions--pair">

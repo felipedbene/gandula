@@ -21,6 +21,7 @@ import LineupEditor, {
   type LineupState,
   lineupStateEquals,
 } from "./LineupEditor";
+import BenchEditor from "./BenchEditor";
 import { countUserMatchesFromRound } from "./TacticsView";
 
 type PrepareViewProps = {
@@ -166,11 +167,18 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
         >
           <TacticsForm state={current} onChange={setCurrent} />
           {baseTeam && (
-            <LineupEditor
-              team={baseTeam}
-              state={currentLineup}
-              onChange={setCurrentLineup}
-            />
+            <>
+              <LineupEditor
+                team={baseTeam}
+                state={currentLineup}
+                onChange={setCurrentLineup}
+              />
+              <BenchEditor
+                team={baseTeam}
+                state={currentLineup}
+                onChange={setCurrentLineup}
+              />
+            </>
           )}
           {error && <pre className="error">{error}</pre>}
           <div className="form-actions form-actions--pair">

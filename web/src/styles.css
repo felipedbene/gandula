@@ -569,6 +569,22 @@ fieldset legend {
   margin: 4px 0;
 }
 
+/* D.1.f — Bench editor (BANCO section header + ADICIONAR JOGADOR area) */
+
+/* Section header sitting above the bench list, with the count fraction
+   (e.g. "BANCO (5 / 7)"). Same dim register as candidate titles. */
+.bench-header {
+  margin: 12px 0 4px 0;
+  text-transform: uppercase;
+}
+
+/* Wrapper for the [ ADICIONAR JOGADOR ] button + its expandable candidate
+   list. Matches the gap between lineup slots so the button reads as part
+   of the bench block, not a free-floating action. */
+.bench-add {
+  margin-top: 8px;
+}
+
 /* C3.4 finale ─────────────────────────────────────────────────────────────── */
 
 /* Champion celebration body when the controlled team wins — uses the goal-

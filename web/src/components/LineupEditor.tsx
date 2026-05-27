@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Player, Team } from "../types";
+import { MAX_BENCH } from "./BenchEditor";
 
 /**
  * Lineup state: the 11 starting XI player IDs + the bench player IDs.
@@ -59,11 +60,18 @@ export default function LineupEditor({ team, state, onChange }: LineupEditorProp
   }
 
   /**
-   * Swap-perfect substitution: XI[slotIdx] ⇄ incomingId. If incoming came
-   * from the bench, outgoing takes its exact bench slot — bench size and
-   * order both preserved. If incoming came from outside the bench (no
-   * caller today; D.1.f may surface this path), outgoing leaves the team
-   * silently — bench unchanged.
+   * Swap-perfect substitution: XI[slotIdx] ⇄ incomingId.
+   *
+   * - Incoming came from the bench → outgoing takes its exact bench slot.
+   *   Bench size and order both preserved.
+   * - Incoming came from outside the bench (D.1.f path, surfaced when the
+   *   user REMOVERs a player off the bench and then picks them back into
+   *   the XI from "outside"):
+   *     - If the bench has room (< MAX_BENCH), outgoing is appended to the
+   *       end so the user doesn't lose the player they had on the field.
+   *     - If the bench is full, outgoing leaves the team silently — the
+   *       rare-but-real case where the user has deliberately built up a
+   *       full bench and the only thing to give up is the XI slot.
    */
   function swap(slotIdx: number, incomingId: number) {
     const outgoingId = state.starting_xi[slotIdx];
@@ -74,7 +82,10 @@ export default function LineupEditor({ team, state, onChange }: LineupEditorProp
     const benchIdx = newBench.indexOf(incomingId);
     if (benchIdx >= 0) {
       newBench[benchIdx] = outgoingId;
+    } else if (newBench.length < MAX_BENCH) {
+      newBench.push(outgoingId);
     }
+    // else: bench full and incoming from outside → outgoing leaves silently.
 
     onChange({ starting_xi: newXI, bench: newBench });
     setExpandedSlot(null);
