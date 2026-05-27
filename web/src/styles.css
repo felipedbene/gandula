@@ -1,3 +1,9 @@
+@font-face {
+  font-family: "PxPlus IBM VGA 9x16";
+  src: url("/fonts/WebPlus_IBM_VGA_9x16.woff") format("woff");
+  font-display: swap;
+}
+
 :root {
   --bg: #0a0a0a;
   --fg: #33ff33;
@@ -10,7 +16,7 @@
   --glow: 0 0 2px rgba(51, 255, 51, 0.6), 0 0 8px rgba(51, 255, 51, 0.25);
   --glow-gol: 0 0 4px #aaff66, 0 0 12px rgba(170, 255, 102, 0.55);
   --glow-red: 0 0 4px #ff4040, 0 0 10px rgba(255, 64, 64, 0.5);
-  --font-mono: "VT323", ui-monospace, "Courier New", monospace;
+  --font-mono: "PxPlus IBM VGA 9x16", "VT323", ui-monospace, monospace;
   --font-size: 17px;
   --line-height: 1.25;
 }
@@ -85,7 +91,6 @@ html, body {
 .ascii-box__top,
 .ascii-box__bottom {
   white-space: pre;
-  overflow: hidden;
 }
 
 .ascii-box__title {
