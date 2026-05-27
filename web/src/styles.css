@@ -200,15 +200,21 @@ fieldset legend {
   min-width: 0;
 }
 
-/* Wrapper for the form's action button(s). flex-basis: 100% forces this
-   row to its own line inside the parent .form (which is itself flex-wrap),
-   and the inner flex centers the button without making it full-width
-   clickable. */
+/* Action button row — always pinned just above the fixed status bar so the
+   primary action stays reachable when content overflows the viewport (form
+   with 17 team checkboxes, running phase with full classificação, finale
+   with destaques + classificação, reveal with feed + outros jogos). Solid
+   bg so content scrolls underneath; no z-index, CRT scanlines paint over. */
 .form-actions {
-  flex-basis: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  margin: 0;
+  padding: 8px var(--char-w);
+  background: var(--bg);
   display: flex;
   justify-content: center;
-  margin-top: 8px;
 }
 
 /* Pre-game meta info inside CONFRONTO box: two columns (home / away) of
@@ -461,20 +467,6 @@ fieldset legend {
 .form-actions--pair {
   justify-content: center;
   gap: calc(var(--char-w) * 2);
-}
-
-/* PULAR row during reveal — pinned to viewport bottom just above the
-   fixed status bar so it's always reachable even when feed + OUTROS JOGOS
-   push the page past the viewport. Solid bg so content scrolling underneath
-   is hidden. Like .status, no z-index — the CRT scanlines paint over. */
-.form-actions--reveal {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 28px;
-  margin: 0;
-  padding: 8px var(--char-w);
-  background: var(--bg);
 }
 
 /* C3.4 finale ─────────────────────────────────────────────────────────────── */

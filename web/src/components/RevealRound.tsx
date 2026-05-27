@@ -163,7 +163,7 @@ export default function RevealRound({ saved, onDone }: RevealRoundProps) {
       </Card>
 
       {isPlaying && (
-        <div className="form-actions form-actions--reveal">
+        <div className="form-actions">
           <button type="button" className="btn" onClick={() => setSkipAll(true)}>
             [ PULAR ]
           </button>
