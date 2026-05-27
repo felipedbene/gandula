@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import init from "./wasm/gandula_wasm.js";
-import { AsciiBox } from "./components/AsciiBox";
+import CardDouble from "./srcl/CardDouble";
 import { Footer } from "./components/Footer";
 import { MatchView } from "./components/MatchView";
 import { SeasonView } from "./components/SeasonView";
@@ -46,16 +46,8 @@ export function App() {
   return (
     <div className="crt">
       <main className="app">
-        <AsciiBox
-          double
-          header={
-            <div className="gandula-header">
-              <span className="hi">GANDULA</span>
-              <span className="muted">Simulador de futebol em texto</span>
-              <span>v0.5</span>
-            </div>
-          }
-        >
+        <CardDouble title={<span className="standings-hi">GANDULA</span>} titleRight="v0.5">
+          <p className="muted">Simulador de futebol em texto</p>
           <nav className="tabs">
             <button
               className={tab === "match" ? "tab active" : "tab"}
@@ -70,7 +62,7 @@ export function App() {
               [ TEMPORADA ]
             </button>
           </nav>
-        </AsciiBox>
+        </CardDouble>
         <section className="content">
           {tab === "match" ? (
             <MatchView onStatus={setStatus} />

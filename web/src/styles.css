@@ -26,6 +26,16 @@
      Chrome resolves 1ch ≈ 8.948px while actual advance is 9.0px,
      causing ~4px overflow at 78ch widths. */
   --char-w: calc(var(--font-size) * 9 / 16);
+
+  /* SRCL theme-token mapping. SRCL primitives read `--theme-*` and
+     `--font-family-mono`; we redirect each onto our phosphor palette so
+     they render green-on-black without forking the upstream CSS modules. */
+  --theme-text: var(--fg);
+  --theme-background: var(--bg);
+  --theme-border: var(--fg-dim);
+  --theme-focused-foreground: var(--fg-hi);
+  --theme-line-height-base: var(--line-height);
+  --font-family-mono: var(--font-mono);
 }
 
 * {
@@ -270,20 +280,6 @@ fieldset legend {
   flex-basis: 100%;
   white-space: pre;
   margin: 8px 0;
-}
-
-/* GANDULA header row: three flex items (title left, tagline middle, version
-   right) distributed by space-between. Per-item color set via .hi / .muted /
-   defaults inherited from .ascii-box__content. */
-.gandula-header {
-  display: flex;
-  justify-content: space-between;
-  gap: calc(var(--char-w) * 2);
-}
-
-.hi {
-  color: var(--fg-hi);
-  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
 }
 
 .error {

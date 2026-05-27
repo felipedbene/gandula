@@ -14,7 +14,12 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/srcl/*"],
+      "@common/*": ["src/srcl/common/*"]
+    }
   },
   "include": ["src"]
 }
