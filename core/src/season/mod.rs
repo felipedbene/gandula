@@ -183,7 +183,7 @@ fn generate_fixtures(n_teams: usize) -> Vec<Fixture> {
 // Deterministic, fixture-unique. Same season_seed + same fixture index always
 // gives the same match seed. Changing the order of fixtures (e.g., adding a
 // team) reshuffles the matches.
-fn match_seed(season_seed: u64, fixture_idx: u32) -> u64 {
+pub fn match_seed(season_seed: u64, fixture_idx: u32) -> u64 {
     let mut s = season_seed.wrapping_mul(0x9E37_79B9_7F4A_7C15);
     s = s.wrapping_add((fixture_idx as u64).wrapping_mul(0xD1B5_4A32_D192_ED03));
     s.wrapping_mul(0xC6BC_2796_92B5_C323)

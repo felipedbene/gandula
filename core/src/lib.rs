@@ -10,4 +10,4 @@ pub use domain::{
 };
 pub use engine::simulate;
 pub use error::GandulaError;
-pub use season::{Fixture, League, SeasonRecord, TeamStats, simulate_season};
+pub use season::{Fixture, League, SeasonRecord, TeamStats, match_seed, simulate_season};

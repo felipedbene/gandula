@@ -5,7 +5,7 @@
 //! objects matching the existing JSON shapes (same shape the CLI uses to load
 //! team files).
 
-use gandula_core::{League, Team, simulate, simulate_season};
+use gandula_core::{League, Team, match_seed, simulate, simulate_season};
 use serde::Serialize;
 use serde_wasm_bindgen::Serializer;
 use wasm_bindgen::prelude::*;
@@ -40,4 +40,14 @@ pub fn run_season(teams: JsValue, seed: u64, name: String) -> Result<JsValue, Js
     let r = simulate_season(&league, seed).map_err(|e| JsError::new(&e.to_string()))?;
     r.serialize(&bigint_serializer())
         .map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Derive the deterministic per-match seed from a season seed and a fixture
+/// index. Mirrors the internal derivation the engine uses when running a
+/// full season — exposed so JS can re-simulate individual matches when the
+/// player customizes tactics mid-season and the rest of the league needs
+/// to be re-simulated from a fixture onward. u64 → JS bigint automatically.
+#[wasm_bindgen]
+pub fn derive_match_seed(season_seed: u64, fixture_idx: u32) -> u64 {
+    match_seed(season_seed, fixture_idx)
 }
