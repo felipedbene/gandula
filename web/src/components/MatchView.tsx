@@ -3,7 +3,8 @@ import { play_match } from "../wasm/gandula_wasm.js";
 import { SAMPLE_TEAMS, teamById } from "../teams";
 import type { Match, MatchEvent, Player, Team } from "../types";
 import { eventKindName } from "../types";
-import { AsciiBox } from "./AsciiBox";
+import Card from "../srcl/Card";
+import CardDouble from "../srcl/CardDouble";
 
 type MatchViewProps = {
   onStatus: (msg: string) => void;
@@ -37,7 +38,7 @@ export function MatchView({ onStatus }: MatchViewProps) {
 
   return (
     <div className="match-view">
-      <AsciiBox title="CONFRONTO">
+      <Card title="CONFRONTO">
         <form
           className="form"
           onSubmit={(e) => {
@@ -86,7 +87,7 @@ export function MatchView({ onStatus }: MatchViewProps) {
             </button>
           </div>
         </form>
-      </AsciiBox>
+      </Card>
 
       {homeId === awayId && (
         <p className="muted">Escolha times diferentes.</p>
@@ -144,7 +145,7 @@ function MatchResult({ result }: { result: Match }) {
 
   return (
     <div className="match-result">
-      <AsciiBox double title={title} hint="[↑↓] rolar  [ESC] voltar">
+      <CardDouble title={title}>
         <ol className="feed">
           {visible.map((e, i) => {
             const side = e.side === "Away" ? " event--away" : "";
@@ -169,7 +170,7 @@ function MatchResult({ result }: { result: Match }) {
             );
           })}
         </ol>
-      </AsciiBox>
+      </CardDouble>
       {isPlaying && (
         <button className="btn" onClick={skip}>
           [ PULAR ]
