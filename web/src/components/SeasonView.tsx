@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { run_season } from "../wasm/gandula_wasm.js";
 import { ALL_TEAMS, teamById } from "../teams";
-import type { SeasonRecord } from "../types";
+import type { SeasonRecord, TeamStats } from "../types";
+import { computeStandings, goalDifference, points } from "../types";
 import { clearSeason, loadSeason, saveSeason, type SavedSeason } from "../persistence";
 import Card from "../srcl/Card";
 
@@ -244,8 +245,10 @@ function TeamPicker({
 }
 
 // ─── Phase: running ─────────────────────────────────────────────────────────
-// Placeholder for the per-round reveal screen that lands in C3.2. Shows just
-// enough metadata to confirm autoload + save state are wired correctly.
+// Two cards: current-round fixture list (no score) and partial standings
+// computed up to the current round. No reveal logic here — that's C3.3's
+// AVANÇAR button. Edge case: currentRoundIdx === totalRounds renders the
+// CAMPEONATO ENCERRADO branch so C3.4 has a stable hook point.
 function CampeonatoEmCurso({
   saved,
   onReset,
@@ -259,21 +262,183 @@ function CampeonatoEmCurso({
     saved.record.fixtures.length === 0
       ? 0
       : Math.max(...saved.record.fixtures.map((f) => f.round)) + 1;
+  const isFinished = saved.currentRoundIdx >= totalRounds;
+
+  const teamIds = saved.record.standings.map((s) => s.team_id);
+  const standings = computeStandings(
+    saved.record.matches,
+    saved.record.fixtures,
+    saved.currentRoundIdx,
+    teamIds,
+  );
+
+  const roundLabel = isFinished
+    ? `ENCERRADA · ${totalRounds} / ${totalRounds}`
+    : `RODADA ${saved.currentRoundIdx + 1} / ${totalRounds}`;
 
   return (
-    <Card title="CAMPEONATO EM CURSO">
-      <pre className="campeonato-meta">
-        {`Liga              : ${saved.record.league_name}\n`}
-        {`Semente           : ${saved.seed.toString()}\n`}
-        {`Time controlado   : ${teamName}\n`}
-        {`Rodada atual      : ${saved.currentRoundIdx} / ${totalRounds}`}
-      </pre>
-      <p className="muted">Tela de rodada chega no C3.2.</p>
+    <>
+      <p className="campeonato-header muted">
+        LIGA: {saved.record.league_name} · SEMENTE: {saved.seed.toString()} ·
+        {" "}TIME: {teamName} · {roundLabel}
+      </p>
+
+      {isFinished ? (
+        <Card title="CAMPEONATO ENCERRADO">
+          <p>Todas as rodadas foram jogadas.</p>
+        </Card>
+      ) : (
+        <Card title={`RODADA ${saved.currentRoundIdx + 1}`}>
+          <div className="round-list">
+            {currentRoundFixtures(saved).map((row, i) => (
+              <div
+                key={i}
+                className={`round-list__row${row.isUser ? " round-list__row--user" : ""}`}
+              >
+                <span className="round-list__glyph">{row.isUser ? "►" : " "}</span>
+                <span>
+                  {row.homeName.padEnd(24)}
+                  {"×  "}
+                  {row.awayName}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <StandingsTable
+        standings={standings}
+        highlightTeamId={saved.controlledTeamId}
+      />
+
       <div className="form-actions">
         <button type="button" className="btn" onClick={onReset}>
           [ NOVA TEMPORADA ]
         </button>
       </div>
+    </>
+  );
+}
+
+/**
+ * Pull the current-round matchups in **fixtures-array order** — the circle-
+ * method order is deterministic, ports of the season schedule depend on it,
+ * we don't re-sort by name or anything else.
+ */
+function currentRoundFixtures(saved: SavedSeason): Array<{
+  homeName: string;
+  awayName: string;
+  isUser: boolean;
+}> {
+  const round = saved.currentRoundIdx;
+  return saved.record.fixtures
+    .map((f, i) => ({ f, i }))
+    .filter(({ f }) => f.round === round)
+    .map(({ i }) => {
+      const m = saved.record.matches[i];
+      return {
+        homeName: teamById(m.home)?.name ?? `Time ${m.home}`,
+        awayName: teamById(m.away)?.name ?? `Time ${m.away}`,
+        isUser: m.home === saved.controlledTeamId || m.away === saved.controlledTeamId,
+      };
+    });
+}
+
+// ─── Shared: standings table ────────────────────────────────────────────────
+function pad(v: string | number, w: number, dir: "L" | "R" = "R"): string {
+  return dir === "L" ? String(v).padEnd(w) : String(v).padStart(w);
+}
+
+const COL_GAP = "  ";
+
+function StandingsTable({
+  standings,
+  highlightTeamId,
+  title = "CLASSIFICAÇÃO",
+}: {
+  standings: TeamStats[];
+  /** When provided, this team gets the bright row instead of the leader. In
+   *  running mode the user's controlled team is the natural focal point;
+   *  outside running mode (none in-tree today), falls back to i === 0. */
+  highlightTeamId?: number;
+  title?: string;
+}) {
+  const headerLine = [
+    pad("POS", 3),
+    pad("TIME", 24, "L"),
+    pad("P", 3),
+    pad("V", 3),
+    pad("E", 3),
+    pad("D", 3),
+    pad("GP", 3),
+    pad("GC", 3),
+    pad("SG", 4),
+    pad("PTS", 3),
+  ].join(COL_GAP);
+
+  const dividerLine = [
+    "───",
+    "─".repeat(24),
+    "──",
+    "──",
+    "──",
+    "──",
+    "──",
+    "──",
+    "───",
+    "──",
+  ]
+    .map((s, i) => (i === 1 ? s : pad(s, [3, 24, 3, 3, 3, 3, 3, 3, 4, 3][i])))
+    .join(COL_GAP);
+
+  return (
+    <Card title={title}>
+      <pre className="standings">
+        <span className="standings-dim">{headerLine}</span>
+        {"\n"}
+        <span className="standings-dim">{dividerLine}</span>
+        {"\n"}
+        {standings.map((s, i) => {
+          const team = teamById(s.team_id);
+          const teamName = team?.name ?? `Time ${s.team_id}`;
+          const gd = goalDifference(s);
+          const gdStr = gd > 0 ? `+${gd}` : String(gd);
+          const pts = points(s);
+          const hi =
+            highlightTeamId !== undefined
+              ? s.team_id === highlightTeamId
+                ? "standings-hi"
+                : ""
+              : i === 0
+                ? "standings-hi"
+                : "";
+          return (
+            <span key={s.team_id}>
+              {pad(`${i + 1}.`, 3)}
+              {COL_GAP}
+              <span className={hi}>{pad(teamName, 24, "L")}</span>
+              {COL_GAP}
+              {pad(s.played, 3)}
+              {COL_GAP}
+              {pad(s.won, 3)}
+              {COL_GAP}
+              {pad(s.drawn, 3)}
+              {COL_GAP}
+              {pad(s.lost, 3)}
+              {COL_GAP}
+              {pad(s.goals_for, 3)}
+              {COL_GAP}
+              {pad(s.goals_against, 3)}
+              {COL_GAP}
+              {pad(gdStr, 4)}
+              {COL_GAP}
+              <span className={hi}>{pad(pts, 3)}</span>
+              {"\n"}
+            </span>
+          );
+        })}
+      </pre>
     </Card>
   );
 }
