@@ -10,6 +10,11 @@ import type { SavedSeason, UserTactics } from "../persistence";
 import { teamById } from "../teams";
 import { resimulateFromRound } from "../util/resimulate";
 import Card from "../srcl/Card";
+import TacticsForm, {
+  type TacticsFormState,
+  tacticsFormStateEquals,
+  tacticsFormStateToOverride,
+} from "./TacticsForm";
 
 type TacticsViewProps = {
   saved: SavedSeason;
@@ -23,71 +28,49 @@ type TacticsViewProps = {
 };
 
 /**
- * Tactical configuration screen. Five enum dropdowns the engine consumes
- * via Team.formation + Team.tactics: formation, mentality, tempo, pressing,
- * width. starting_xi and bench come from the base team here — D.1.e/f will
- * let the user customize those too.
+ * Tactical configuration screen accessible via the quick-menu [ TÁTICA ]
+ * button on the running phase. Re-simulates from `currentRoundIdx` onward
+ * when the user applies changes.
  *
- * Lifecycle:
- *   1. Mount → initial dropdown values from saved.userTactics if defined,
- *      otherwise from the JSON team via teamById().
- *   2. User changes any dropdown → component-local state updates, dirty
- *      check enables [ APLICAR ].
- *   3. Click APLICAR → resimulateFromRound() runs synchronously (~160ms
- *      worst case), result handed to parent via onApply.
- *   4. Click VOLTAR → onBack() with no persistence.
+ * State ownership: this view owns the `TacticsFormState`. The form
+ * subcomponent is pure-controlled — see TacticsForm.tsx.
  */
 export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps) {
   const baseTeam = teamById(saved.controlledTeamId);
   const teamName = baseTeam?.name ?? `Time ${saved.controlledTeamId}`;
 
-  // Initial state: prefer userTactics overrides if defined, fall back to
-  // the team's defaults from the JSON registry. Both paths produce all five
-  // fields; the type guarantees it for userTactics, and team JSON always
-  // populates formation + tactics.
-  const initial = useMemo(() => {
+  const initial: TacticsFormState = useMemo(() => {
     if (saved.userTactics) {
       return {
         formation: saved.userTactics.formation,
-        tactics: saved.userTactics.tactics,
+        mentality: saved.userTactics.tactics.mentality,
+        tempo: saved.userTactics.tactics.tempo,
+        pressing: saved.userTactics.tactics.pressing,
+        width: saved.userTactics.tactics.width,
       };
     }
     return {
       formation: baseTeam?.formation ?? ("F442" as Formation),
-      tactics: baseTeam?.tactics ?? {
-        mentality: "Balanced" as Mentality,
-        tempo: "Normal" as Tempo,
-        pressing: "Medium" as Pressing,
-        width: "Normal" as Width,
-      },
+      mentality: baseTeam?.tactics.mentality ?? ("Balanced" as Mentality),
+      tempo: baseTeam?.tactics.tempo ?? ("Normal" as Tempo),
+      pressing: baseTeam?.tactics.pressing ?? ("Medium" as Pressing),
+      width: baseTeam?.tactics.width ?? ("Normal" as Width),
     };
   }, [saved.userTactics, baseTeam]);
 
-  const [formation, setFormation] = useState<Formation>(initial.formation);
-  const [mentality, setMentality] = useState<Mentality>(initial.tactics.mentality);
-  const [tempo, setTempo] = useState<Tempo>(initial.tactics.tempo);
-  const [pressing, setPressing] = useState<Pressing>(initial.tactics.pressing);
-  const [width, setWidth] = useState<Width>(initial.tactics.width);
+  const [current, setCurrent] = useState<TacticsFormState>(initial);
   const [error, setError] = useState<string | null>(null);
-
-  const dirty =
-    formation !== initial.formation ||
-    mentality !== initial.tactics.mentality ||
-    tempo !== initial.tactics.tempo ||
-    pressing !== initial.tactics.pressing ||
-    width !== initial.tactics.width;
+  const dirty = !tacticsFormStateEquals(initial, current);
 
   function apply() {
     if (!baseTeam) {
       setError("Time controlado não encontrado.");
       return;
     }
+    const { formation, tactics } = tacticsFormStateToOverride(current);
     const override: UserTactics = {
       formation,
-      tactics: { mentality, tempo, pressing, width },
-      // XI and bench come from the base team. D.1.e/f will let the user
-      // customize these; for now we forward the JSON defaults so the
-      // engine gets a complete Team object.
+      tactics,
       starting_xi: baseTeam.starting_xi.slice(),
       bench: baseTeam.bench?.slice() ?? [],
     };
@@ -95,15 +78,7 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
       const start = performance.now();
       const newSaved = resimulateFromRound(saved, saved.currentRoundIdx, override);
       const ms = Math.round(performance.now() - start);
-      // Count actually re-simulated fixtures (user-involving from
-      // currentRoundIdx onward) for the status line — purely informational.
-      const resimCount = saved.record.fixtures.reduce((acc, f, i) => {
-        if (f.round < saved.currentRoundIdx) return acc;
-        const m = saved.record.matches[i];
-        const involvesUser =
-          m.home === saved.controlledTeamId || m.away === saved.controlledTeamId;
-        return acc + (involvesUser ? 1 : 0);
-      }, 0);
+      const resimCount = countUserMatchesFromRound(saved, saved.currentRoundIdx);
       onApply(newSaved, ms, resimCount);
     } catch (e) {
       setError(String(e));
@@ -119,61 +94,8 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
           if (dirty) apply();
         }}
       >
-        <label>
-          <span>Formação</span>
-          <select
-            value={formation}
-            onChange={(e) => setFormation(e.target.value as Formation)}
-          >
-            <option value="F442">4-4-2</option>
-            <option value="F433">4-3-3</option>
-            <option value="F352">3-5-2</option>
-            <option value="F4231">4-2-3-1</option>
-          </select>
-        </label>
-        <label>
-          <span>Postura</span>
-          <select
-            value={mentality}
-            onChange={(e) => setMentality(e.target.value as Mentality)}
-          >
-            <option value="VeryDefensive">Muito Defensivo</option>
-            <option value="Defensive">Defensivo</option>
-            <option value="Balanced">Equilibrado</option>
-            <option value="Attacking">Ofensivo</option>
-            <option value="VeryAttacking">Muito Ofensivo</option>
-          </select>
-        </label>
-        <label>
-          <span>Ritmo</span>
-          <select value={tempo} onChange={(e) => setTempo(e.target.value as Tempo)}>
-            <option value="Slow">Lento</option>
-            <option value="Normal">Normal</option>
-            <option value="Fast">Rápido</option>
-          </select>
-        </label>
-        <label>
-          <span>Marcação</span>
-          <select
-            value={pressing}
-            onChange={(e) => setPressing(e.target.value as Pressing)}
-          >
-            <option value="Low">Baixa</option>
-            <option value="Medium">Média</option>
-            <option value="High">Alta</option>
-          </select>
-        </label>
-        <label>
-          <span>Amplitude</span>
-          <select value={width} onChange={(e) => setWidth(e.target.value as Width)}>
-            <option value="Narrow">Estreita</option>
-            <option value="Normal">Normal</option>
-            <option value="Wide">Larga</option>
-          </select>
-        </label>
-
+        <TacticsForm state={current} onChange={setCurrent} />
         {error && <pre className="error">{error}</pre>}
-
         <div className="form-actions form-actions--pair">
           <button type="submit" className="btn" disabled={!dirty}>
             [ APLICAR ]
@@ -185,4 +107,22 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
       </form>
     </Card>
   );
+}
+
+/**
+ * Count user-involving fixtures at or after `fromRoundIdx`. Exposed so
+ * PrepareView and TacticsView (and future Fio-D callers) report the same
+ * number in their status lines without duplicating the loop.
+ */
+export function countUserMatchesFromRound(
+  saved: SavedSeason,
+  fromRoundIdx: number,
+): number {
+  return saved.record.fixtures.reduce((acc, f, i) => {
+    if (f.round < fromRoundIdx) return acc;
+    const m = saved.record.matches[i];
+    const involves =
+      m.home === saved.controlledTeamId || m.away === saved.controlledTeamId;
+    return acc + (involves ? 1 : 0);
+  }, 0);
 }

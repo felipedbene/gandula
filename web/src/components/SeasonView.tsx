@@ -14,6 +14,7 @@ import {
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
+import PrepareView from "./PrepareView";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
@@ -29,6 +30,7 @@ type Phase =
   | { tag: "form" }
   | { tag: "picking"; pendingRecord: SeasonRecord }
   | { tag: "running"; saved: SavedSeason }
+  | { tag: "prepare"; saved: SavedSeason }
   | { tag: "revealing"; saved: SavedSeason }
   | { tag: "tactics"; saved: SavedSeason };
 
@@ -158,22 +160,48 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     }
   }
 
+  function openPrepare(saved: SavedSeason) {
+    onStatus(`preparando rodada ${saved.currentRoundIdx + 1}`);
+    setPhase({ tag: "prepare", saved });
+  }
+
+  function backFromPrepare(saved: SavedSeason) {
+    onStatus("voltou ao painel");
+    setPhase({ tag: "running", saved });
+  }
+
   /**
-   * Persist the incremented save FIRST, then enter reveal. If the user
-   * hits F5 mid-animation, autoload sees the new currentRoundIdx and goes
-   * straight to running — the reveal animation is lost but state is intact.
-   * That's the right trade: state correctness > eye candy.
+   * Called when user clicks [ JOGAR ] from PrepareView. The view may have
+   * re-simulated already (if dirty) or returned the original save (if no
+   * tactical change). Either way, persist the incremented round FIRST and
+   * THEN enter revealing — same persist-before-reveal ordering the old
+   * advanceRound used so F5 mid-reveal autoloads straight into running
+   * with the new round already committed.
    */
-  async function advanceRound(saved: SavedSeason) {
-    const newSaved: SavedSeason = {
-      ...saved,
-      currentRoundIdx: saved.currentRoundIdx + 1,
+  async function playRound(
+    newSaved: SavedSeason,
+    resimMs: number,
+    resimCount: number,
+  ) {
+    const advanced: SavedSeason = {
+      ...newSaved,
+      currentRoundIdx: newSaved.currentRoundIdx + 1,
       savedAt: new Date().toISOString(),
     };
     try {
-      await saveSeason(newSaved);
-      onStatus(`avançando para rodada ${newSaved.currentRoundIdx + 1}`);
-      setPhase({ tag: "revealing", saved: newSaved });
+      await saveSeason(advanced);
+      const teamName =
+        teamById(advanced.controlledTeamId)?.name ??
+        `Time ${advanced.controlledTeamId}`;
+      if (resimCount > 0) {
+        const plural = resimCount === 1 ? "" : "s";
+        onStatus(
+          `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms · rodada ${advanced.currentRoundIdx} iniciada`,
+        );
+      } else {
+        onStatus(`avançando para rodada ${advanced.currentRoundIdx + 1}`);
+      }
+      setPhase({ tag: "revealing", saved: advanced });
     } catch (e) {
       setError(String(e));
       onStatus(`erro ao salvar avanço: ${e}`);
@@ -204,8 +232,15 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         <CampeonatoEmCurso
           saved={phase.saved}
           onReset={resetSeason}
-          onAdvance={() => advanceRound(phase.saved)}
+          onPrepare={() => openPrepare(phase.saved)}
           onTactics={() => openTactics(phase.saved)}
+        />
+      )}
+      {phase.tag === "prepare" && (
+        <PrepareView
+          saved={phase.saved}
+          onPlay={playRound}
+          onBack={() => backFromPrepare(phase.saved)}
         />
       )}
       {phase.tag === "revealing" && (
@@ -336,12 +371,12 @@ function TeamPicker({
 function CampeonatoEmCurso({
   saved,
   onReset,
-  onAdvance,
+  onPrepare,
   onTactics,
 }: {
   saved: SavedSeason;
   onReset: () => void;
-  onAdvance: () => void;
+  onPrepare: () => void;
   onTactics: () => void;
 }) {
   const team = teamById(saved.controlledTeamId);
@@ -398,7 +433,7 @@ function CampeonatoEmCurso({
       />
 
       <div className="form-actions form-actions--triple">
-        <button type="button" className="btn" onClick={onAdvance}>
+        <button type="button" className="btn" onClick={onPrepare}>
           [ AVANÇAR RODADA ]
         </button>
         <button type="button" className="btn" onClick={onTactics}>

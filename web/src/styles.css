@@ -476,6 +476,13 @@ fieldset legend {
   gap: calc(var(--char-w) * 2);
 }
 
+/* PrepareView: PRÓXIMO JOGO card body — preserves the padded monospace
+   alignment of the home/away venues + força readout that's built in JSX. */
+.next-opponent {
+  white-space: pre;
+  margin: 0;
+}
+
 /* C3.4 finale ─────────────────────────────────────────────────────────────── */
 
 /* Champion celebration body when the controlled team wins — uses the goal-
