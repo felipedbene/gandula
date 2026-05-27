@@ -162,7 +162,6 @@ fictionalize --seed 1998 --dump-mapping > out_mapping.json
 ```json
 {
   "seed": 1998,
-  "generated_at": "2026-05-26T22:00:00Z",
   "clubs": {
     "Flamengo": "Flamenguinho FC",
     "Palmeiras": "Palmeiral EC",
@@ -178,6 +177,9 @@ fictionalize --seed 1998 --dump-mapping > out_mapping.json
 The shape is intentionally simple — flat dicts. Felipe can hand-edit this file
 before re-running the fictionalizer if he wants to fix a specific name without
 touching seeds.
+
+Timestamp omitted because byte-identical rerun is the contract; recover via
+`git log` or file mtime if you need to know when a mapping was generated.
 
 ## Idempotency
 
