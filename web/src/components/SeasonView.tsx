@@ -84,9 +84,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
               onChange={(e) => setSeed(Number(e.target.value))}
             />
           </label>
-          <button type="submit" className="btn" disabled={selected.size < 2}>
-            [ RODAR TEMPORADA ]
-          </button>
+          <div className="form-actions">
+            <button type="submit" className="btn" disabled={selected.size < 2}>
+              [ RODAR TEMPORADA ]
+            </button>
+          </div>
         </form>
       </AsciiBox>
 
