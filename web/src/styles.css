@@ -246,57 +246,58 @@ fieldset legend {
 }
 
 .match-result {
-  margin-top: 24px;
-}
-
-.scoreline {
-  font-size: 18px;
-  margin: 0 0 12px;
+  margin-top: 8px;
 }
 
 .feed {
   list-style: none;
   padding: 0;
   margin: 0;
-  border: 1px solid var(--line);
-  border-radius: 4px;
   max-height: 480px;
   overflow-y: auto;
-  background: white;
 }
 
 .feed .event {
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--pale);
-}
-
-.feed .event:last-child {
-  border-bottom: none;
+  padding: 0;
 }
 
 .event.goal {
+  color: var(--accent-gol);
+  text-shadow: var(--glow-gol);
   font-weight: bold;
-  color: var(--accent);
-  background: #f1fff5;
 }
 
 .event.red {
-  color: var(--bad);
+  color: var(--accent-red);
+  text-shadow: var(--glow-red);
   font-weight: bold;
 }
 
 .event.yellow {
-  color: var(--warn);
+  color: var(--accent-yel);
+  text-shadow: 0 0 3px var(--accent-yel);
 }
 
 .event.sub {
-  color: #1a4f8f;
+  color: var(--accent-sub);
+  text-shadow: 0 0 2px var(--accent-sub);
   font-style: italic;
 }
 
 .event.whistle {
+  color: var(--fg-hi);
+  text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
   font-weight: bold;
-  background: var(--pale);
+}
+
+.event__minute {
+  color: var(--fg-dim);
+  text-shadow: 0 0 1px rgba(51, 255, 51, 0.4);
+  margin-right: 1ch;
+}
+
+.event__glyph {
+  margin-right: 1ch;
 }
 
 .season-result {

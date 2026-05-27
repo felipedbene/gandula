@@ -83,22 +83,44 @@ export function MatchView() {
 
       {error && <pre className="error">{error}</pre>}
 
-      {result && (
-        <div className="match-result">
-          <h2 className="scoreline">
-            {teamById(result.home)?.name} {result.result.home_goals}
-            {" x "}
-            {result.result.away_goals} {teamById(result.away)?.name}
-          </h2>
-          <ol className="feed">
-            {result.events.map((e, i) => (
-              <li key={i} className={`event ${eventClass(e)}`}>
+      {result && <MatchResult result={result} />}
+    </div>
+  );
+}
+
+function MatchResult({ result }: { result: Match }) {
+  const home = teamById(result.home)?.name ?? `Time ${result.home}`;
+  const away = teamById(result.away)?.name ?? `Time ${result.away}`;
+  const title =
+    `${home.toUpperCase()}  ${result.result.home_goals} x ${result.result.away_goals}  ${away.toUpperCase()}`;
+
+  return (
+    <div className="match-result">
+      <AsciiBox double title={title} hint="[↑↓] rolar  [ESC] voltar">
+        <ol className="feed">
+          {result.events.map((e, i) => {
+            const klass = `event ${eventClass(e)}`;
+            const glyph = eventGlyph(e);
+            const m = e.text.match(/^(\d+'?)\s+(.*)$/);
+            if (m) {
+              const [, minute, rest] = m;
+              return (
+                <li key={i} className={klass}>
+                  <span className="event__minute">{minute}</span>
+                  {glyph && <span className="event__glyph">{glyph}</span>}
+                  {rest}
+                </li>
+              );
+            }
+            return (
+              <li key={i} className={klass}>
+                {glyph && <span className="event__glyph">{glyph}</span>}
                 {e.text}
               </li>
-            ))}
-          </ol>
-        </div>
-      )}
+            );
+          })}
+        </ol>
+      </AsciiBox>
     </div>
   );
 }
@@ -117,6 +139,25 @@ function eventClass(e: MatchEvent): string {
     case "HalfTime":
     case "FullTime":
       return "whistle";
+    default:
+      return "";
+  }
+}
+
+function eventGlyph(e: MatchEvent): string {
+  const k = eventKindName(e.kind);
+  switch (k) {
+    case "Goal":
+      return "►►►";
+    case "RedCard":
+      return "██";
+    case "YellowCard":
+      return "▓";
+    case "Substitution":
+      return "↔";
+    case "HalfTime":
+    case "FullTime":
+      return "───";
     default:
       return "";
   }
