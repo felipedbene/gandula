@@ -469,11 +469,22 @@ fieldset legend {
   gap: calc(var(--char-w) * 2);
 }
 
-/* Three action buttons inline (AVANÇAR + TÁTICA + NOVA TEMPORADA on the
-   running phase). Same treatment as --pair — flex handles the extra child. */
+/* Three action buttons inline. Legacy from before E.1.a's [ VER SÉRIE X ]
+   button (the running phase now uses --quadruple). Kept for any future
+   three-button row that may want it. */
 .form-actions--triple {
   justify-content: center;
   gap: calc(var(--char-w) * 2);
+}
+
+/* Four action buttons inline (AVANÇAR + TÁTICA + VER outra divisão +
+   NOVA TEMPORADA on the running phase). flex-wrap kicks in if the row
+   doesn't fit a narrow viewport — labels are short enough that 80 cols
+   accommodate all four side-by-side. */
+.form-actions--quadruple {
+  justify-content: center;
+  gap: calc(var(--char-w) * 2);
+  flex-wrap: wrap;
 }
 
 /* PrepareView: PRÓXIMO JOGO card body — preserves the padded monospace

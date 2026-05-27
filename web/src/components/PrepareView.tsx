@@ -4,13 +4,18 @@ import type {
   Match,
   Mentality,
   Pressing,
-  Team,
   Tempo,
   Width,
 } from "../types";
-import type { SavedSeason, UserTactics } from "../persistence";
+import {
+  findUserDivisionIdx,
+  totalRoundsOf,
+  type SavedSeason,
+  type UserTactics,
+} from "../persistence";
 import { teamById } from "../teams";
 import { resimulateFromRound } from "../util/resimulate";
+import { avgStrength } from "../util/divisions";
 import Card from "../srcl/Card";
 import TacticsForm, {
   type TacticsFormState,
@@ -37,19 +42,18 @@ type PrepareViewProps = {
 /**
  * Intermediate screen between [ AVANÇAR RODADA ] (running phase) and the
  * round reveal. Shows the next opponent (or "SEM JOGO" for bye rounds)
- * plus the tactical form.
+ * in the user's division, plus the tactical form. Re-simulation on JOGAR
+ * runs only when the form is dirty; clean JOGAR forwards the original
+ * save through to the reveal so the user doesn't eat the ~160ms freeze
+ * when they just want to play with the current tactics.
  *
- * JOGAR behavior:
- *   - If the user changed tactics → re-simulate, then transition
- *   - If unchanged → forward the original save through, skip the ~160ms
- *     re-simulation freeze (clean JOGAR is the explicit "play with what
- *     I have" path)
- *
- * State ownership: this view owns the TacticsFormState (current). The
- * form subcomponent is pure-controlled.
+ * State ownership: this view owns the TacticsFormState + LineupState. All
+ * form subcomponents are pure-controlled.
  */
 export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps) {
   const baseTeam = teamById(saved.controlledTeamId);
+  const userDivIdx = findUserDivisionIdx(saved);
+  const userDiv = saved.divisions[userDivIdx];
 
   const initial: TacticsFormState = useMemo(() => {
     if (saved.userTactics) {
@@ -90,20 +94,24 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
     !tacticsFormStateEquals(initial, current) ||
     !lineupStateEquals(initialLineup, currentLineup);
 
-  // User's fixture in the current round (null on bye rounds — 17-team
-  // odd-N schedule gives every team 2 byes per season).
+  // User's fixture in the current round of their division (null on bye
+  // rounds — Série B has 9 teams, so engine inserts 2 byes per team per
+  // season via the virtual BYE position).
   const userFixture = useMemo(() => {
-    const fixtures = saved.record.fixtures;
-    const matches = saved.record.matches;
+    const fixtures = userDiv.record.fixtures;
+    const matches = userDiv.record.matches;
     for (let i = 0; i < fixtures.length; i++) {
-      if (fixtures[i].round !== saved.currentRoundIdx) continue;
+      if (fixtures[i].round !== userDiv.currentRoundIdx) continue;
       const m = matches[i];
-      if (m.home === saved.controlledTeamId || m.away === saved.controlledTeamId) {
+      if (
+        m.home === saved.controlledTeamId ||
+        m.away === saved.controlledTeamId
+      ) {
         return { fixtureIdx: i, match: m };
       }
     }
     return null;
-  }, [saved]);
+  }, [userDiv, saved.controlledTeamId]);
 
   const isBye = userFixture === null;
 
@@ -128,24 +136,22 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
     };
     try {
       const start = performance.now();
-      const newSaved = resimulateFromRound(saved, saved.currentRoundIdx, override);
+      const newSaved = resimulateFromRound(saved, userDiv.currentRoundIdx, override);
       const ms = Math.round(performance.now() - start);
-      const resimCount = countUserMatchesFromRound(saved, saved.currentRoundIdx);
+      const resimCount = countUserMatchesFromRound(saved, userDiv.currentRoundIdx);
       onPlay(newSaved, ms, resimCount);
     } catch (e) {
       setError(String(e));
     }
   }
 
-  const totalRounds =
-    saved.record.fixtures.length === 0
-      ? 0
-      : Math.max(...saved.record.fixtures.map((f) => f.round)) + 1;
+  const totalRounds = totalRoundsOf(userDiv);
 
   return (
     <>
       <p className="campeonato-header muted">
-        PREPARAR · RODADA {saved.currentRoundIdx + 1} / {totalRounds}
+        PREPARAR · {userDiv.name} · RODADA {userDiv.currentRoundIdx + 1} /{" "}
+        {totalRounds}
       </p>
 
       {isBye ? (
@@ -236,24 +242,4 @@ function ByeCard() {
       </p>
     </Card>
   );
-}
-
-/** Mirror of MatchView's avgStrength (deleted along with MatchView in
- *  0f1ea72). Inlined here pending a util/team-stats extraction when a
- *  third caller appears. Per-player overall is the mean of 6 attributes;
- *  the team's overall is the mean across the 11 starters, rounded. */
-function avgStrength(team: Team): number {
-  const starters = team.starting_xi
-    .map((id) => team.roster.find((p) => p.id === id))
-    .filter((p): p is NonNullable<typeof p> => p !== undefined);
-  if (starters.length === 0) return 0;
-  const sum = starters.reduce((acc, p) => {
-    const a = p.attributes;
-    return (
-      acc +
-      (a.pace + a.technique + a.passing + a.defending + a.finishing + a.stamina) /
-        6
-    );
-  }, 0);
-  return Math.round(sum / starters.length);
 }

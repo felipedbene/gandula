@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Match } from "../types";
-import type { SavedSeason } from "../persistence";
+import { findUserDivisionIdx, type SavedSeason } from "../persistence";
 import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
 import Card from "../srcl/Card";
@@ -23,28 +23,39 @@ type OtherMatch = {
 
 /**
  * Orchestrates the AVANÇAR reveal: user's match (if any) plays tick-by-tick
- * via MatchReveal, the other matches in the round reveal final scores at
- * deterministic wall-clock moments seeded off the season's seed XOR round.
+ * via MatchReveal, the other matches in the user's division reveal final
+ * scores at deterministic wall-clock moments seeded off the division seed
+ * XOR round.
  *
- * Persistence note: by the time this component mounts, the save's
- * `currentRoundIdx` has already been incremented by SeasonView. The round
- * we're revealing is therefore `currentRoundIdx - 1`. F5 mid-reveal autoloads
- * straight back into `running` — animation is lost, save is intact.
+ * Persistence note: by the time this component mounts, both divisions have
+ * already been incremented by SeasonView.playRound. The round we're
+ * revealing is therefore `userDiv.currentRoundIdx - 1`. F5 mid-reveal
+ * autoloads straight back into `running` — animation is lost, save intact.
  *
- * Bye-round path: when the user's team has no fixture in this round
- * (happens in odd-team leagues — 17 teams → 2 byes per season), the user
- * match pane is omitted and the header explicitly says "SEU TIME DESCANSA",
- * so it doesn't read as a UI bug.
+ * The other division advances silently in the same playRound call; nothing
+ * about it is shown here — it's available read-only via the
+ * [ VER SÉRIE A/B ] button on the running screen.
+ *
+ * Bye-round path: Série B is N=9 odd, so the engine schedules a virtual
+ * BYE for one team per round; if that team is the user, the user match
+ * pane is omitted and the header says "SEU TIME DESCANSA". Série A is
+ * N=8 even, no byes — user is always playing there.
  */
 export default function RevealRound({ saved, onDone }: RevealRoundProps) {
-  const revealRound = saved.currentRoundIdx - 1;
+  const userDivIdx = findUserDivisionIdx(saved);
+  const userDiv = saved.divisions[userDivIdx];
+  // Per-division seed namespace — matches the XOR used by SeasonView.run()
+  // and util/resimulate's resimulateFromRound so reveal timing stays
+  // deterministic across re-simulations.
+  const divSeed = saved.seed ^ BigInt(userDiv.tier);
+  const revealRound = userDiv.currentRoundIdx - 1;
 
   // Pair fixtures with matches for the round in question, preserving the
-  // engine's fixtures-array ordering (circle method is deterministic and the
-  // UI shouldn't second-guess it).
+  // engine's fixtures-array ordering (circle method is deterministic and
+  // the UI shouldn't second-guess it).
   const { userMatch, others } = useMemo(() => {
-    const fixtures = saved.record.fixtures;
-    const matches = saved.record.matches;
+    const fixtures = userDiv.record.fixtures;
+    const matches = userDiv.record.matches;
     const rows: { idx: number; match: Match; homeName: string; awayName: string; isUser: boolean }[] = [];
     fixtures.forEach((f, i) => {
       if (f.round !== revealRound) return;
@@ -55,18 +66,20 @@ export default function RevealRound({ saved, onDone }: RevealRoundProps) {
         match: m,
         homeName: teamById(m.home)?.name ?? `Time ${m.home}`,
         awayName: teamById(m.away)?.name ?? `Time ${m.away}`,
-        isUser: m.home === saved.controlledTeamId || m.away === saved.controlledTeamId,
+        isUser:
+          m.home === saved.controlledTeamId ||
+          m.away === saved.controlledTeamId,
       });
     });
     const userRow = rows.find((r) => r.isUser);
     const otherRows = rows.filter((r) => !r.isUser);
     return { userMatch: userRow, others: otherRows };
-  }, [saved, revealRound]);
+  }, [userDiv, saved.controlledTeamId, revealRound]);
 
-  // Deterministic per (seed, round): same season + same round always picks
-  // the same reveal-at-minute sequence for parallel matches.
+  // Deterministic per (divSeed, round): same division + same round always
+  // picks the same reveal-at-minute sequence for parallel matches.
   const otherWithTiming: OtherMatch[] = useMemo(() => {
-    const minutes = revealMinutes(saved.seed, revealRound, others.length);
+    const minutes = revealMinutes(divSeed, revealRound, others.length);
     return others.map((r, i) => ({
       index: r.idx,
       match: r.match,
@@ -74,7 +87,7 @@ export default function RevealRound({ saved, onDone }: RevealRoundProps) {
       awayName: r.awayName,
       revealAtMinute: minutes[i],
     }));
-  }, [saved.seed, revealRound, others]);
+  }, [divSeed, revealRound, others]);
 
   const [othersRevealed, setOthersRevealed] = useState<boolean[]>(() =>
     new Array(otherWithTiming.length).fill(false),
@@ -127,8 +140,8 @@ export default function RevealRound({ saved, onDone }: RevealRoundProps) {
   }, [userDone, allOthersDone, onDone]);
 
   const headerText = userMatch
-    ? `REVELANDO RODADA ${revealRound + 1}`
-    : `REVELANDO RODADA ${revealRound + 1} — SEU TIME DESCANSA NESTA RODADA`;
+    ? `REVELANDO RODADA ${revealRound + 1} · ${userDiv.name}`
+    : `REVELANDO RODADA ${revealRound + 1} · ${userDiv.name} — SEU TIME DESCANSA`;
 
   const isPlaying = !userDone || !allOthersDone;
 

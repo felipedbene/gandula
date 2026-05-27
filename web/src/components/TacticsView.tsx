@@ -6,7 +6,11 @@ import type {
   Tempo,
   Width,
 } from "../types";
-import type { SavedSeason, UserTactics } from "../persistence";
+import {
+  findUserDivisionIdx,
+  type SavedSeason,
+  type UserTactics,
+} from "../persistence";
 import { teamById } from "../teams";
 import { resimulateFromRound } from "../util/resimulate";
 import Card from "../srcl/Card";
@@ -96,10 +100,13 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
       bench: currentLineup.bench.slice(),
     };
     try {
+      const userDivIdx = findUserDivisionIdx(saved);
+      const userDiv = saved.divisions[userDivIdx];
+      const fromRound = userDiv.currentRoundIdx;
       const start = performance.now();
-      const newSaved = resimulateFromRound(saved, saved.currentRoundIdx, override);
+      const newSaved = resimulateFromRound(saved, fromRound, override);
       const ms = Math.round(performance.now() - start);
-      const resimCount = countUserMatchesFromRound(saved, saved.currentRoundIdx);
+      const resimCount = countUserMatchesFromRound(saved, fromRound);
       onApply(newSaved, ms, resimCount);
     } catch (e) {
       setError(String(e));
@@ -145,17 +152,19 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
 }
 
 /**
- * Count user-involving fixtures at or after `fromRoundIdx`. Exposed so
- * PrepareView and TacticsView (and future Fio-D callers) report the same
+ * Count user-involving fixtures at or after `fromRoundIdx` within the
+ * user's division. Exposed so PrepareView and TacticsView report the same
  * number in their status lines without duplicating the loop.
  */
 export function countUserMatchesFromRound(
   saved: SavedSeason,
   fromRoundIdx: number,
 ): number {
-  return saved.record.fixtures.reduce((acc, f, i) => {
+  const userDivIdx = findUserDivisionIdx(saved);
+  const userDiv = saved.divisions[userDivIdx];
+  return userDiv.record.fixtures.reduce((acc, f, i) => {
     if (f.round < fromRoundIdx) return acc;
-    const m = saved.record.matches[i];
+    const m = userDiv.record.matches[i];
     const involves =
       m.home === saved.controlledTeamId || m.away === saved.controlledTeamId;
     return acc + (involves ? 1 : 0);
