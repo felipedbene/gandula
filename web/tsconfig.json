@@ -15,6 +15,7 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "noEmit": true,
+    "types": ["vitest/globals", "node"],
     "baseUrl": ".",
     "paths": {
       "@components/*": ["src/srcl/*"],

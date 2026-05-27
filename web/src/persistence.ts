@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
-import type { SeasonRecord } from "./types";
+import type { Formation, SeasonRecord, Tactics } from "./types";
 
 /**
  * IndexedDB persistence for the in-progress Elifoot-mode season.
@@ -28,6 +28,22 @@ const DB_VERSION = 1;
 const STORE = "season";
 const SLOT_KEY = "current";
 
+/**
+ * User's tactical overrides for their controlled team. When undefined on
+ * SavedSeason, the team is used as-is from the JSON registry. When defined,
+ * these fields override the JSON defaults at re-simulation time (Fio D —
+ * see util/resimulate.ts).
+ *
+ * Stored as a complete object (not a diff) for schema simplicity: applying
+ * it is straight field substitution, and serialization is symmetric.
+ */
+export type UserTactics = {
+  formation: Formation;
+  tactics: Tactics;
+  starting_xi: number[];   // exactly 11 player ids from the team's roster
+  bench: number[];         // up to 7 player ids; disjoint from starting_xi
+};
+
 export type SavedSeason = {
   schemaVersion: 1;
   savedAt: string;            // ISO 8601 timestamp at last save
@@ -35,6 +51,13 @@ export type SavedSeason = {
   controlledTeamId: number;   // which team the player is managing
   currentRoundIdx: number;    // 0-indexed, next round to reveal
   record: SeasonRecord;       // entire pre-simulated season
+  /**
+   * Undefined → controlled team used as-is from the JSON registry. Once
+   * defined, all four sub-fields are populated together — no partial
+   * overrides. Old saves persisted before this field existed deserialize
+   * with `userTactics: undefined`, which is the desired backward-compat.
+   */
+  userTactics?: UserTactics;
 };
 
 async function db(): Promise<IDBPDatabase> {
