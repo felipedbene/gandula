@@ -113,32 +113,6 @@ body {
   margin: 0;
 }
 
-.tabs {
-  display: flex;
-  gap: 12px;
-  margin: 8px 0 16px;
-}
-
-.tab {
-  background: transparent;
-  color: var(--fg-dim);
-  font: inherit;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-shadow: var(--glow);
-}
-
-.tab.active {
-  background: var(--fg);
-  color: var(--bg);
-  text-shadow: none;
-}
-
-.tab:hover:not(.active) {
-  color: var(--fg);
-}
-
 .content {
   padding-top: 8px;
 }

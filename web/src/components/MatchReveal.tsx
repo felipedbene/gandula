@@ -20,8 +20,7 @@ type MatchRevealProps = {
   match: Match;
   /** Fires once when reveal completes (naturally or via skipAll). When set,
    *  the internal [ PULAR ] button is suppressed — parent owns the skip
-   *  control (e.g. RevealRound during AVANÇAR). When unset (standalone use
-   *  from MatchView), the internal button shows. */
+   *  control (e.g. RevealRound during AVANÇAR). */
   onComplete?: () => void;
   /** External skip signal. Flipping to `true` jumps reveal to the end and
    *  triggers onComplete on the next tick. */
