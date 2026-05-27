@@ -5,7 +5,11 @@ import type { Match, MatchEvent } from "../types";
 import { eventKindName } from "../types";
 import { AsciiBox } from "./AsciiBox";
 
-export function MatchView() {
+type MatchViewProps = {
+  onStatus: (msg: string) => void;
+};
+
+export function MatchView({ onStatus }: MatchViewProps) {
   const [homeId, setHomeId] = useState<number>(SAMPLE_TEAMS[0].id);
   const [awayId, setAwayId] = useState<number>(SAMPLE_TEAMS[1].id);
   const [seed, setSeed] = useState<number>(1998);
@@ -19,11 +23,15 @@ export function MatchView() {
       const home = teamById(homeId);
       const away = teamById(awayId);
       if (!home || !away) throw new Error("time não encontrado");
+      const start = performance.now();
       // wasm-bindgen expects BigInt for u64.
       const raw = play_match(home, away, BigInt(seed));
+      const ms = Math.round(performance.now() - start);
       setResult(raw as Match);
+      onStatus(`partida concluída em ${ms}ms · seed ${seed}`);
     } catch (e) {
       setError(String(e));
+      onStatus(`erro: ${e}`);
     }
   }
 

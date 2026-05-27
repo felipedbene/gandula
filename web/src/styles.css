@@ -363,3 +363,23 @@ fieldset legend {
   color: var(--fg-hi);
   text-shadow: 0 0 2px #fff, 0 0 6px rgba(255, 255, 255, 0.4);
 }
+
+.status {
+  margin-top: 16px;
+  color: var(--fg-dim);
+}
+
+.cursor {
+  display: inline-block;
+  animation: blink 24s infinite;
+}
+
+/* Brief specified `steps(2, start)` + `to { visibility: hidden }` but that
+   combination leaves the cursor permanently hidden (per CSS discrete
+   visibility interpolation at step boundaries — both step values resolve
+   to >= 50% progress → always 'to' state). Explicit keyframes split the
+   cycle 50/50 with hard transitions, no timing-function reliance. */
+@keyframes blink {
+  0%, 50% { visibility: visible; }
+  50.01%, 100% { visibility: hidden; }
+}

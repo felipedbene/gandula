@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import init from "./wasm/gandula_wasm.js";
 import { AsciiBox } from "./components/AsciiBox";
+import { Footer } from "./components/Footer";
 import { MatchView } from "./components/MatchView";
 import { SeasonView } from "./components/SeasonView";
 
@@ -10,6 +11,7 @@ export function App() {
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<Tab>("match");
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>("pronto");
 
   useEffect(() => {
     init()
@@ -64,8 +66,13 @@ export function App() {
           </button>
         </nav>
         <section className="content">
-          {tab === "match" ? <MatchView /> : <SeasonView />}
+          {tab === "match" ? (
+            <MatchView onStatus={setStatus} />
+          ) : (
+            <SeasonView onStatus={setStatus} />
+          )}
         </section>
+        <Footer status={status} />
       </main>
     </div>
   );

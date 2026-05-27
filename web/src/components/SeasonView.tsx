@@ -5,7 +5,11 @@ import type { SeasonRecord, TeamStats } from "../types";
 import { goalDifference, points } from "../types";
 import { AsciiBox } from "./AsciiBox";
 
-export function SeasonView() {
+type SeasonViewProps = {
+  onStatus: (msg: string) => void;
+};
+
+export function SeasonView({ onStatus }: SeasonViewProps) {
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(SAMPLE_TEAMS.map((t) => t.id))
   );
@@ -30,10 +34,14 @@ export function SeasonView() {
     try {
       const teams = SAMPLE_TEAMS.filter((t) => selected.has(t.id));
       if (teams.length < 2) throw new Error("Selecione pelo menos 2 times.");
+      const start = performance.now();
       const raw = run_season(teams, BigInt(seed), name);
+      const ms = Math.round(performance.now() - start);
       setRecord(raw as SeasonRecord);
+      onStatus(`temporada concluída em ${ms}ms · seed ${seed}`);
     } catch (e) {
       setError(String(e));
+      onStatus(`erro: ${e}`);
     }
   }
 
