@@ -8,17 +8,14 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 - **E.1.a–e** — career mode: two divisions (Série A/B), promotion/relegation,
   the `Career` schema (currently v5) + in-place migrations, the finances layer,
   and the transfer market.
+- **E.1.f — Manager firing** — lose-condition when the balance goes negative.
+  Shipped beyond the original plan: finances now accrue **per round** (home
+  gate + wage slice), so you can go broke — and be fired — mid-season, and the
+  transfer market is openable **every round**, not just at the finale.
 - **Platform** — Mantine UI (responsive, dark phosphor theme), tick-by-tick
-  match reveal with a running clock, randomized new careers (random Série B
-  club + random seed), and GitHub Actions CI/CD (build wasm → test → deploy).
-
-## E.1 — Career loop (closing out)
-
-- [ ] **E.1.f — Manager firing** · _S, web-only_
-  Go to a "fired" / game-over state when finances run dry. Builds entirely on
-  the existing finances layer (`manager.money`, `computeSeasonFinances`) — no
-  engine changes. Open UX decision: what the fired state looks like (a
-  post-mortem screen → new career? a summary of what went wrong?).
+  match reveal with a running clock (on bye rounds too), randomized new careers
+  (random Série B club + random seed), and GitHub Actions CI/CD (build wasm →
+  test → deploy).
 
 ## E.2 — Living world (players age & evolve)
 
@@ -40,22 +37,20 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 
 ## Polish (small, slot in anytime)
 
-- [ ] **Scout reports** · _S, web-only_
+- [ ] **Scout reports** · _S, web-only_ ← **next**
   Richer free-agent browsing layered on top of the transfer market (attributes,
-  comparisons, recommendations).
+  comparisons, recommendations) so buys aren't blind.
 - [~] **Live playback** · _S–M, web_
-  Keep extending the reveal ticker. Partially done — the running match clock
-  landed with the reveal-pacing work.
+  Running match clock during the reveal landed (incl. bye rounds). Further
+  playback polish (per-event pacing tweaks, highlights) can still be layered on.
 
 ## Suggested order
 
-1. **E.1.f — manager firing** — cheap, adds real stakes, closes the E.1 arc.
-2. **Scout reports** — quick web-only win.
+1. ~~E.1.f — manager firing~~ ✓ shipped (with per-round finances + mid-season market)
+2. **Scout reports** — quick web-only win. ← next
 3. **E.2.a — aging** — deepens multi-season play.
-4. **Live playback** — polish on the reveal.
-5. **E.3 — self-play AI** — last; biggest, and benefits from E.2 + the
+4. **E.3 — self-play AI** — last; biggest, and benefits from E.2 + the
    `Manager` trait extraction.
 
-Dependencies: E.1.f ← finances (done) · scout reports ← transfer market (done)
-· self-play ← `Manager`-trait extraction + ideally E.2 (a richer world to play
-against).
+Dependencies: scout reports ← transfer market (done) · aging ← stays
+deterministic in `core` · self-play ← `Manager`-trait extraction + ideally E.2.
