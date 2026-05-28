@@ -575,7 +575,10 @@ function SeasonFinale({
   // always are (Série A finishes round 14 < user's Série B 18), but the
   // throw is a defensive guarantee for E.1.c when the user can be in
   // either tier.
-  const prResult = useMemo(() => computePromotionRelegation(saved), [saved]);
+  const prResult = useMemo(
+    () => computePromotionRelegation(saved, saved.controlledTeamId),
+    [saved],
+  );
   const tierASize =
     saved.divisions.find((d) => d.tier === 1)?.record.standings.length ?? 0;
 

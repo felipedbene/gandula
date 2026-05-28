@@ -121,7 +121,7 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    const result = computePromotionRelegation(saved);
+    const result = computePromotionRelegation(saved, saved.controlledTeamId);
     expect(result.promoted.map((s) => s.team_id)).toEqual([201, 202]);
     expect(result.promoted).toHaveLength(PROMOTION_SLOTS);
   });
@@ -132,7 +132,7 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    const result = computePromotionRelegation(saved);
+    const result = computePromotionRelegation(saved, saved.controlledTeamId);
     expect(result.relegated.map((s) => s.team_id)).toEqual([107, 108]);
     expect(result.relegated).toHaveLength(RELEGATION_SLOTS);
   });
@@ -143,7 +143,7 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    const result = computePromotionRelegation(saved);
+    const result = computePromotionRelegation(saved, saved.controlledTeamId);
     expect(result.userPromoted).toBe(true);
     expect(result.userRelegated).toBe(false);
   });
@@ -154,7 +154,9 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    expect(computePromotionRelegation(saved).userPromoted).toBe(true);
+    expect(
+      computePromotionRelegation(saved, saved.controlledTeamId).userPromoted,
+    ).toBe(true);
   });
 
   it("userPromoted false when user is 3º or lower in Série B", () => {
@@ -163,7 +165,9 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    expect(computePromotionRelegation(saved).userPromoted).toBe(false);
+    expect(
+      computePromotionRelegation(saved, saved.controlledTeamId).userPromoted,
+    ).toBe(false);
   });
 
   it("userRelegated true when user is 7º or 8º of Série A", () => {
@@ -177,8 +181,12 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    expect(computePromotionRelegation(saved7).userRelegated).toBe(true);
-    expect(computePromotionRelegation(saved8).userRelegated).toBe(true);
+    expect(
+      computePromotionRelegation(saved7, saved7.controlledTeamId).userRelegated,
+    ).toBe(true);
+    expect(
+      computePromotionRelegation(saved8, saved8.controlledTeamId).userRelegated,
+    ).toBe(true);
   });
 
   it("userRelegated false when user finishes 6º or better in Série A", () => {
@@ -187,7 +195,9 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    expect(computePromotionRelegation(saved).userRelegated).toBe(false);
+    expect(
+      computePromotionRelegation(saved, saved.controlledTeamId).userRelegated,
+    ).toBe(false);
   });
 
   it("PROMOTION_SLOTS equals RELEGATION_SLOTS (preserves 8+9 split)", () => {
@@ -201,7 +211,9 @@ describe("computePromotionRelegation", () => {
       tierBStandings: tierB,
       tierAFinished: false,
     });
-    expect(() => computePromotionRelegation(saved)).toThrow(/Série A/);
+    expect(() =>
+      computePromotionRelegation(saved, saved.controlledTeamId),
+    ).toThrow(/Série A/);
   });
 
   it("throws when Série B is not finished", () => {
@@ -211,7 +223,9 @@ describe("computePromotionRelegation", () => {
       tierBStandings: tierB,
       tierBFinished: false,
     });
-    expect(() => computePromotionRelegation(saved)).toThrow(/Série B/);
+    expect(() =>
+      computePromotionRelegation(saved, saved.controlledTeamId),
+    ).toThrow(/Série B/);
   });
 
   it("is deterministic across repeated calls", () => {
@@ -220,8 +234,8 @@ describe("computePromotionRelegation", () => {
       tierAStandings: tierA,
       tierBStandings: tierB,
     });
-    const a = computePromotionRelegation(saved);
-    const b = computePromotionRelegation(saved);
+    const a = computePromotionRelegation(saved, saved.controlledTeamId);
+    const b = computePromotionRelegation(saved, saved.controlledTeamId);
     expect(a).toEqual(b);
   });
 });

@@ -1,4 +1,4 @@
-import type { SavedSeason } from "../persistence";
+import type { Division } from "../persistence";
 import { totalRoundsOf } from "../persistence";
 import type { TeamStats } from "../types";
 
@@ -11,8 +11,8 @@ export const RELEGATION_SLOTS = 2;
 /**
  * Outcome of a season's promotion / relegation calculation. Pure
  * derivation from the final standings of both divisions — does not
- * mutate the save, does not generate the next season's divisions
- * (that's E.1.c).
+ * mutate the input, does not generate the next season's divisions
+ * (that's `advanceCareer` in util/career.ts).
  *
  * Order conventions:
  *   - `promoted`: best-of-Série-B first (champion → runner-up).
@@ -31,23 +31,28 @@ export type PRResult = {
 /**
  * Compute promotion / relegation for the just-finished season. Requires
  * both divisions to have played all their rounds — otherwise standings
- * are provisional and a P/R verdict would be incoherent. In E.1.a's
- * careers (user always in Série B), Série A finishes at round 14 while
- * the user's Série B is still climbing 15-18, so by the time the user
- * sees SeasonFinale both are guaranteed done. But we check explicitly:
- * defensive invariant ahead of E.1.c, when the user could end up in
- * either tier.
+ * are provisional and a P/R verdict would be incoherent. The throw is a
+ * defensive invariant for E.1.c, when the user can end up in either tier.
+ *
+ * The first parameter is typed structurally (`{ divisions: Division[] }`)
+ * so the same function works for both Season (v3 — `career.currentSeason`)
+ * and SavedSeason (legacy v2). The transitional window between E.1.c.2
+ * and E.1.c.3 has both shapes in play; once E.1.c.3 removes SavedSeason
+ * the parameter can be narrowed to Season.
  *
  * Tiebreakers come for free from the engine's `compute_standings` sort
  * (Pts desc, GD desc, GF desc, team_id asc) — `record.standings` is
  * already in that order, so slicing is the entire algorithm.
  */
-export function computePromotionRelegation(saved: SavedSeason): PRResult {
-  const tierA = saved.divisions.find((d) => d.tier === 1);
-  const tierB = saved.divisions.find((d) => d.tier === 2);
+export function computePromotionRelegation(
+  state: { divisions: Division[] },
+  controlledTeamId: number,
+): PRResult {
+  const tierA = state.divisions.find((d) => d.tier === 1);
+  const tierB = state.divisions.find((d) => d.tier === 2);
   if (!tierA || !tierB) {
     throw new Error(
-      "computePromotionRelegation: SavedSeason must have both Série A (tier 1) and Série B (tier 2)",
+      "computePromotionRelegation: state must have both Série A (tier 1) and Série B (tier 2)",
     );
   }
 
@@ -68,7 +73,7 @@ export function computePromotionRelegation(saved: SavedSeason): PRResult {
   return {
     promoted,
     relegated,
-    userPromoted: promoted.some((s) => s.team_id === saved.controlledTeamId),
-    userRelegated: relegated.some((s) => s.team_id === saved.controlledTeamId),
+    userPromoted: promoted.some((s) => s.team_id === controlledTeamId),
+    userRelegated: relegated.some((s) => s.team_id === controlledTeamId),
   };
 }
