@@ -32,7 +32,6 @@ import { advanceCareer } from "../util/career";
 import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
-import SupportView from "./SupportView";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -68,8 +67,7 @@ type Phase =
   | { tag: "tactics"; career: Career }
   | { tag: "finale"; career: Career }
   | { tag: "history"; career: Career }
-  | { tag: "transferMarket"; career: Career }
-  | { tag: "support" };
+  | { tag: "transferMarket"; career: Career };
 
 /**
  * Pick the right initial phase for a loaded/migrated Career. If the user's
@@ -299,16 +297,6 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     setPhase({ tag: "transferMarket", career });
   }
 
-  function openSupport() {
-    onStatus("apoiar o projeto");
-    setPhase({ tag: "support" });
-  }
-
-  function backFromSupport() {
-    onStatus("pronto");
-    setPhase({ tag: "form" });
-  }
-
   /**
    * Called when TransferMarketView fires onClose. The view passes back
    * a Career with userRoster / manager.money / currentSeason.transfers
@@ -474,7 +462,6 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           seed={seed}
           onSeedChange={setSeed}
           onSubmit={run}
-          onSupport={openSupport}
         />
       )}
       {phase.tag === "running" && (
@@ -533,7 +520,6 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           onClose={closeTransferMarket}
         />
       )}
-      {phase.tag === "support" && <SupportView onBack={backFromSupport} />}
       {error && <pre className="error">{error}</pre>}
     </div>
   );
@@ -549,14 +535,12 @@ function NewSeasonForm({
   seed,
   onSeedChange,
   onSubmit,
-  onSupport,
 }: {
   name: string;
   onNameChange: (s: string) => void;
   seed: number;
   onSeedChange: (n: number) => void;
   onSubmit: () => void;
-  onSupport: () => void;
 }) {
   return (
     <Card title="NOVA CARREIRA">
@@ -587,12 +571,9 @@ function NewSeasonForm({
             onChange={(e) => onSeedChange(Number(e.target.value))}
           />
         </label>
-        <div className="form-actions form-actions--pair">
+        <div className="form-actions">
           <button type="submit" className="btn">
             [ INICIAR CARREIRA ]
-          </button>
-          <button type="button" className="btn" onClick={onSupport}>
-            [ APOIAR PROJETO ]
           </button>
         </div>
       </form>
