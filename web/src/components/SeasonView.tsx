@@ -466,8 +466,8 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   }
 
   return (
-    <div className="season-view">
-      {phase.tag === "loading" && <p className="muted">Carregando save…</p>}
+    <>
+      {phase.tag === "loading" && <Text c="dimmed">Carregando save…</Text>}
       {phase.tag === "form" && (
         <NewSeasonForm
           name={name}
@@ -535,8 +535,12 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         />
       )}
       {phase.tag === "support" && <SupportView onBack={backFromSupport} />}
-      {error && <pre className="error">{error}</pre>}
-    </div>
+      {error && (
+        <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
+          {error}
+        </Text>
+      )}
+    </>
   );
 }
 
