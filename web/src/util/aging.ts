@@ -60,3 +60,16 @@ export function agePlayer(p: Player): Player {
 export function ageRoster(roster: Player[]): Player[] {
   return roster.map(agePlayer);
 }
+
+/**
+ * Age a roster by `seasons` whole seasons (E.2.a.2). Because aging is pure and
+ * deterministic, applying it N times reproduces what an N-season-old roster
+ * would be — so opponents (who reset to the immutable registry each season)
+ * can be aged on the fly from their base rather than persisting per-team state.
+ * `seasons <= 0` returns a fresh copy unchanged.
+ */
+export function applyAgingSeasons(roster: Player[], seasons: number): Player[] {
+  let r = roster.map((p) => ({ ...p }));
+  for (let i = 0; i < seasons; i++) r = ageRoster(r);
+  return r;
+}

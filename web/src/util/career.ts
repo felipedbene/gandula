@@ -2,6 +2,7 @@ import { run_season } from "../wasm/gandula_wasm.js";
 import { teamById } from "../teams";
 import { points, type Player, type SeasonRecord, type Team } from "../types";
 import {
+  FIRST_YEAR,
   findUserDivisionIdxInSeason,
   type Career,
   type Division,
@@ -10,7 +11,7 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
-import { ageRoster } from "./aging";
+import { ageRoster, applyAgingSeasons } from "./aging";
 import { userTeam } from "./roster";
 
 /**
@@ -202,19 +203,22 @@ function buildNextSeason(
 
   // Substitute the user's team (wherever it ends up post-P/R) with the
   // userTeam() view so transfer-market activity (E.1.e+) flows through:
-  // next season's run_season sees the bought/sold roster, not the
-  // registry default. The substitution is a no-op when userRoster is
-  // empty — userTeam falls back to the registry team.
+  // next season's run_season sees the bought/sold roster, not the registry
+  // default. The user's roster is already aged by advanceCareer (E.2.a).
+  //
+  // E.2.a.2: opponents reset to the immutable registry each season, so age
+  // them on the fly by the elapsed-season count — matching the user's
+  // incrementally-aged squad so the whole league ages in lockstep. The
+  // controlled team is left as the (already-aged) userTeam view.
   const userTeamWithRoster = userTeam(career);
-  const useUserRosterIfControlled = (t: Team): Team =>
-    t.id === career.controlledTeamId ? userTeamWithRoster : t;
+  const elapsed = current.year + 1 - FIRST_YEAR;
+  const composeTeam = (t: Team): Team =>
+    t.id === career.controlledTeamId
+      ? userTeamWithRoster
+      : { ...t, roster: applyAgingSeasons(t.roster, elapsed) };
 
-  const tierATeams: Team[] = [...tierASurvivors, ...newPromoted].map(
-    useUserRosterIfControlled,
-  );
-  const tierBTeams: Team[] = [...tierBSurvivors, ...newRelegated].map(
-    useUserRosterIfControlled,
-  );
+  const tierATeams: Team[] = [...tierASurvivors, ...newPromoted].map(composeTeam);
+  const tierBTeams: Team[] = [...tierBSurvivors, ...newRelegated].map(composeTeam);
 
   // Invariant: division sizes must match the previous season. Mismatch
   // would mean PRResult was malformed or the standings were missing teams.
