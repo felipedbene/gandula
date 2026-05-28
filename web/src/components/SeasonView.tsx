@@ -33,7 +33,8 @@ import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import Card from "../srcl/Card";
+import { Button, Group, Stack, Table, Text } from "@mantine/core";
+import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
 import PrepareView from "./PrepareView";
@@ -559,7 +560,7 @@ function NewSeasonForm({
   onSupport: () => void;
 }) {
   return (
-    <Card title="NOVA CARREIRA">
+    <Panel title="NOVA CARREIRA">
       <form
         className="form"
         onSubmit={(e) => {
@@ -596,7 +597,7 @@ function NewSeasonForm({
           </button>
         </div>
       </form>
-    </Card>
+    </Panel>
   );
 }
 
@@ -635,51 +636,50 @@ function CampeonatoEmCurso({
   );
 
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {teamName} · RODADA{" "}
         {userDiv.currentRoundIdx + 1} / {totalRounds} · $ {formatMoney(career.manager.money)}
-      </p>
+      </Text>
 
-      <Card title={`RODADA ${userDiv.currentRoundIdx + 1}`}>
-        <div className="round-list">
+      <Panel title={`Rodada ${userDiv.currentRoundIdx + 1}`}>
+        <Stack gap={4}>
           {currentRoundFixtures(career, userDiv).map((row, i) => (
-            <div
-              key={i}
-              className={`round-list__row${row.isUser ? " round-list__row--user" : ""}`}
-            >
-              <span className="round-list__glyph">{row.isUser ? "►" : " "}</span>
-              <span>
-                {row.homeName.padEnd(24)}
-                {"×  "}
-                {row.awayName}
-              </span>
-            </div>
+            <Group key={i} gap="xs" wrap="nowrap">
+              <Text span w={14} ta="center" c="phosphor.4">
+                {row.isUser ? "►" : ""}
+              </Text>
+              <Text
+                span
+                c={row.isUser ? "phosphor.4" : undefined}
+                fw={row.isUser ? 600 : undefined}
+              >
+                {row.homeName} × {row.awayName}
+              </Text>
+            </Group>
           ))}
-        </div>
-      </Card>
+        </Stack>
+      </Panel>
 
       <StandingsTable
         standings={standings}
         highlightTeamId={career.controlledTeamId}
-        title={`CLASSIFICAÇÃO · ${userDiv.name.toUpperCase()}`}
+        title={`Classificação · ${userDiv.name}`}
       />
 
-      <div className="form-actions form-actions--quadruple">
-        <button type="button" className="btn" onClick={onPrepare}>
-          [ AVANÇAR RODADA ]
-        </button>
-        <button type="button" className="btn" onClick={onTactics}>
-          [ TÁTICA ]
-        </button>
-        <button type="button" className="btn" onClick={onViewOtherDivision}>
-          [ VER {otherDiv.name.toUpperCase()} ]
-        </button>
-        <button type="button" className="btn" onClick={onReset}>
-          [ NOVA CARREIRA ]
-        </button>
-      </div>
-    </>
+      <Group justify="center" gap="sm">
+        <Button onClick={onPrepare}>Avançar rodada</Button>
+        <Button variant="default" onClick={onTactics}>
+          Tática
+        </Button>
+        <Button variant="default" onClick={onViewOtherDivision}>
+          Ver {otherDiv.name}
+        </Button>
+        <Button variant="subtle" color="red" onClick={onReset}>
+          Nova carreira
+        </Button>
+      </Group>
+    </Stack>
   );
 }
 
@@ -707,26 +707,26 @@ function OtherDivisionView({
   );
 
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         ANO {season.year} · DIVISÃO: {otherDiv.name} ·{" "}
         {isFinished
           ? `ENCERRADA · ${total} / ${total}`
           : `RODADA ${otherDiv.currentRoundIdx + 1} / ${total}`}{" "}
         · $ {formatMoney(career.manager.money)}
-      </p>
+      </Text>
 
       <StandingsTable
         standings={standings}
-        title={`CLASSIFICAÇÃO · ${otherDiv.name.toUpperCase()}`}
+        title={`Classificação · ${otherDiv.name}`}
       />
 
-      <div className="form-actions">
-        <button type="button" className="btn" onClick={onBack}>
-          [ VOLTAR ]
-        </button>
-      </div>
-    </>
+      <Group justify="center">
+        <Button variant="default" onClick={onBack}>
+          Voltar
+        </Button>
+      </Group>
+    </Stack>
   );
 }
 
@@ -802,7 +802,7 @@ function SeasonFinale({
         {totalRounds} · $ {formatMoney(career.manager.money)}
       </p>
 
-      <Card title={isUserChamp ? "*** CAMPEÃO ***" : "CAMPEÃO"}>
+      <Panel title={isUserChamp ? "*** CAMPEÃO ***" : "CAMPEÃO"}>
         {isUserChamp ? (
           <p className="finale-champ">
             PARABÉNS! {champName} venceu o {userDiv.name}.
@@ -810,9 +810,9 @@ function SeasonFinale({
         ) : (
           <p>{champName}</p>
         )}
-      </Card>
+      </Panel>
 
-      <Card title="DESTAQUES DA TEMPORADA">
+      <Panel title="DESTAQUES DA TEMPORADA">
         <ul className="finale-stats">
           {scorer && (
             <li>
@@ -848,9 +848,9 @@ function SeasonFinale({
             </li>
           )}
         </ul>
-      </Card>
+      </Panel>
 
-      <Card title="FINANÇAS DA TEMPORADA">
+      <Panel title="FINANÇAS DA TEMPORADA">
         <ul className="finances-list">
           <li className="finances-row">
             <span>Receita de bilheteria</span>
@@ -898,9 +898,9 @@ function SeasonFinale({
             <span>$ {formatMoney(career.manager.money + finances.net)}</span>
           </li>
         </ul>
-      </Card>
+      </Panel>
 
-      <Card title="PROMOÇÃO E REBAIXAMENTO">
+      <Panel title="PROMOÇÃO E REBAIXAMENTO">
         {prResult.userPromoted && (
           <p className="pr-banner pr-banner--promoted">
             *** SEU TIME SUBIU PARA A SÉRIE A! ***
@@ -950,7 +950,7 @@ function SeasonFinale({
             );
           })}
         </ul>
-      </Card>
+      </Panel>
 
       <StandingsTable
         standings={userDiv.record.standings}
@@ -1026,7 +1026,7 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
   const moneySign = entry.moneyDelta >= 0 ? "+" : "−";
 
   return (
-    <Card title={`TEMPORADA ${entry.year}`}>
+    <Panel title={`TEMPORADA ${entry.year}`}>
       <div className="history-card">
         <p>
           {entry.userDivision.name} · {entry.userPosition}º lugar · {entry.userPoints} pts
@@ -1047,7 +1047,7 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
           <p className="muted">Transferências: {countTransfers(entry.transfers)}</p>
         )}
       </div>
-    </Card>
+    </Panel>
   );
 }
 
@@ -1102,97 +1102,62 @@ function currentRoundFixtures(
 }
 
 // ─── Shared: standings table ────────────────────────────────────────────────
-function pad(v: string | number, w: number, dir: "L" | "R" = "R"): string {
-  return dir === "L" ? String(v).padEnd(w) : String(v).padStart(w);
-}
-
-const COL_GAP = "  ";
-
 function StandingsTable({
   standings,
   highlightTeamId,
-  title = "CLASSIFICAÇÃO",
+  title = "Classificação",
 }: {
   standings: TeamStats[];
   /** When provided, this team gets the bright row instead of the leader. */
   highlightTeamId?: number;
   title?: string;
 }) {
-  const headerLine = [
-    pad("POS", 3),
-    pad("TIME", 24, "L"),
-    pad("P", 3),
-    pad("V", 3),
-    pad("E", 3),
-    pad("D", 3),
-    pad("GP", 3),
-    pad("GC", 3),
-    pad("SG", 4),
-    pad("PTS", 3),
-  ].join(COL_GAP);
-
-  const dividerLine = [
-    "───",
-    "─".repeat(24),
-    "──",
-    "──",
-    "──",
-    "──",
-    "──",
-    "──",
-    "───",
-    "──",
-  ]
-    .map((s, i) => (i === 1 ? s : pad(s, [3, 24, 3, 3, 3, 3, 3, 3, 4, 3][i])))
-    .join(COL_GAP);
-
   return (
-    <Card title={title}>
-      <pre className="standings">
-        <span className="standings-dim">{headerLine}</span>
-        {"\n"}
-        <span className="standings-dim">{dividerLine}</span>
-        {"\n"}
-        {standings.map((s, i) => {
-          const team = teamById(s.team_id);
-          const teamName = team?.name ?? `Time ${s.team_id}`;
-          const gd = goalDifference(s);
-          const gdStr = gd > 0 ? `+${gd}` : String(gd);
-          const pts = points(s);
-          const hi =
-            highlightTeamId !== undefined
-              ? s.team_id === highlightTeamId
-                ? "standings-hi"
-                : ""
-              : i === 0
-                ? "standings-hi"
-                : "";
-          return (
-            <span key={s.team_id}>
-              {pad(`${i + 1}.`, 3)}
-              {COL_GAP}
-              <span className={hi}>{pad(teamName, 24, "L")}</span>
-              {COL_GAP}
-              {pad(s.played, 3)}
-              {COL_GAP}
-              {pad(s.won, 3)}
-              {COL_GAP}
-              {pad(s.drawn, 3)}
-              {COL_GAP}
-              {pad(s.lost, 3)}
-              {COL_GAP}
-              {pad(s.goals_for, 3)}
-              {COL_GAP}
-              {pad(s.goals_against, 3)}
-              {COL_GAP}
-              {pad(gdStr, 4)}
-              {COL_GAP}
-              <span className={hi}>{pad(pts, 3)}</span>
-              {"\n"}
-            </span>
-          );
-        })}
-      </pre>
-    </Card>
+    <Panel title={title}>
+      <Table.ScrollContainer minWidth={320}>
+        <Table highlightOnHover verticalSpacing={6} horizontalSpacing="sm" fz="sm">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>#</Table.Th>
+              <Table.Th>Time</Table.Th>
+              <Table.Th ta="right">P</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">V</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">E</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">D</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">GP</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">GC</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">SG</Table.Th>
+              <Table.Th ta="right">Pts</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {standings.map((s, i) => {
+              const teamName = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
+              const gd = goalDifference(s);
+              const isHi =
+                highlightTeamId !== undefined
+                  ? s.team_id === highlightTeamId
+                  : i === 0;
+              return (
+                <Table.Tr key={s.team_id} bg={isHi ? "phosphor.9" : undefined}>
+                  <Table.Td>{i + 1}</Table.Td>
+                  <Table.Td c={isHi ? "phosphor.3" : undefined} fw={isHi ? 700 : undefined}>
+                    {teamName}
+                  </Table.Td>
+                  <Table.Td ta="right">{s.played}</Table.Td>
+                  <Table.Td ta="right" visibleFrom="sm">{s.won}</Table.Td>
+                  <Table.Td ta="right" visibleFrom="sm">{s.drawn}</Table.Td>
+                  <Table.Td ta="right" visibleFrom="sm">{s.lost}</Table.Td>
+                  <Table.Td ta="right" visibleFrom="sm">{s.goals_for}</Table.Td>
+                  <Table.Td ta="right" visibleFrom="sm">{s.goals_against}</Table.Td>
+                  <Table.Td ta="right" visibleFrom="sm">{gd > 0 ? `+${gd}` : gd}</Table.Td>
+                  <Table.Td ta="right" fw={700}>{points(s)}</Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
+    </Panel>
   );
 }

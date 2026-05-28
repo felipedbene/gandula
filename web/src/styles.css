@@ -49,14 +49,6 @@ html, body {
   font-family: var(--font-mono);
   font-size: var(--font-size);
   line-height: var(--line-height);
-  text-shadow: var(--glow);
-}
-
-/* Brief: "Fixed-width 80-column desktop layout. No mobile responsive in v1."
-   Force body to at least 80 cols (720px @ 16px). On narrower viewports the
-   browser shows a horizontal scrollbar instead of squeezing the cards. */
-body {
-  min-width: calc(var(--char-w) * 80);
 }
 
 .crt {

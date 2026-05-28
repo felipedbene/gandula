@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import init from "./wasm/gandula_wasm.js";
-import CardDouble from "./srcl/CardDouble";
+import { Container, Group, Stack, Text, Title } from "@mantine/core";
 import { Footer } from "./components/Footer";
 import { SeasonView } from "./components/SeasonView";
 
@@ -17,39 +17,33 @@ export function App() {
       );
   }, []);
 
-  if (error) {
-    return (
-      <div className="crt">
-        <main className="app">
-          <h1>Gandula</h1>
-          <pre className="error">{error}</pre>
-        </main>
-      </div>
-    );
-  }
-
-  if (!ready) {
-    return (
-      <div className="crt">
-        <main className="app">
-          <h1>Gandula</h1>
-          <p className="muted">Carregando engine…</p>
-        </main>
-      </div>
-    );
-  }
-
   return (
-    <div className="crt">
-      <main className="app">
-        <CardDouble title={<span className="standings-hi">GANDULA</span>} titleRight="v0.5">
-          <p className="muted">Simulador de futebol em texto</p>
-        </CardDouble>
-        <section className="content">
+    <Container size="sm" py="lg">
+      <Stack gap="md">
+        <Group justify="space-between" align="baseline">
+          <Title order={1} c="phosphor.4" style={{ letterSpacing: "0.12em" }}>
+            GANDULA
+          </Title>
+          <Text c="dimmed" size="sm">
+            v0.5
+          </Text>
+        </Group>
+        <Text c="dimmed" size="sm">
+          Simulador de futebol em texto
+        </Text>
+
+        {error ? (
+          <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
+            {error}
+          </Text>
+        ) : !ready ? (
+          <Text c="dimmed">Carregando engine…</Text>
+        ) : (
           <SeasonView onStatus={setStatus} />
-        </section>
+        )}
+
         <Footer status={status} />
-      </main>
-    </div>
+      </Stack>
+    </Container>
   );
 }
