@@ -33,7 +33,7 @@ import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import { Button, Divider, Group, NumberInput, Stack, Table, Text, TextInput } from "@mantine/core";
+import { Button, Divider, Group, Stack, Table, Text, TextInput } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -90,13 +90,19 @@ function initialPhaseFor(career: Career): Phase {
   return { tag: "running", career };
 }
 
+/** A fresh pseudo-random seed for a new career, so each one gets a different
+ *  league by default. The field stays editable — type a fixed seed (e.g. 1998)
+ *  to reproduce or share a specific career. */
+function randomSeed(): number {
+  return Math.floor(Math.random() * 1_000_000);
+}
+
 export function SeasonView({ onStatus }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
 
-  // Form-field state — only relevant while `phase.tag === "form"`. Kept
-  // as independent useStates because they're standard controlled-input
-  // concerns. Team assignment happens at run() time via pickStarterTeam.
-  const [seed, setSeed] = useState<number>(1998);
+  // Form-field state. Only the league name is user-editable; the seed is
+  // generated randomly at run() time (not user-controlled) and the team is
+  // assigned via pickRandomStarter — see run().
   const [name, setName] = useState<string>("Brasileirão Imaginário 2026");
   const [error, setError] = useState<string | null>(null);
 
@@ -168,6 +174,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       }
       const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
       const starterTeam = pickRandomStarter(tierB);
+      const seed = randomSeed();
       const careerSeed = BigInt(seed);
       const seasonSeed = careerSeed ^ BigInt(FIRST_YEAR);
 
@@ -472,8 +479,6 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         <NewSeasonForm
           name={name}
           onNameChange={setName}
-          seed={seed}
-          onSeedChange={setSeed}
           onSubmit={run}
           onSupport={openSupport}
         />
@@ -551,15 +556,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 function NewSeasonForm({
   name,
   onNameChange,
-  seed,
-  onSeedChange,
   onSubmit,
   onSupport,
 }: {
   name: string;
   onNameChange: (s: string) => void;
-  seed: number;
-  onSeedChange: (n: number) => void;
   onSubmit: () => void;
   onSupport: () => void;
 }) {
@@ -580,11 +581,6 @@ function NewSeasonForm({
             label="Liga"
             value={name}
             onChange={(e) => onNameChange(e.currentTarget.value)}
-          />
-          <NumberInput
-            label="Semente"
-            value={seed}
-            onChange={(v) => onSeedChange(Number(v))}
           />
           <Group justify="center" gap="sm">
             <Button type="submit">Iniciar carreira</Button>
