@@ -13,6 +13,9 @@ tactics you set and the result you read.
 weakest team in the Brasileirão Imaginário's Série B and try to climb. State
 lives in your browser's IndexedDB; no account, no tracking, no server.
 
+Enjoying it? [Buy me a coffee on Ko-fi](https://ko-fi.com/felipedebene) — keeps
+the side-project lights on.
+
 The repo is split between a Rust simulation core (used by the CLI and compiled
 to WebAssembly for the web) and a React+Vite web app.
 
