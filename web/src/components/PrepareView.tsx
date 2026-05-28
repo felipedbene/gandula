@@ -18,7 +18,8 @@ import { userTeam } from "../util/roster";
 import { resimulateFromRound } from "../util/resimulate";
 import { avgStrength } from "../util/divisions";
 import { formatMoney } from "../util/money";
-import Card from "../srcl/Card";
+import { Button, Group, Stack, Text } from "@mantine/core";
+import { Panel } from "./ui/Panel";
 import TacticsForm, {
   type TacticsFormState,
   tacticsFormStateEquals,
@@ -155,11 +156,11 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
   const totalRounds = totalRoundsOf(userDiv);
 
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         PREPARAR · {userDiv.name} · RODADA {userDiv.currentRoundIdx + 1} /{" "}
         {totalRounds} · $ {formatMoney(career.manager.money)}
-      </p>
+      </Text>
 
       {isBye ? (
         <ByeCard />
@@ -170,41 +171,44 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
         />
       )}
 
-      <Card title="TÁTICA">
+      <Panel title="Tática">
         <form
-          className="form"
           onSubmit={(e) => {
             e.preventDefault();
             play();
           }}
         >
-          <TacticsForm state={current} onChange={setCurrent} />
-          {baseTeam && (
-            <>
-              <LineupEditor
-                team={baseTeam}
-                state={currentLineup}
-                onChange={setCurrentLineup}
-              />
-              <BenchEditor
-                team={baseTeam}
-                state={currentLineup}
-                onChange={setCurrentLineup}
-              />
-            </>
-          )}
-          {error && <pre className="error">{error}</pre>}
-          <div className="form-actions form-actions--pair">
-            <button type="submit" className="btn">
-              [ JOGAR ]
-            </button>
-            <button type="button" className="btn" onClick={onBack}>
-              [ VOLTAR ]
-            </button>
-          </div>
+          <Stack gap="md">
+            <TacticsForm state={current} onChange={setCurrent} />
+            {baseTeam && (
+              <>
+                <LineupEditor
+                  team={baseTeam}
+                  state={currentLineup}
+                  onChange={setCurrentLineup}
+                />
+                <BenchEditor
+                  team={baseTeam}
+                  state={currentLineup}
+                  onChange={setCurrentLineup}
+                />
+              </>
+            )}
+            {error && (
+              <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
+                {error}
+              </Text>
+            )}
+            <Group justify="center" gap="sm">
+              <Button type="submit">Jogar</Button>
+              <Button type="button" variant="default" onClick={onBack}>
+                Voltar
+              </Button>
+            </Group>
+          </Stack>
         </form>
-      </Card>
-    </>
+      </Panel>
+    </Stack>
   );
 }
 
@@ -234,24 +238,47 @@ function NextOpponentCard({
   const opponentStrength = opponentTeam ? avgStrength(opponentTeam) : 0;
 
   return (
-    <Card title="PRÓXIMO JOGO">
-      <pre className="next-opponent">
-        {`${userName.padEnd(28)}${userVenue}\n`}
-        {`× ${opponentName.padEnd(26)}${opponentVenue}\n`}
-        {`\n`}
-        {`FORÇA MED: ${String(userStrength).padStart(3)}    ×    ${String(opponentStrength).padStart(3)}`}
-      </pre>
-    </Card>
+    <Panel title="Próximo jogo">
+      <Stack gap={6}>
+        <Group justify="space-between" wrap="nowrap">
+          <Text size="sm">
+            {userName}{" "}
+            <Text span c="dimmed">
+              {userVenue}
+            </Text>
+          </Text>
+          <Text size="sm" c="dimmed">
+            Força {userStrength}
+          </Text>
+        </Group>
+        <Text c="dimmed" ta="center">
+          ×
+        </Text>
+        <Group justify="space-between" wrap="nowrap">
+          <Text size="sm">
+            {opponentName}{" "}
+            <Text span c="dimmed">
+              {opponentVenue}
+            </Text>
+          </Text>
+          <Text size="sm" c="dimmed">
+            Força {opponentStrength}
+          </Text>
+        </Group>
+      </Stack>
+    </Panel>
   );
 }
 
 function ByeCard() {
   return (
-    <Card title="SEM JOGO">
-      <p>Seu time descansa nesta rodada.</p>
-      <p className="muted">
-        Mudanças de tática aplicam às próximas rodadas onde seu time joga.
-      </p>
-    </Card>
+    <Panel title="Sem jogo">
+      <Stack gap={4}>
+        <Text>Seu time descansa nesta rodada.</Text>
+        <Text c="dimmed" size="sm">
+          Mudanças de tática aplicam às próximas rodadas onde seu time joga.
+        </Text>
+      </Stack>
+    </Panel>
   );
 }

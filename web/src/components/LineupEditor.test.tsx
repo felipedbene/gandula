@@ -3,7 +3,7 @@
 // default); .tsx extension keeps import.meta.url file:// per the note in
 // vitest.config.ts.
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "../test-utils";
 import LineupEditor, {
   lineupStateEquals,
   type LineupState,

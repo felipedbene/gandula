@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import type { Player, Team } from "../types";
 import type { LineupState } from "./LineupEditor";
 
@@ -70,53 +71,63 @@ export default function BenchEditor({ team, state, onChange }: BenchEditorProps)
   const noOutside = candidates.length === 0;
 
   return (
-    <>
+    <Stack gap="xs">
       {benchEmpty && (
-        <p className="lineup-warning">
+        <Text c="red.5" size="sm">
           ATENÇÃO: banco vazio (substituições impossíveis)
-        </p>
+        </Text>
       )}
       {!benchEmpty && benchGkCount === 0 && (
-        <p className="lineup-warning">
+        <Text c="red.5" size="sm">
           ATENÇÃO: nenhum goleiro no banco
-        </p>
+        </Text>
       )}
 
-      <div className="bench-header muted">
+      <Text size="sm" c="dimmed" tt="uppercase">
         BANCO ({state.bench.length} / {MAX_BENCH})
-      </div>
+      </Text>
 
-      <div className="lineup">
+      <Stack gap={2}>
         {state.bench.map((playerId, slotIdx) => {
           const player = playerById.get(playerId);
           return (
-            <div key={slotIdx} className="lineup-slot">
-              <div className="lineup-slot__row">
-                <span className="lineup-slot__glyph">►</span>
-                <span className="lineup-slot__pos">{player?.position ?? "?"}</span>
-                <span className="lineup-slot__name">
-                  {player?.name ?? `Player ${playerId}`}
-                </span>
-                <span className="lineup-slot__stam">
-                  STAM {player?.attributes.stamina ?? "?"}
-                </span>
-                <button
-                  type="button"
-                  className="btn lineup-slot__btn"
-                  onClick={() => remove(slotIdx)}
-                >
-                  [ REMOVER ]
-                </button>
-              </div>
-            </div>
+            <Group key={slotIdx} gap="xs" wrap="nowrap">
+              <Text span c="phosphor.4">►</Text>
+              <Text span size="sm" c="dimmed">
+                {player?.position ?? "?"}
+              </Text>
+              <Text
+                span
+                size="sm"
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {player?.name ?? `Player ${playerId}`}
+              </Text>
+              <Text span size="sm" c="dimmed">
+                STAM {player?.attributes.stamina ?? "?"}
+              </Text>
+              <Button
+                size="compact-xs"
+                variant="default"
+                onClick={() => remove(slotIdx)}
+              >
+                Remover
+              </Button>
+            </Group>
           );
         })}
-      </div>
+      </Stack>
 
-      <div className="bench-add">
-        <button
-          type="button"
-          className="btn"
+      <div>
+        <Button
+          size="compact-sm"
+          variant="default"
           onClick={() => setAdding((p) => !p)}
           disabled={benchFull || noOutside}
           title={
@@ -127,34 +138,42 @@ export default function BenchEditor({ team, state, onChange }: BenchEditorProps)
                 : undefined
           }
         >
-          [ ADICIONAR JOGADOR ]
-        </button>
+          Adicionar jogador
+        </Button>
 
         {adding && (
-          <div className="lineup-candidates">
-            <p className="lineup-candidates__title muted">
+          <Stack
+            gap={2}
+            pl="md"
+            mt={4}
+            style={{ borderLeft: "1px solid var(--mantine-color-dark-4)" }}
+          >
+            <Text size="xs" c="dimmed">
               Candidatos (qualquer posição):
-            </p>
+            </Text>
             {candidates.map((c) => (
-              <div key={c.id} className="lineup-candidates__row">
-                <span className="lineup-slot__glyph"> </span>
-                <span className="lineup-slot__pos">{c.position}</span>
-                <span className="lineup-slot__name">{c.name}</span>
-                <span className="lineup-slot__stam">
+              <Group key={c.id} gap="xs" wrap="nowrap">
+                <Text span size="sm" c="dimmed">
+                  {c.position}
+                </Text>
+                <Text span size="sm" style={{ flex: 1, minWidth: 0 }}>
+                  {c.name}
+                </Text>
+                <Text span size="sm" c="dimmed">
                   STAM {c.attributes.stamina}
-                </span>
-                <button
-                  type="button"
-                  className="btn lineup-slot__btn"
+                </Text>
+                <Button
+                  size="compact-xs"
+                  variant="light"
                   onClick={() => add(c.id)}
                 >
-                  [ ESCOLHER ]
-                </button>
-              </div>
+                  Escolher
+                </Button>
+              </Group>
             ))}
-          </div>
+          </Stack>
         )}
       </div>
-    </>
+    </Stack>
   );
 }

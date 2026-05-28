@@ -1,3 +1,4 @@
+import { NativeSelect, Stack } from "@mantine/core";
 import type {
   Formation,
   Mentality,
@@ -67,75 +68,70 @@ type TacticsFormProps = {
  */
 export default function TacticsForm({ state, onChange }: TacticsFormProps) {
   return (
-    <>
-      <label>
-        <span>Formação</span>
-        <select
-          value={state.formation}
-          onChange={(e) =>
-            onChange({ ...state, formation: e.target.value as Formation })
-          }
-        >
-          <option value="F442">4-4-2</option>
-          <option value="F433">4-3-3</option>
-          <option value="F352">3-5-2</option>
-          <option value="F4231">4-2-3-1</option>
-        </select>
-      </label>
-      <label>
-        <span>Postura</span>
-        <select
-          value={state.mentality}
-          onChange={(e) =>
-            onChange({ ...state, mentality: e.target.value as Mentality })
-          }
-        >
-          <option value="VeryDefensive">Muito Defensivo</option>
-          <option value="Defensive">Defensivo</option>
-          <option value="Balanced">Equilibrado</option>
-          <option value="Attacking">Ofensivo</option>
-          <option value="VeryAttacking">Muito Ofensivo</option>
-        </select>
-      </label>
-      <label>
-        <span>Ritmo</span>
-        <select
-          value={state.tempo}
-          onChange={(e) =>
-            onChange({ ...state, tempo: e.target.value as Tempo })
-          }
-        >
-          <option value="Slow">Lento</option>
-          <option value="Normal">Normal</option>
-          <option value="Fast">Rápido</option>
-        </select>
-      </label>
-      <label>
-        <span>Marcação</span>
-        <select
-          value={state.pressing}
-          onChange={(e) =>
-            onChange({ ...state, pressing: e.target.value as Pressing })
-          }
-        >
-          <option value="Low">Baixa</option>
-          <option value="Medium">Média</option>
-          <option value="High">Alta</option>
-        </select>
-      </label>
-      <label>
-        <span>Amplitude</span>
-        <select
-          value={state.width}
-          onChange={(e) =>
-            onChange({ ...state, width: e.target.value as Width })
-          }
-        >
-          <option value="Narrow">Estreita</option>
-          <option value="Normal">Normal</option>
-          <option value="Wide">Larga</option>
-        </select>
-      </label>
-    </>
+    <Stack gap="sm">
+      <NativeSelect
+        label="Formação"
+        value={state.formation}
+        onChange={(e) =>
+          onChange({ ...state, formation: e.currentTarget.value as Formation })
+        }
+        data={[
+          { value: "F442", label: "4-4-2" },
+          { value: "F433", label: "4-3-3" },
+          { value: "F352", label: "3-5-2" },
+          { value: "F4231", label: "4-2-3-1" },
+        ]}
+      />
+      <NativeSelect
+        label="Postura"
+        value={state.mentality}
+        onChange={(e) =>
+          onChange({ ...state, mentality: e.currentTarget.value as Mentality })
+        }
+        data={[
+          { value: "VeryDefensive", label: "Muito Defensivo" },
+          { value: "Defensive", label: "Defensivo" },
+          { value: "Balanced", label: "Equilibrado" },
+          { value: "Attacking", label: "Ofensivo" },
+          { value: "VeryAttacking", label: "Muito Ofensivo" },
+        ]}
+      />
+      <NativeSelect
+        label="Ritmo"
+        value={state.tempo}
+        onChange={(e) =>
+          onChange({ ...state, tempo: e.currentTarget.value as Tempo })
+        }
+        data={[
+          { value: "Slow", label: "Lento" },
+          { value: "Normal", label: "Normal" },
+          { value: "Fast", label: "Rápido" },
+        ]}
+      />
+      <NativeSelect
+        label="Marcação"
+        value={state.pressing}
+        onChange={(e) =>
+          onChange({ ...state, pressing: e.currentTarget.value as Pressing })
+        }
+        data={[
+          { value: "Low", label: "Baixa" },
+          { value: "Medium", label: "Média" },
+          { value: "High", label: "Alta" },
+        ]}
+      />
+      <NativeSelect
+        label="Amplitude"
+        value={state.width}
+        onChange={(e) =>
+          onChange({ ...state, width: e.currentTarget.value as Width })
+        }
+        data={[
+          { value: "Narrow", label: "Estreita" },
+          { value: "Normal", label: "Normal" },
+          { value: "Wide", label: "Larga" },
+        ]}
+      />
+    </Stack>
   );
 }

@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "../test-utils";
 import init, { run_season } from "../wasm/gandula_wasm.js";
 import PrepareView from "./PrepareView";
 import { ALL_TEAMS, teamById } from "../teams";

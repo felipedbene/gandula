@@ -14,7 +14,8 @@ import {
 import { userTeam } from "../util/roster";
 import { resimulateFromRound } from "../util/resimulate";
 import { formatMoney } from "../util/money";
-import Card from "../srcl/Card";
+import { Button, Group, Stack, Text } from "@mantine/core";
+import { Panel } from "./ui/Panel";
 import TacticsForm, {
   type TacticsFormState,
   tacticsFormStateEquals,
@@ -119,45 +120,50 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
   }
 
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         ANO {season.year} · TÁTICA · {teamName.toUpperCase()} · $ {formatMoney(career.manager.money)}
-      </p>
-      <Card title={`TÁTICA · ${teamName.toUpperCase()}`}>
-      <form
-        className="form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (dirty) apply();
-        }}
-      >
-        <TacticsForm state={current} onChange={setCurrent} />
-        {baseTeam && (
-          <>
-            <LineupEditor
-              team={baseTeam}
-              state={currentLineup}
-              onChange={setCurrentLineup}
-            />
-            <BenchEditor
-              team={baseTeam}
-              state={currentLineup}
-              onChange={setCurrentLineup}
-            />
-          </>
-        )}
-        {error && <pre className="error">{error}</pre>}
-        <div className="form-actions form-actions--pair">
-          <button type="submit" className="btn" disabled={!dirty}>
-            [ APLICAR ]
-          </button>
-          <button type="button" className="btn" onClick={onBack}>
-            [ VOLTAR ]
-          </button>
-        </div>
-      </form>
-    </Card>
-    </>
+      </Text>
+      <Panel title={`Tática · ${teamName}`}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (dirty) apply();
+          }}
+        >
+          <Stack gap="md">
+            <TacticsForm state={current} onChange={setCurrent} />
+            {baseTeam && (
+              <>
+                <LineupEditor
+                  team={baseTeam}
+                  state={currentLineup}
+                  onChange={setCurrentLineup}
+                />
+                <BenchEditor
+                  team={baseTeam}
+                  state={currentLineup}
+                  onChange={setCurrentLineup}
+                />
+              </>
+            )}
+            {error && (
+              <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
+                {error}
+              </Text>
+            )}
+            <Group justify="center" gap="sm">
+              <Button type="submit" disabled={!dirty}>
+                Aplicar
+              </Button>
+              <Button type="button" variant="default" onClick={onBack}>
+                Voltar
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Panel>
+    </Stack>
   );
 }
 

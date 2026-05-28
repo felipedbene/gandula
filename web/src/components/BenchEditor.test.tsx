@@ -2,7 +2,7 @@
 // happy-dom (vitest default); .tsx extension keeps import.meta.url as
 // file:// per the note in vitest.config.ts.
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from "../test-utils";
 import BenchEditor from "./BenchEditor";
 import type { LineupState } from "./LineupEditor";
 import { ALL_TEAMS } from "../teams";
