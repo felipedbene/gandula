@@ -5,16 +5,23 @@ import type { Match, MatchEvent } from "../types";
 import { eventKindName } from "../types";
 
 /** Tick-by-tick reveal pacing: ms of wall-clock per minute of match time.
- *  80ms/min → 90' match unrolls in ~7.2s, with dense periods (e.g. three
- *  subs at min 70) appearing in a burst and calm stretches sitting still.
- *  Elifoot 98 vibe — the engine resolves the match in <5ms but the UI
+ *  220ms/min → 90' match unrolls in ~20s, with dense periods (e.g. three
+ *  subs at min 70) spaced out by MIN_EVENT_GAP_MS and calm stretches sitting
+ *  still. Elifoot 98 vibe — the engine resolves the match in <5ms but the UI
  *  pretends to be a 1998 PC discovering the result tick by tick. */
-export const REVEAL_MS_PER_MIN = 80;
+export const REVEAL_MS_PER_MIN = 220;
 
 /** Extra wall-clock delay added to second-half events so the feed pauses
  *  briefly at halftime — matches the "intervalo" beat from Elifoot where
  *  you registered "ah, primeiro tempo acabou" before the second half rolled. */
 export const HALFTIME_PAUSE_MS = 1500;
+
+/** Minimum wall-clock gap between two consecutive revealed events. Without
+ *  it, a burst of lances in the same match-minute (e.g. goal + booking at
+ *  70') would fire at the same instant and flash by; this keeps each one on
+ *  screen long enough to read. Applied as a monotonic floor over the
+ *  minute-proportional schedule, so calm stretches still pace naturally. */
+const MIN_EVENT_GAP_MS = 600;
 
 type MatchRevealProps = {
   match: Match;
@@ -31,7 +38,17 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   const home = teamById(match.home)?.name ?? `Time ${match.home}`;
   const away = teamById(match.away)?.name ?? `Time ${match.away}`;
 
+  // Final whistle minute — last event is the FullTime marker (usually 90').
+  const finalMinute =
+    match.events.length > 0
+      ? match.events[match.events.length - 1].minute
+      : 90;
+
   const [revealed, setRevealed] = useState(0);
+  // The match clock, ticked continuously by a timer (see effect below) rather
+  // than read off the last revealed event — so it counts up during the calm
+  // stretches between lances instead of standing still.
+  const [clockMinute, setClockMinute] = useState(0);
   // Guards onComplete from firing twice: once when naturally hitting the last
   // event, and again if skipAll flips true after that.
   const completedRef = useRef(false);
@@ -39,20 +56,44 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   useEffect(() => {
     setRevealed(0);
     completedRef.current = false;
+    // Walk events in order, scheduling each at its minute-proportional time
+    // but never closer than MIN_EVENT_GAP_MS to the previous one. Seeding
+    // `prev` at -gap lets the first event keep its natural (ungapped) time.
+    let prev = -MIN_EVENT_GAP_MS;
     const timers = match.events.map((e, i) => {
-      const delay =
+      const base =
         e.minute * REVEAL_MS_PER_MIN +
         (e.minute > 45 ? HALFTIME_PAUSE_MS : 0);
-      return window.setTimeout(() => setRevealed(i + 1), delay);
+      const at = Math.max(base, prev + MIN_EVENT_GAP_MS);
+      prev = at;
+      return window.setTimeout(() => setRevealed(i + 1), at);
     });
     return () => timers.forEach(window.clearTimeout);
   }, [match]);
 
+  // Tick the match clock independently of events: map wall-clock elapsed back
+  // to a match minute (accounting for the halftime pause), clamped to the
+  // final whistle. Stops once it reaches full time.
+  useEffect(() => {
+    setClockMinute(0);
+    const start = performance.now();
+    const id = window.setInterval(() => {
+      const m = Math.min(
+        Math.floor(minuteAtElapsed(performance.now() - start)),
+        finalMinute,
+      );
+      setClockMinute(m);
+      if (m >= finalMinute) window.clearInterval(id);
+    }, 100);
+    return () => window.clearInterval(id);
+  }, [match, finalMinute]);
+
   useEffect(() => {
     if (skipAll) {
       setRevealed(match.events.length);
+      setClockMinute(finalMinute);
     }
-  }, [skipAll, match.events.length]);
+  }, [skipAll, match.events.length, finalMinute]);
 
   useEffect(() => {
     if (!completedRef.current && revealed >= match.events.length && match.events.length > 0) {
@@ -76,7 +117,6 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   const runningAway = visible.filter(
     (e) => eventKindName(e.kind) === "Goal" && e.side === "Away",
   ).length;
-  const clock = visible.length > 0 ? visible[visible.length - 1].minute : 0;
 
   return (
     <Card withBorder radius="md" padding={0}>
@@ -100,7 +140,7 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
           {away.toUpperCase()}
         </Text>
         <Badge variant="outline" color="phosphor" radius="xl">
-          {clock}'
+          {clockMinute}'
         </Badge>
       </Group>
 
@@ -155,6 +195,16 @@ function EventRow({ event }: { event: MatchEvent }) {
       </Group>
     </li>
   );
+}
+
+/** Inverse of the reveal schedule: given wall-clock ms since kickoff, return
+ *  the match minute the clock should show. Linear 0→45 in the first half, a
+ *  flat hold at 45 during the halftime pause, then linear 45→90. */
+function minuteAtElapsed(elapsedMs: number): number {
+  const firstHalfMs = 45 * REVEAL_MS_PER_MIN;
+  if (elapsedMs <= firstHalfMs) return elapsedMs / REVEAL_MS_PER_MIN;
+  if (elapsedMs <= firstHalfMs + HALFTIME_PAUSE_MS) return 45;
+  return 45 + (elapsedMs - firstHalfMs - HALFTIME_PAUSE_MS) / REVEAL_MS_PER_MIN;
 }
 
 function eventStyle(k: string): { c?: string; fw?: number; fs?: "italic" } {
