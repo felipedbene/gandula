@@ -5,13 +5,16 @@ A text-based football management simulator. The name is the Portuguese word for
 not a Football Manager competitor.
 
 Gandula is a love letter to the 1998-era Brazilian text-based football
-management games: tight simulation loop, legible numbers, one season fits in an
-evening, and a clear cause-and-effect line between the tactics you set and the
-result you read.
+management games (Elifoot, mainly): tight simulation loop, legible numbers, one
+season fits in an evening, and a clear cause-and-effect line between the
+tactics you set and the result you read.
 
-This repository is Phase 1 — the deterministic match engine and a CLI to play a
-single match. No UI, no AI managers, no league/season logic, no persistence.
-Those come later.
+**Play it now:** [gandula.debene.dev](https://gandula.debene.dev). Manage the
+weakest team in the Brasileirão Imaginário's Série B and try to climb. State
+lives in your browser's IndexedDB; no account, no tracking, no server.
+
+The repo is split between a Rust simulation core (used by the CLI and compiled
+to WebAssembly for the web) and a React+Vite web app.
 
 ## Running a match
 
@@ -45,7 +48,7 @@ single most important property of the engine. See `core/tests/determinism.rs`.
 
 ## Sample teams
 
-Three made-up Brazilian clubs ship in `assets/teams/`:
+`assets/teams/` ships three fully-detailed sample clubs at the top level:
 
 | File                       | Vibe                       | Avg. strength |
 |----------------------------|----------------------------|---------------|
@@ -53,12 +56,19 @@ Three made-up Brazilian clubs ship in `assets/teams/`:
 | `flamenguinho_fc.json`     | Balanced F442              | ~68           |
 | `ipanema_atletico.json`    | Defensive F352 underdog    | ~55           |
 
+…plus 14 more in `assets/teams/fictional/` — together they make up the
+17-team Brasileirão Imaginário the web app uses for its two-tier league
+(Série A 8 + Série B 9).
+
 ## Workspace layout
 
 ```
 core/          — domain types, deterministic RNG wrapper, simulation engine
 cli/           — `gandula` binary
-assets/teams/  — sample team JSONs
+wasm/          — wasm-bindgen wrapper around core for the browser
+web/           — Vite + React + TS career-mode app
+assets/teams/  — sample team JSONs (3 at top + 14 in fictional/)
+scripts/       — build helpers (mainly the wasm→web pipeline)
 ARCHITECTURE.md — tick loop + event-weighting formulas (for tuning)
 ```
 
@@ -69,7 +79,7 @@ cargo build           # build everything
 cargo test            # determinism + statistical sanity tests
 ```
 
-## Substitutions and managers (Phase 2)
+## Substitutions and managers
 
 Each team can carry a `bench` of up to 7 players in its JSON. Between minutes,
 a small rule-based manager runs for both sides and may swap in a fresh player:
@@ -82,7 +92,7 @@ a small rule-based manager runs for both sides and may swap in a fresh player:
 Max 3 subs per side. See `ARCHITECTURE.md` for the constants and the rule
 order.
 
-## Running a season (Phase 3)
+## Running a season (CLI)
 
 Drop in any number of team JSONs and watch a double round-robin play out:
 
@@ -113,7 +123,7 @@ Pos   Time                      P    V    E    D    GP    GC    SG   Pts
 `(team files, seed, name)` always reproduces the same season — see
 `core/tests/season_determinism.rs`.
 
-## Saving and loading (Phase 4)
+## Saving and loading (CLI)
 
 Teams and seasons can be persisted to a SQLite file:
 
@@ -142,11 +152,35 @@ gandula show-season  --db data.db --id 1 --show both
 SQLite is bundled (no system dep). Schema is a tiny two-table store with
 JSON blobs for the full domain objects — see `ARCHITECTURE.md`.
 
-## Web app (Phase 5)
+## Web app — career mode
 
-The same engine runs in the browser via WebAssembly. A small Vite + React + TS
-app lives in `web/`. Two screens: **Partida** (single match) and **Temporada**
-(double round-robin with the standings table).
+The same engine runs in the browser via WebAssembly. A Vite + React + TS app
+lives in `web/`. Full career-mode loop:
+
+- **Two divisions in parallel.** 17 fictional Brazilian clubs split into Série A
+  (top 8) and Série B (bottom 9). User always starts as the weakest team in B.
+- **Round-by-round reveal.** Pre-simulated season; rounds reveal one at a time
+  with a live-feel ticker animation. F5 mid-reveal autoloads cleanly into the
+  saved state — animation is lost, save intact.
+- **Tactics.** Per-season formation, mentality, tempo, pressing, width, plus
+  starting XI + bench. Mid-season changes re-simulate the user's remaining
+  fixtures only; other matches stay frozen.
+- **Promotion / relegation.** Top 2 of Série B go up, bottom 2 of Série A come
+  down. Survives multi-season careers — your team plays whichever tier P/R
+  placed it.
+- **Finances.** Per-season net of ticket revenue (home opponent strength ×
+  factor), salaries (full-roster × player avg × factor), and a promotion/
+  relegation bonus or penalty. Money carries across seasons.
+- **Transfer market.** Between seasons, a deterministic free agent pool (2 GK,
+  4 DEF, 4 MID, 2 FWD) generated per `(career.seed, year)`. Buy / sell with
+  age-curve pricing and roster bounds [14..25]. Session-level undo.
+- **History.** Past seasons collapsed to compact summaries (champion, user's
+  position, P/R outcome, money delta, transfers).
+
+Schema is versioned (currently v5) with in-place migrations from every prior
+version — `loadCareer` cascades v2→v3→v4→v5 transparently.
+
+### Running locally
 
 ```bash
 # One-time setup: builds the wasm module and installs npm deps.
@@ -155,22 +189,29 @@ app lives in `web/`. Two screens: **Partida** (single match) and **Temporada**
 # Dev server with hot reload at http://localhost:5173/
 cd web && npm run dev
 
-# Production bundle in web/dist/ (≈ 365 KB, ≈ 127 KB gzipped)
+# Production bundle in web/dist/
 cd web && npm run build
+
+# Run the JS test suite (115 tests covering schema, persistence,
+# simulation parity, finances, transfer market, components).
+cd web && npm run test:run
 ```
 
 If you change anything in `core/` or `wasm/`, re-run `./scripts/build-web.sh`
 to regenerate the wasm module.
 
-The web app ships with the same three sample teams as the CLI (bundled at
-build time). Browser state is purely in-memory for now — no save/load on the
-web side. SQLite stays in the terminal world.
+### Deploy
+
+The production site at [gandula.debene.dev](https://gandula.debene.dev) runs
+as a Cloudflare Workers static-asset deploy. `wrangler.toml` in `web/` carries
+the full config; `npm run deploy` builds and uploads.
 
 ## What's next
 
 On the roadmap:
 
-- Self-play training for rival managers
-- Promotion/relegation, multi-season, transfers
-- Browser persistence (IndexedDB)
-- Tick-by-tick live playback in the web app
+- Manager firing when finances run dry (E.1.f)
+- Player evolution / aging across seasons
+- Scout reports for free agents (richer pool browsing)
+- Self-play training for rival-manager AIs
+- Tick-by-tick live playback (extending the existing reveal ticker)
