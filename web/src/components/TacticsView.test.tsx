@@ -38,7 +38,7 @@ function makeCareer(): { career: Career; starterId: number } {
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const career: Career = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -50,8 +50,10 @@ function makeCareer(): { career: Career; starterId: number } {
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
       ],
+      transfers: [],
     },
     manager: { money: STARTING_MONEY },
+    userRoster: [],
   };
   return { career, starterId: starter.id };
 }

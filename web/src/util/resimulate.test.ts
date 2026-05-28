@@ -48,7 +48,7 @@ function makeCareer(seed: bigint, currentRoundIdx: number): Career {
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -60,8 +60,10 @@ function makeCareer(seed: bigint, currentRoundIdx: number): Career {
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx },
       ],
+      transfers: [],
     },
     manager: { money: STARTING_MONEY },
+    userRoster: [],
   };
 }
 

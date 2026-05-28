@@ -140,9 +140,9 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v4 Career is present", async () => {
+  it("returns kind:'loaded' when a v5 Career is present", async () => {
     const career: Career = {
-      schemaVersion: 4,
+      schemaVersion: 5,
       savedAt: "2026-01-01T00:00:00Z",
       seed: 1998n,
       controlledTeamId: 201,
@@ -151,8 +151,10 @@ describe("loadCareer", () => {
         year: FIRST_YEAR,
         seed: 1998n ^ BigInt(FIRST_YEAR),
         divisions: [],
+        transfers: [],
       },
       manager: { money: STARTING_MONEY },
+      userRoster: [],
     };
     await saveCareer(career);
     const result = await loadCareer();
@@ -160,34 +162,37 @@ describe("loadCareer", () => {
     if (result.kind === "loaded") {
       expect(result.career.controlledTeamId).toBe(201);
       expect(result.career.manager.money).toBe(STARTING_MONEY);
+      expect(result.career.userRoster).toEqual([]);
     }
   });
 
-  it("cascades a v2 payload through v3 to v4 in one load", async () => {
+  it("cascades a v2 payload through v3 → v4 → v5 in one load", async () => {
     const v2 = makeV2Save({ seed: 1998n, controlledTeamId: 201 });
     await writeRaw(v2);
 
     const first = await loadCareer();
     // Kind preserves the original starting point even though the
-    // cascade went v2 → v3 → v4 internally.
+    // cascade went v2 → v3 → v4 → v5 internally.
     expect(first.kind).toBe("migratedV2");
     if (first.kind === "migratedV2") {
-      expect(first.career.schemaVersion).toBe(4);
+      expect(first.career.schemaVersion).toBe(5);
       expect(first.career.controlledTeamId).toBe(201);
       expect(first.career.currentSeason.year).toBe(FIRST_YEAR);
       expect(first.career.currentSeason.divisions).toHaveLength(2);
+      expect(first.career.currentSeason.transfers).toEqual([]);
       expect(first.career.manager.money).toBe(STARTING_MONEY);
+      expect(first.career.userRoster).toEqual([]);
     }
 
-    // Second call must read the persisted v4 directly — proves the
+    // Second call must read the persisted v5 directly — proves the
     // cascade write hit the store.
     const second = await loadCareer();
     expect(second.kind).toBe("loaded");
   });
 
-  it("migrates a v3 payload in place to v4", async () => {
-    // Hand-write a v3-shaped payload (no manager, no money fields on
-    // history) and confirm loadCareer upgrades it.
+  it("cascades a v3 payload through v4 to v5 in one load", async () => {
+    // Hand-write a v3-shaped payload (no manager, no transfers, no money
+    // fields on history) and confirm loadCareer cascades it all the way.
     const v3 = {
       schemaVersion: 3,
       savedAt: "2026-01-01T00:00:00Z",
@@ -205,12 +210,48 @@ describe("loadCareer", () => {
     const first = await loadCareer();
     expect(first.kind).toBe("migratedV3");
     if (first.kind === "migratedV3") {
-      expect(first.career.schemaVersion).toBe(4);
+      expect(first.career.schemaVersion).toBe(5);
       expect(first.career.controlledTeamId).toBe(201);
       expect(first.career.manager.money).toBe(STARTING_MONEY);
+      expect(first.career.userRoster).toEqual([]);
+      expect(first.career.currentSeason.transfers).toEqual([]);
     }
 
-    // Persisted as v4 — second load is the fast path.
+    // Persisted as v5 — second load is the fast path.
+    const second = await loadCareer();
+    expect(second.kind).toBe("loaded");
+  });
+
+  it("migrates a v4 payload in place to v5", async () => {
+    // Hand-write a v4-shaped payload (has manager, lacks userRoster +
+    // transfers) and confirm loadCareer upgrades it to v5.
+    const v4 = {
+      schemaVersion: 4,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 99n,
+      controlledTeamId: 201,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 99n ^ BigInt(FIRST_YEAR),
+        divisions: [],
+      },
+      manager: { money: 750_000 }, // distinct so we can assert preservation
+    };
+    await writeRaw(v4);
+
+    const first = await loadCareer();
+    expect(first.kind).toBe("migratedV4");
+    if (first.kind === "migratedV4") {
+      expect(first.career.schemaVersion).toBe(5);
+      expect(first.career.controlledTeamId).toBe(201);
+      // Money preserved (NOT reset to STARTING_MONEY — only userRoster +
+      // transfers are added).
+      expect(first.career.manager.money).toBe(750_000);
+      expect(first.career.userRoster).toEqual([]);
+      expect(first.career.currentSeason.transfers).toEqual([]);
+    }
+
     const second = await loadCareer();
     expect(second.kind).toBe("loaded");
   });

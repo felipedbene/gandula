@@ -39,7 +39,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalA = Math.max(...recordA.fixtures.map((f) => f.round)) + 1;
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -51,8 +51,10 @@ function makeFinishedCareer(seed: bigint): Career {
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx: totalA },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: totalB },
       ],
+      transfers: [],
     },
     manager: { money: STARTING_MONEY },
+    userRoster: [],
   };
 }
 

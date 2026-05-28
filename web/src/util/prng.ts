@@ -9,7 +9,7 @@
  * C3.3 opts to skip the animation entirely on reload, this property is
  * still load-bearing for any future "rewatch this round" feature).
  */
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
     state = (state + 0x6d2b79f5) | 0;

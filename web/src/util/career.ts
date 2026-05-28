@@ -213,6 +213,9 @@ function buildNextSeason(
     divisions,
     // userTactics intentionally undefined — fresh season, user reconfigures.
     // E.1.c discussion (decision 1.1): "uma temporada, uma tática".
+    // transfers starts empty — mercado opens between this Season and the
+    // NEXT, and writes accumulate into THIS season's `transfers` (E.1.e.2).
+    transfers: [],
   };
 }
 

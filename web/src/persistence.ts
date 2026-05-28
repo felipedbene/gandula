@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
-import type { Formation, SeasonRecord, Tactics } from "./types";
+import type { Formation, Player, Position, SeasonRecord, Tactics } from "./types";
 
 /**
  * IndexedDB persistence for the in-progress Elifoot-mode career.
@@ -11,10 +11,10 @@ import type { Formation, SeasonRecord, Tactics } from "./types";
  *
  * Schema history:
  *   - v1 (pre-E.1.a): single record + currentRoundIdx. Discarded on load.
- *   - v2 (E.1.a): divisions[]. Auto-migrated via cascade v2→v3→v4.
+ *   - v2 (E.1.a): divisions[]. Auto-migrated via cascade v2→v3→v4→v5.
  *   - v3 (E.1.c): Career wrapping currentSeason + seasons[] history.
- *     Auto-migrated to v4 by `loadCareer`.
  *   - v4 (E.1.d): adds Manager (money) + SeasonHistory money fields.
+ *   - v5 (E.1.e): adds Career.userRoster + Season/SeasonHistory transfers.
  *
  * Storage strategy: each division's SeasonRecord is simulated upfront and
  * persisted whole. `currentRoundIdx` on each Division tracks how many
@@ -93,6 +93,21 @@ export type Manager = {
 };
 
 /**
+ * Single transfer-market transaction. Recorded as a flat summary (no
+ * full Player snapshot) — undo within a market session lives in
+ * TransferMarketView's local state (E.1.e.2), the persisted record only
+ * needs to survive long enough to surface in HistoryCard. `position` is
+ * here so the history line can group by role without rehydrating the
+ * player from anywhere.
+ */
+export type TransferRecord = {
+  kind: "buy" | "sell";
+  playerName: string;
+  position: Position;
+  price: number;
+};
+
+/**
  * A career season in progress. Mirrors the v2 SavedSeason payload minus
  * the career-level fields (schemaVersion, seed, controlledTeamId — those
  * live on Career). Adds `year` and a per-season `seed` derived from the
@@ -110,6 +125,13 @@ export type Season = {
   seed: bigint;
   divisions: Division[];
   userTactics?: UserTactics;
+  /** Transfer-market activity accumulated during this season. Mercado
+   *  abre na phase entre `finale` e the next season's `running`, so by
+   *  the time `advanceCareer` runs these are the year-N transfers being
+   *  copied into year-N's SeasonHistory. Always present (empty when no
+   *  transfers happened) — required field so consumers don't need to
+   *  defensively `?? []`. */
+  transfers: TransferRecord[];
 };
 
 /**
@@ -148,6 +170,11 @@ export type SeasonHistory = {
    *  history UI doesn't need to cumulative-sum across all prior entries.
    *  Backfilled to STARTING_MONEY for seasons that existed before E.1.d. */
   moneyAfter: number;
+  /** Transfer-market activity that happened between this season and the
+   *  next. Optional because (a) seasons that existed pre-E.1.e have no
+   *  transfer data to backfill, and (b) skipping the market entirely
+   *  leaves no record either way. UI treats absent and empty the same. */
+  transfers?: TransferRecord[];
 };
 
 /**
@@ -158,7 +185,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 4;
+  schemaVersion: 5;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -173,17 +200,23 @@ export type Career = {
   currentSeason: Season;
   /** Cross-season manager state. Always present in v4+ saves. */
   manager: Manager;
+  /** User team's actual roster after transfer-market activity. Empty
+   *  array means "use the JSON registry default" (fresh career; no
+   *  transfers yet). Resolved everywhere by util/roster.ts userTeam(). */
+  userRoster: Player[];
 };
 
-/**
- * Private intermediate type used by the v3 → v4 migration path. Mirrors
- * the v3-era `Career` shape exactly: no `manager`, no money fields on
- * `SeasonHistory`. Returned by `migrateV2toV3` (which is still tested as
- * a standalone v2-to-v3 step) and consumed by `migrateV3toV4`. Not
- * exported because UI code never sees a v3 — `loadCareer` always
- * cascades through to v4 before returning.
- */
-type SeasonHistoryV3 = Omit<SeasonHistory, "moneyDelta" | "moneyAfter">;
+// ─── Private intermediate types for the migration cascade ────────────────
+//
+// Each prior schema version lives here as a closed shape so the per-step
+// migration functions stay typed. They're not exported: UI code never
+// sees a pre-v5 Career — loadCareer cascades through every intermediate
+// step before returning.
+
+type SeasonHistoryV3 = Omit<SeasonHistory, "moneyDelta" | "moneyAfter" | "transfers">;
+
+type SeasonV4 = Omit<Season, "transfers">;
+type SeasonHistoryV4 = Omit<SeasonHistory, "transfers">;
 
 type CareerV3 = {
   schemaVersion: 3;
@@ -191,7 +224,17 @@ type CareerV3 = {
   seed: bigint;
   controlledTeamId: number;
   seasons: SeasonHistoryV3[];
-  currentSeason: Season;
+  currentSeason: SeasonV4;
+};
+
+type CareerV4 = {
+  schemaVersion: 4;
+  savedAt: string;
+  seed: bigint;
+  controlledTeamId: number;
+  seasons: SeasonHistoryV4[];
+  currentSeason: SeasonV4;
+  manager: Manager;
 };
 
 /**
@@ -224,35 +267,36 @@ async function db(): Promise<IDBPDatabase> {
 // ─── Load / save / clear / migrate (v3) ──────────────────────────────────
 
 /**
- * Result of `loadCareer`. Discriminated with five kinds:
- *   - `loaded`: a v4 Career was read directly.
- *   - `migratedV3`: a v3 payload was upgraded in place to v4 (manager
- *     initialised at STARTING_MONEY, history money fields backfilled).
- *   - `migratedV2`: a v2 payload was cascaded v2→v3→v4. The cascade is
- *     internal — callers see one transition from "old save" to v4 — but
- *     the kind preserves the original starting point so the status line
- *     can say "v2" specifically.
+ * Result of `loadCareer`. Discriminated with six kinds:
+ *   - `loaded`: a v5 Career was read directly.
+ *   - `migratedV4`: a v4 payload was upgraded in place to v5 (userRoster:[]
+ *     added, currentSeason.transfers:[] added; existing SeasonHistory
+ *     entries get no transfer backfill — `transfers` field stays absent).
+ *   - `migratedV3`: a v3 payload was cascaded v3→v4→v5.
+ *   - `migratedV2`: a v2 payload was cascaded v2→v3→v4→v5.
  *   - `discardedV1`: a v1 payload (no division info) was found and
  *     deleted. No migration possible.
  *   - `none`: empty slot.
+ *
+ * Cascades are internal — callers see one transition from "old save" to
+ * v5 — but the kind preserves the original starting point so the status
+ * line can say "v3" specifically (etc.).
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV4"; career: Career }
   | { kind: "migratedV3"; career: Career }
   | { kind: "migratedV2"; career: Career }
   | { kind: "discardedV1" }
   | { kind: "none" };
 
 /**
- * Read the current career. Handles four eras of payloads via a v3/v4
+ * Read the current career. Handles five eras of payloads via a v3/v4/v5
  * cascade:
- *   - v4 (current): returned as-is.
- *   - v3 (E.1.c): migrated to v4 with manager.money = STARTING_MONEY
- *     and history money fields backfilled to 0/STARTING_MONEY. Past
- *     financial history is unreconstructable — backfill is the cheapest
- *     correct fallback.
- *   - v2 (E.1.a): cascaded v2→v3→v4 in one load. Persisted as v4 so
- *     subsequent loads see `kind: "loaded"`.
+ *   - v5 (current): returned as-is.
+ *   - v4 (E.1.d): adds userRoster:[] and currentSeason.transfers:[].
+ *   - v3 (E.1.c): cascaded v3→v4→v5.
+ *   - v2 (E.1.a): cascaded v2→v3→v4→v5 in one load.
  *   - v1 (pre-E.1.a — no division info): discarded. User starts fresh.
  *
  * Empty slot returns `kind: "none"`.
@@ -263,17 +307,24 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 4) {
+  if (candidate.schemaVersion === 5) {
     return { kind: "loaded", career: value as Career };
   }
+  if (candidate.schemaVersion === 4) {
+    const career = migrateV4toV5(value as CareerV4);
+    await conn.put(STORE, career, SLOT_KEY);
+    return { kind: "migratedV4", career };
+  }
   if (candidate.schemaVersion === 3) {
-    const career = migrateV3toV4(value as CareerV3);
+    const v4 = migrateV3toV4(value as CareerV3);
+    const career = migrateV4toV5(v4);
     await conn.put(STORE, career, SLOT_KEY);
     return { kind: "migratedV3", career };
   }
   if (candidate.schemaVersion === 2) {
     const v3 = migrateV2toV3(value as SavedSeason);
-    const career = migrateV3toV4(v3);
+    const v4 = migrateV3toV4(v3);
+    const career = migrateV4toV5(v4);
     await conn.put(STORE, career, SLOT_KEY);
     return { kind: "migratedV2", career };
   }
@@ -312,7 +363,7 @@ export async function clearCareer(): Promise<void> {
  *     so there is no perceived inconsistency.
  *
  * Exported for the persistence-migration tests; UI never calls this
- * directly (loadCareer cascades through it on its way to v4).
+ * directly (loadCareer cascades through it on its way to v5).
  */
 export function migrateV2toV3(v2: SavedSeason): CareerV3 {
   return {
@@ -331,7 +382,7 @@ export function migrateV2toV3(v2: SavedSeason): CareerV3 {
 }
 
 /**
- * v3 CareerV3 → v4 Career. Adds `manager` with STARTING_MONEY and
+ * v3 CareerV3 → v4 CareerV4. Adds `manager` with STARTING_MONEY and
  * backfills the new money fields on any existing SeasonHistory entries.
  *
  * Backfill semantics: pre-E.1.d careers have no financial history to
@@ -341,9 +392,9 @@ export function migrateV2toV3(v2: SavedSeason): CareerV3 {
  * to keep their progress with a financial slate that begins now.
  *
  * Exported for tests; UI never calls this directly (loadCareer cascades
- * through it).
+ * through it on its way to v5).
  */
-export function migrateV3toV4(v3: CareerV3): Career {
+export function migrateV3toV4(v3: CareerV3): CareerV4 {
   return {
     schemaVersion: 4,
     savedAt: v3.savedAt,
@@ -356,6 +407,29 @@ export function migrateV3toV4(v3: CareerV3): Career {
     })),
     currentSeason: v3.currentSeason,
     manager: { money: STARTING_MONEY },
+  };
+}
+
+/**
+ * v4 CareerV4 → v5 Career. Adds `userRoster: []` (registry-default
+ * roster, no transfers yet) and `currentSeason.transfers: []`. Past
+ * SeasonHistory entries do NOT get transfer backfill — the `transfers`
+ * field stays absent for them, which the UI treats identically to an
+ * empty array.
+ *
+ * Exported for tests; UI never calls this directly (loadCareer cascades
+ * through it).
+ */
+export function migrateV4toV5(v4: CareerV4): Career {
+  return {
+    schemaVersion: 5,
+    savedAt: v4.savedAt,
+    seed: v4.seed,
+    controlledTeamId: v4.controlledTeamId,
+    seasons: v4.seasons, // transfers stays absent — UI handles it
+    currentSeason: { ...v4.currentSeason, transfers: [] },
+    manager: v4.manager,
+    userRoster: [],
   };
 }
 

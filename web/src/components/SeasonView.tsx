@@ -103,7 +103,8 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         if (
           result.kind === "loaded" ||
           result.kind === "migratedV2" ||
-          result.kind === "migratedV3"
+          result.kind === "migratedV3" ||
+          result.kind === "migratedV4"
         ) {
           const career = result.career;
           const userDivIdx = findUserDivisionIdxInSeason(
@@ -119,7 +120,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
               ? "save v2 migrado"
               : result.kind === "migratedV3"
                 ? "save v3 migrado"
-                : "save carregado";
+                : result.kind === "migratedV4"
+                  ? "save v4 migrado"
+                  : "save carregado";
           onStatus(
             `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
@@ -168,7 +171,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 4,
+        schemaVersion: 5,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -180,8 +183,10 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
             { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
           ],
+          transfers: [],
         },
         manager: { money: STARTING_MONEY },
+        userRoster: [],
       };
 
       saveCareer(newCareer)
