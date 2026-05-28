@@ -45,13 +45,13 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
       : 90;
 
   const [revealed, setRevealed] = useState(0);
-  // The match clock, ticked continuously by a timer (see effect below) rather
-  // than read off the last revealed event — so it counts up during the calm
-  // stretches between lances instead of standing still.
-  const [clockMinute, setClockMinute] = useState(0);
   // Guards onComplete from firing twice: once when naturally hitting the last
   // event, and again if skipAll flips true after that.
   const completedRef = useRef(false);
+
+  // Continuous match clock — counts up during the calm stretches between
+  // lances instead of standing still on the last event's minute.
+  const clockMinute = useMatchClock(finalMinute, !!skipAll, match);
 
   useEffect(() => {
     setRevealed(0);
@@ -71,29 +71,11 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
     return () => timers.forEach(window.clearTimeout);
   }, [match]);
 
-  // Tick the match clock independently of events: map wall-clock elapsed back
-  // to a match minute (accounting for the halftime pause), clamped to the
-  // final whistle. Stops once it reaches full time.
-  useEffect(() => {
-    setClockMinute(0);
-    const start = performance.now();
-    const id = window.setInterval(() => {
-      const m = Math.min(
-        Math.floor(minuteAtElapsed(performance.now() - start)),
-        finalMinute,
-      );
-      setClockMinute(m);
-      if (m >= finalMinute) window.clearInterval(id);
-    }, 100);
-    return () => window.clearInterval(id);
-  }, [match, finalMinute]);
-
   useEffect(() => {
     if (skipAll) {
       setRevealed(match.events.length);
-      setClockMinute(finalMinute);
     }
-  }, [skipAll, match.events.length, finalMinute]);
+  }, [skipAll, match.events.length]);
 
   useEffect(() => {
     if (!completedRef.current && revealed >= match.events.length && match.events.length > 0) {
@@ -205,6 +187,42 @@ function minuteAtElapsed(elapsedMs: number): number {
   if (elapsedMs <= firstHalfMs) return elapsedMs / REVEAL_MS_PER_MIN;
   if (elapsedMs <= firstHalfMs + HALFTIME_PAUSE_MS) return 45;
   return 45 + (elapsedMs - firstHalfMs - HALFTIME_PAUSE_MS) / REVEAL_MS_PER_MIN;
+}
+
+/**
+ * Continuous match clock: ticks 0 → `finalMinute` mapped from wall-clock
+ * (with the halftime hold), restarting whenever `resetKey` changes. `skip`
+ * snaps to full time. `active` lets a caller mount it without running a timer
+ * (so a non-bye RevealRound doesn't spin a second interval next to
+ * MatchReveal's). Shared by MatchReveal (the user's match) and RevealRound's
+ * bye-round header, so the clock shows even when the user doesn't play.
+ */
+export function useMatchClock(
+  finalMinute: number,
+  skip: boolean,
+  resetKey: unknown,
+  active = true,
+): number {
+  const [minute, setMinute] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    setMinute(0);
+    const start = performance.now();
+    const id = window.setInterval(() => {
+      const m = Math.min(
+        Math.floor(minuteAtElapsed(performance.now() - start)),
+        finalMinute,
+      );
+      setMinute(m);
+      if (m >= finalMinute) window.clearInterval(id);
+    }, 100);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalMinute, resetKey, active]);
+  useEffect(() => {
+    if (skip) setMinute(finalMinute);
+  }, [skip, finalMinute]);
+  return minute;
 }
 
 function eventStyle(k: string): { c?: string; fw?: number; fs?: "italic" } {

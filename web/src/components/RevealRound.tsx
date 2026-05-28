@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button, Group, Stack, Text } from "@mantine/core";
+import { Badge, Box, Button, Card, Group, Stack, Text } from "@mantine/core";
 import type { Match } from "../types";
 import { findUserDivisionIdxInSeason, type Career } from "../persistence";
 import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
 import { Panel } from "./ui/Panel";
-import MatchReveal, { HALFTIME_PAUSE_MS, REVEAL_MS_PER_MIN } from "./MatchReveal";
+import MatchReveal, {
+  HALFTIME_PAUSE_MS,
+  REVEAL_MS_PER_MIN,
+  useMatchClock,
+} from "./MatchReveal";
 
 type RevealRoundProps = {
   career: Career;
@@ -127,18 +131,32 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
 
   const isPlaying = !userDone || !allOthersDone;
 
+  // On a bye round there's no MatchReveal (and thus no clock), so run a
+  // standalone matchday clock here — it ticks while the other games reveal.
+  const isBye = userMatch === undefined;
+  const byeClock = useMatchClock(90, skipAll, revealRound, isBye);
+
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
         {headerText}
       </Text>
 
-      {userMatch && (
+      {userMatch ? (
         <MatchReveal
           match={userMatch.match}
           onComplete={() => setUserDone(true)}
           skipAll={skipAll}
         />
+      ) : (
+        <Card withBorder radius="md" padding="md">
+          <Group justify="space-between" wrap="nowrap">
+            <Text c="dimmed">Seu time descansa nesta rodada.</Text>
+            <Badge variant="outline" color="phosphor" radius="xl">
+              {byeClock}'
+            </Badge>
+          </Group>
+        </Card>
       )}
 
       <Panel title="Outros jogos">
