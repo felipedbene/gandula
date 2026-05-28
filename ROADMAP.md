@@ -29,9 +29,10 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 - [x] **E.2.a — Aging (your squad)** · _M, web_ — shipped (see above).
 - [x] **E.2.a.2 — League-wide aging** · _M, web_ — shipped: opponents aged on
   the fly by elapsed seasons (recompute from registry base, no per-team state).
-- [ ] **E.2.b — Youth / regen** · _M, web_
-  Young players entering the pool / an academy, so squads (and eventually the
-  league) refresh rather than only decline.
+- [x] **E.2.b — Youth / regen (opponents)** · _M, web_ — shipped: AI clubs
+  retire ≥36 + intake youth + rebuild a valid XI each season (evolveTeam), so
+  the league refreshes instead of decaying. The user refreshes via the market.
+  (A visible youth academy for the user is a possible later add.)
 
 ## E.3 — Smarter opponents
 
@@ -53,9 +54,8 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 2. ~~Scout reports~~ ✓ shipped
 3. ~~E.2.a — aging (your squad)~~ ✓ shipped
 4. ~~E.2.a.2 — league-wide aging~~ ✓ shipped
-5. **E.2.b — youth / regen** — refresh squads so the world doesn't only
-   decline (contained, web). ← next
-6. **E.3 — self-play AI** — last; biggest (Rust + training), benefits from a
-   richer E.2 world + the `Manager`-trait extraction.
+5. ~~E.2.b — youth / regen (opponents)~~ ✓ shipped — E.2 living world complete
+6. **E.3 — self-play AI** — last; biggest (Rust + training), benefits from the
+   now-richer E.2 world + the `Manager`-trait extraction. ← next
 
 Dependencies: self-play ← `Manager`-trait extraction + ideally E.2.
