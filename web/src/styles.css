@@ -166,6 +166,8 @@ body {
   padding: 0 4px;
   cursor: pointer;
   text-shadow: none;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn:hover:not(:disabled) {
