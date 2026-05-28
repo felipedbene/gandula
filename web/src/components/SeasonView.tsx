@@ -33,7 +33,7 @@ import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import { Button, Divider, Group, Stack, Table, Text, TextInput } from "@mantine/core";
+import { Button, Divider, Group, Stack, Table, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -100,10 +100,8 @@ function randomSeed(): number {
 export function SeasonView({ onStatus }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
 
-  // Form-field state. Only the league name is user-editable; the seed is
-  // generated randomly at run() time (not user-controlled) and the team is
-  // assigned via pickRandomStarter — see run().
-  const [name, setName] = useState<string>("Brasileirão Imaginário 2026");
+  // The new-career form has no inputs now: the seed is generated randomly at
+  // run() time and the team is assigned via pickRandomStarter — see run().
   const [error, setError] = useState<string | null>(null);
 
   // Autoload once on mount. Discriminated LoadCareerResult lets us surface
@@ -476,12 +474,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     <>
       {phase.tag === "loading" && <Text c="dimmed">Carregando save…</Text>}
       {phase.tag === "form" && (
-        <NewSeasonForm
-          name={name}
-          onNameChange={setName}
-          onSubmit={run}
-          onSupport={openSupport}
-        />
+        <NewSeasonForm onSubmit={run} onSupport={openSupport} />
       )}
       {phase.tag === "running" && (
         <CampeonatoEmCurso
@@ -554,13 +547,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 // 17 teams fixed) and the user no longer picks a team (assigned to the
 // weakest Série B team via pickStarterTeam).
 function NewSeasonForm({
-  name,
-  onNameChange,
   onSubmit,
   onSupport,
 }: {
-  name: string;
-  onNameChange: (s: string) => void;
   onSubmit: () => void;
   onSupport: () => void;
 }) {
@@ -577,11 +566,6 @@ function NewSeasonForm({
             17 times divididos em Série A (8) + Série B (9). Você assume um time
             aleatório da Série B.
           </Text>
-          <TextInput
-            label="Liga"
-            value={name}
-            onChange={(e) => onNameChange(e.currentTarget.value)}
-          />
           <Group justify="center" gap="sm">
             <Button type="submit">Iniciar carreira</Button>
             <Button type="button" variant="default" onClick={onSupport}>
