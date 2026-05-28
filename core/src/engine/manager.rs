@@ -14,6 +14,32 @@ pub const STAMINA_FRESH_THRESHOLD: f64 = 70.0;
 pub const STAMINA_RULE_MIN_MINUTE: u16 = 55;
 pub const GAME_STATE_RULE_MIN_MINUTE: u16 = 70;
 
+/// Knobs that parameterize the heuristic manager — the search space self-play
+/// (E.3.c) will tune, and the basis for per-club styles (E.3.b). `balanced()`
+/// reproduces the historical constants above exactly, so the default in-match
+/// behavior is unchanged.
+#[derive(Clone, Copy, Debug)]
+pub struct ManagerConfig {
+    pub max_subs_per_match: u8,
+    pub stamina_sub_threshold: f64,
+    pub stamina_fresh_threshold: f64,
+    pub stamina_rule_min_minute: u16,
+    pub game_state_rule_min_minute: u16,
+}
+
+impl ManagerConfig {
+    /// The canonical balanced style — the rules as originally tuned.
+    pub fn balanced() -> Self {
+        Self {
+            max_subs_per_match: MAX_SUBS_PER_MATCH,
+            stamina_sub_threshold: STAMINA_SUB_THRESHOLD,
+            stamina_fresh_threshold: STAMINA_FRESH_THRESHOLD,
+            stamina_rule_min_minute: STAMINA_RULE_MIN_MINUTE,
+            game_state_rule_min_minute: GAME_STATE_RULE_MIN_MINUTE,
+        }
+    }
+}
+
 // ─── Read-only view into one team's state ───────────────────────────────────
 pub(crate) struct ManagerView<'a> {
     pub team: &'a Team,
@@ -38,10 +64,12 @@ pub(crate) enum ManagerAction {
 // The RNG is threaded only so the substitution narration can draw phrasings —
 // the heuristic-decide logic itself stays pure / deterministic without it.
 pub(crate) fn run_managers(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
+    // Both sides use the balanced config for now; per-club styles land in E.3.b.
+    let cfg = ManagerConfig::balanced();
     for side in [Side::Home, Side::Away] {
         let action = {
             let view = build_view(state, side, minute);
-            heuristic_decide(&view)
+            heuristic_decide(&view, &cfg)
         };
         if let Some(action) = action {
             apply_action(state, rng, side, action, minute);
@@ -77,19 +105,22 @@ fn build_view<'a>(state: &'a MatchState<'_>, side: Side, minute: u16) -> Manager
 }
 
 // ─── Heuristic rules (pure, no RNG — order matters: first match wins) ───────
-pub(crate) fn heuristic_decide(view: &ManagerView) -> Option<ManagerAction> {
-    if view.subs_used >= MAX_SUBS_PER_MATCH {
+pub(crate) fn heuristic_decide(
+    view: &ManagerView,
+    cfg: &ManagerConfig,
+) -> Option<ManagerAction> {
+    if view.subs_used >= cfg.max_subs_per_match {
         return None;
     }
     if let Some(action) = gk_emergency(view) {
         return Some(action);
     }
-    if view.minute >= STAMINA_RULE_MIN_MINUTE {
-        if let Some(action) = stamina_swap(view) {
+    if view.minute >= cfg.stamina_rule_min_minute {
+        if let Some(action) = stamina_swap(view, cfg) {
             return Some(action);
         }
     }
-    if view.minute >= GAME_STATE_RULE_MIN_MINUTE {
+    if view.minute >= cfg.game_state_rule_min_minute {
         let diff = view.our_goals as i32 - view.their_goals as i32;
         if diff < 0 {
             if let Some(action) = chase_with_fresh_fwd(view) {
@@ -128,12 +159,12 @@ fn gk_emergency(view: &ManagerView) -> Option<ManagerAction> {
 
 // Rule 2: After STAMINA_RULE_MIN_MINUTE, swap an exhausted outfielder for a
 // fresh same-position bench player (GK excluded — rule 1 handles GK).
-fn stamina_swap(view: &ManagerView) -> Option<ManagerAction> {
+fn stamina_swap(view: &ManagerView, cfg: &ManagerConfig) -> Option<ManagerAction> {
     for slot in 0..11 {
         if !view.on_field[slot] {
             continue;
         }
-        if view.stamina[slot] >= STAMINA_SUB_THRESHOLD {
+        if view.stamina[slot] >= cfg.stamina_sub_threshold {
             continue;
         }
         let id = view.current_xi[slot];
@@ -144,7 +175,7 @@ fn stamina_swap(view: &ManagerView) -> Option<ManagerAction> {
             continue;
         }
         if let Some(bench_idx) =
-            find_bench_with_min_stamina(view, player.position, STAMINA_FRESH_THRESHOLD)
+            find_bench_with_min_stamina(view, player.position, cfg.stamina_fresh_threshold)
         {
             return Some(ManagerAction::Substitute {
                 off_slot: slot,
@@ -321,5 +352,130 @@ fn apply_substitution(
                 text,
             });
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::{
+        Attributes, Formation, Mentality, Player, Pressing, Tactics, TeamId, Tempo, Width,
+    };
+
+    fn player(id: u32, position: Position, stamina_attr: u8) -> Player {
+        Player {
+            id: PlayerId(id),
+            name: format!("P{id}"),
+            age: 25,
+            position,
+            attributes: Attributes {
+                pace: 70,
+                technique: 70,
+                passing: 70,
+                defending: 70,
+                finishing: 70,
+                stamina: stamina_attr,
+            },
+        }
+    }
+
+    // XI = GK + 4 DEF + 3 MID + 3 FWD (ids 1..=11) with a fresh bench FWD (12).
+    fn scenario_team() -> Team {
+        let mut roster = vec![player(1, Position::GK, 90)];
+        for i in 2..=5 {
+            roster.push(player(i, Position::DEF, 90));
+        }
+        for i in 6..=8 {
+            roster.push(player(i, Position::MID, 90));
+        }
+        for i in 9..=11 {
+            roster.push(player(i, Position::FWD, 90));
+        }
+        roster.push(player(12, Position::FWD, 95)); // fresh bench FWD
+        let xi: [PlayerId; 11] = std::array::from_fn(|i| PlayerId((i as u32) + 1));
+        Team {
+            id: TeamId(1),
+            name: "T".to_string(),
+            roster,
+            formation: Formation::F442,
+            tactics: Tactics {
+                mentality: Mentality::Balanced,
+                tempo: Tempo::Normal,
+                pressing: Pressing::Medium,
+                width: Width::Normal,
+            },
+            starting_xi: xi,
+            bench: vec![PlayerId(12)],
+        }
+    }
+
+    // One tired FWD (slot 8 = id 9), everyone else fresh.
+    const ON_FIELD: [bool; 11] = [true; 11];
+    fn tired_fwd_stamina() -> [f64; 11] {
+        let mut s = [90.0f64; 11];
+        s[8] = 30.0;
+        s
+    }
+    fn xi() -> [PlayerId; 11] {
+        std::array::from_fn(|i| PlayerId((i as u32) + 1))
+    }
+
+    fn view<'a>(
+        team: &'a Team,
+        current_xi: &'a [PlayerId; 11],
+        stamina: &'a [f64; 11],
+        bench_used: &'a [bool],
+        minute: u16,
+    ) -> ManagerView<'a> {
+        ManagerView {
+            team,
+            current_xi,
+            on_field: &ON_FIELD,
+            stamina,
+            subs_used: 0,
+            bench_used,
+            minute,
+            our_goals: 0,
+            their_goals: 0,
+        }
+    }
+
+    #[test]
+    fn balanced_subs_tired_fwd_only_after_the_stamina_minute() {
+        let team = scenario_team();
+        let xi = xi();
+        let stamina = tired_fwd_stamina();
+        let bench_used = [false];
+        let cfg = ManagerConfig::balanced();
+
+        let early = view(&team, &xi, &stamina, &bench_used, cfg.stamina_rule_min_minute - 1);
+        assert!(heuristic_decide(&early, &cfg).is_none());
+
+        let late = view(&team, &xi, &stamina, &bench_used, cfg.stamina_rule_min_minute);
+        assert!(matches!(
+            heuristic_decide(&late, &cfg),
+            Some(ManagerAction::Substitute { .. })
+        ));
+    }
+
+    #[test]
+    fn config_drives_behavior() {
+        let team = scenario_team();
+        let xi = xi();
+        let stamina = tired_fwd_stamina();
+        let bench_used = [false];
+        let minute = 40; // below balanced's stamina_rule_min_minute (55)
+
+        let balanced = ManagerConfig::balanced();
+        let eager = ManagerConfig {
+            stamina_rule_min_minute: 30,
+            ..ManagerConfig::balanced()
+        };
+
+        assert!(heuristic_decide(&view(&team, &xi, &stamina, &bench_used, minute), &balanced).is_none());
+        assert!(matches!(
+            heuristic_decide(&view(&team, &xi, &stamina, &bench_used, minute), &eager),
+            Some(ManagerAction::Substitute { .. })
+        ));
     }
 }
