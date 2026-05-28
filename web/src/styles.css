@@ -168,6 +168,15 @@ body {
   text-shadow: none;
 }
 
+/* Anchor elements wearing .btn (external links in SupportView) need these
+   to read as buttons: anchors are display:inline by default, so the .btn
+   padding/background only renders as a box with inline-block. Scoped to
+   a.btn so real <button> elements keep their native box model untouched. */
+a.btn {
+  text-decoration: none;
+  display: inline-block;
+}
+
 .btn:hover:not(:disabled) {
   background: var(--accent-gol);
 }
@@ -484,6 +493,18 @@ fieldset legend {
 .form-actions--quadruple {
   justify-content: center;
   gap: calc(var(--char-w) * 2);
+  flex-wrap: wrap;
+}
+
+/* SupportView's KO-FI + GITHUB link row. Lives inside the GANDULA card as
+   normal flow content — deliberately NOT .form-actions, which is
+   position:fixed and would rip the row out to the bottom bar and overlap
+   the VOLTAR button. */
+.support-links {
+  display: flex;
+  justify-content: center;
+  gap: calc(var(--char-w) * 2);
+  margin-top: 12px;
   flex-wrap: wrap;
 }
 
