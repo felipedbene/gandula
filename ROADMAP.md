@@ -34,13 +34,20 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
   the league refreshes instead of decaying. The user refreshes via the market.
   (A visible youth academy for the user is a possible later add.)
 
-## E.3 — Smarter opponents
+## E.3 — Smarter opponents (self-play rival managers)
 
-- [ ] **Self-play rival managers** · _L, core + training_
-  Learned per-club strategies instead of the single shared heuristic. Wants the
-  `Manager` trait extraction that `ARCHITECTURE.md` already flags as
-  "Phase ≥ 4 territory", and benefits from a richer world (E.2). The most
-  ambitious item — research-y, do it last.
+Broken into steps — the endgame is learned per-club managers via self-play.
+
+- [x] **E.3.a — ManagerConfig** · _S, core_ — shipped: the heuristic manager's
+  thresholds are now a `ManagerConfig` value (the search space), `balanced()` =
+  the old constants. Behavior-preserving.
+- [ ] **E.3.b — Per-club styles** · _M, core_
+  Assign distinct configs (balanced / cautious / bold presets) per club so
+  rivals have managing identities. Behavior changes → re-baseline the subs
+  integration tests + rebuild wasm.
+- [ ] **E.3.c — Self-play search** · _L, core + training_
+  Tune configs by simulated fitness (win rate), persist the winners. The
+  research-y endgame; benefits from the now-richer E.2 world.
 
 ## Polish (small, slot in anytime)
 
@@ -55,7 +62,8 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 3. ~~E.2.a — aging (your squad)~~ ✓ shipped
 4. ~~E.2.a.2 — league-wide aging~~ ✓ shipped
 5. ~~E.2.b — youth / regen (opponents)~~ ✓ shipped — E.2 living world complete
-6. **E.3 — self-play AI** — last; biggest (Rust + training), benefits from the
-   now-richer E.2 world + the `Manager`-trait extraction. ← next
+6. ~~E.3.a — ManagerConfig (self-play substrate)~~ ✓ shipped
+7. **E.3.b — per-club manager styles** — rivals get identities (core). ← next
+8. **E.3.c — self-play search** — tune/learn configs by fitness; the endgame.
 
 Dependencies: self-play ← `Manager`-trait extraction + ideally E.2.
