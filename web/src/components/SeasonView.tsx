@@ -33,7 +33,7 @@ import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import { Button, Group, NumberInput, Stack, Table, Text, TextInput } from "@mantine/core";
+import { Button, Divider, Group, NumberInput, Stack, Table, Text, TextInput } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -789,187 +789,203 @@ function SeasonFinale({
   const hasHistory = career.seasons.length >= 1;
 
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {userTeamName} · ENCERRADA · {totalRounds} /{" "}
         {totalRounds} · $ {formatMoney(career.manager.money)}
-      </p>
+      </Text>
 
-      <Panel title={isUserChamp ? "*** CAMPEÃO ***" : "CAMPEÃO"}>
+      <Panel title={isUserChamp ? "*** Campeão ***" : "Campeão"}>
         {isUserChamp ? (
-          <p className="finale-champ">
+          <Text c="phosphor.4" fw={700}>
             PARABÉNS! {champName} venceu o {userDiv.name}.
-          </p>
+          </Text>
         ) : (
-          <p>{champName}</p>
+          <Text>{champName}</Text>
         )}
       </Panel>
 
-      <Panel title="DESTAQUES DA TEMPORADA">
-        <ul className="finale-stats">
+      <Panel title="Destaques da temporada">
+        <Stack gap={4}>
           {scorer && (
-            <li>
+            <Text size="sm">
               Artilheiro: {scorer.name} ({scorer.teamName}) — {scorer.goals} gols
-            </li>
+            </Text>
           )}
           {assister && (
-            <li>
+            <Text size="sm">
               Líder de assistências: {assister.name} ({assister.teamName}) —{" "}
               {assister.assists} assistências
-            </li>
+            </Text>
           )}
           {biggest && (
-            <li>
+            <Text size="sm">
               Maior goleada:{" "}
               {teamById(biggest.match.home)?.name ?? `Time ${biggest.match.home}`}{" "}
               {biggest.match.result.home_goals} x {biggest.match.result.away_goals}{" "}
               {teamById(biggest.match.away)?.name ?? `Time ${biggest.match.away}`}{" "}
               (rodada {biggest.round + 1})
-            </li>
+            </Text>
           )}
           {cards && (
-            <li>
+            <Text size="sm">
               Mais cartões: {cards.name} ({cards.teamName}) — {cards.yellow}{" "}
               amarelos, {cards.red} vermelhos
-            </li>
+            </Text>
           )}
           {userStats && !isUserChamp && (
-            <li className="finale-stats__user">
+            <Text size="sm" c="phosphor.3" fw={600}>
               Sua colocação: {userTeamName} — {userIdx + 1}º lugar,{" "}
               {points(userStats)} pts, {userStats.won}V {userStats.drawn}E{" "}
               {userStats.lost}D
-            </li>
+            </Text>
           )}
-        </ul>
+        </Stack>
       </Panel>
 
-      <Panel title="FINANÇAS DA TEMPORADA">
-        <ul className="finances-list">
-          <li className="finances-row">
-            <span>Receita de bilheteria</span>
-            <span className="finances-row--positive">
-              + $ {formatMoney(finances.ticketRevenue)}
-            </span>
-          </li>
-          <li className="finances-row">
-            <span>Salários</span>
-            <span className="finances-row--negative">
-              − $ {formatMoney(finances.salaries)}
-            </span>
-          </li>
+      <Panel title="Finanças da temporada">
+        <Stack gap={2}>
+          <FinanceRow
+            label="Receita de bilheteria"
+            value={`+ $ ${formatMoney(finances.ticketRevenue)}`}
+            c="phosphor.4"
+          />
+          <FinanceRow
+            label="Salários"
+            value={`− $ ${formatMoney(finances.salaries)}`}
+            c="red.5"
+          />
           {finances.prBonus > 0 && (
-            <li className="finances-row">
-              <span>Bônus promoção</span>
-              <span className="finances-row--positive">
-                + $ {formatMoney(finances.prBonus)}
-              </span>
-            </li>
+            <FinanceRow
+              label="Bônus promoção"
+              value={`+ $ ${formatMoney(finances.prBonus)}`}
+              c="phosphor.4"
+            />
           )}
           {finances.prBonus < 0 && (
-            <li className="finances-row">
-              <span>Multa rebaixamento</span>
-              <span className="finances-row--negative">
-                − $ {formatMoney(Math.abs(finances.prBonus))}
-              </span>
-            </li>
+            <FinanceRow
+              label="Multa rebaixamento"
+              value={`− $ ${formatMoney(Math.abs(finances.prBonus))}`}
+              c="red.5"
+            />
           )}
-          <li className="finances-divider" />
-          <li className="finances-row">
-            <span>Saldo da temporada</span>
-            <span
-              className={
-                finances.net >= 0
-                  ? "finances-row--positive"
-                  : "finances-row--negative"
-              }
-            >
-              {finances.net >= 0 ? "+" : "−"} $ {formatMoney(Math.abs(finances.net))}
-            </span>
-          </li>
-          <li className="finances-row">
-            <span>Saldo total</span>
-            <span>$ {formatMoney(career.manager.money + finances.net)}</span>
-          </li>
-        </ul>
+          <Divider my={4} />
+          <FinanceRow
+            label="Saldo da temporada"
+            value={`${finances.net >= 0 ? "+" : "−"} $ ${formatMoney(Math.abs(finances.net))}`}
+            c={finances.net >= 0 ? "phosphor.4" : "red.5"}
+          />
+          <FinanceRow
+            label="Saldo total"
+            value={`$ ${formatMoney(career.manager.money + finances.net)}`}
+          />
+        </Stack>
       </Panel>
 
-      <Panel title="PROMOÇÃO E REBAIXAMENTO">
-        {prResult.userPromoted && (
-          <p className="pr-banner pr-banner--promoted">
-            *** SEU TIME SUBIU PARA A SÉRIE A! ***
-          </p>
-        )}
-        {prResult.userRelegated && (
-          <p className="pr-banner pr-banner--relegated">
-            *** SEU TIME FOI REBAIXADO PARA A SÉRIE B ***
-          </p>
-        )}
+      <Panel title="Promoção e rebaixamento">
+        <Stack gap="xs">
+          {prResult.userPromoted && (
+            <Text ta="center" fw={700} c="phosphor.4">
+              *** SEU TIME SUBIU PARA A SÉRIE A! ***
+            </Text>
+          )}
+          {prResult.userRelegated && (
+            <Text ta="center" fw={700} c="red.5">
+              *** SEU TIME FOI REBAIXADO PARA A SÉRIE B ***
+            </Text>
+          )}
 
-        <p className="pr-section-title">▲ SOBEM PARA A SÉRIE A:</p>
-        <ul className="pr-list">
-          {prResult.promoted.map((s, i) => {
-            const team = teamById(s.team_id);
-            const name = team?.name ?? `Time ${s.team_id}`;
-            const isUser = s.team_id === career.controlledTeamId;
-            return (
-              <li
-                key={s.team_id}
-                className={isUser ? "pr-list__item standings-hi" : "pr-list__item"}
-              >
-                {i + 1}º {name} ({points(s)} pts)
-              </li>
-            );
-          })}
-        </ul>
+          <div>
+            <Text size="sm" c="dimmed" mb={4}>
+              ▲ Sobem para a Série A:
+            </Text>
+            <Stack gap={1}>
+              {prResult.promoted.map((s, i) => {
+                const name = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
+                const isUser = s.team_id === career.controlledTeamId;
+                return (
+                  <Text
+                    key={s.team_id}
+                    size="sm"
+                    c={isUser ? "phosphor.3" : undefined}
+                    fw={isUser ? 700 : undefined}
+                  >
+                    {i + 1}º {name} ({points(s)} pts)
+                  </Text>
+                );
+              })}
+            </Stack>
+          </div>
 
-        <p className="pr-section-title">▼ DESCEM PARA A SÉRIE B:</p>
-        <ul className="pr-list">
-          {prResult.relegated.map((s, i) => {
-            const team = teamById(s.team_id);
-            const name = team?.name ?? `Time ${s.team_id}`;
-            const isUser = s.team_id === career.controlledTeamId;
-            // Position in Série A's standings: with 8 teams and 2 relegated,
-            // relegated[0] is 7º, relegated[1] is 8º. Derive from tier A's
-            // standings length so the same code works if RELEGATION_SLOTS
-            // ever changes.
-            const positionInTierA = tierASize - prResult.relegated.length + i + 1;
-            return (
-              <li
-                key={s.team_id}
-                className={isUser ? "pr-list__item standings-hi" : "pr-list__item"}
-              >
-                {positionInTierA}º {name} ({points(s)} pts)
-              </li>
-            );
-          })}
-        </ul>
+          <div>
+            <Text size="sm" c="dimmed" mb={4}>
+              ▼ Descem para a Série B:
+            </Text>
+            <Stack gap={1}>
+              {prResult.relegated.map((s, i) => {
+                const name = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
+                const isUser = s.team_id === career.controlledTeamId;
+                // Position in Série A's standings: with 8 teams and 2
+                // relegated, relegated[0] is 7º, relegated[1] is 8º. Derived
+                // from tier A's standings length so the same code works if
+                // RELEGATION_SLOTS ever changes.
+                const positionInTierA =
+                  tierASize - prResult.relegated.length + i + 1;
+                return (
+                  <Text
+                    key={s.team_id}
+                    size="sm"
+                    c={isUser ? "phosphor.3" : undefined}
+                    fw={isUser ? 700 : undefined}
+                  >
+                    {positionInTierA}º {name} ({points(s)} pts)
+                  </Text>
+                );
+              })}
+            </Stack>
+          </div>
+        </Stack>
       </Panel>
 
       <StandingsTable
         standings={userDiv.record.standings}
         highlightTeamId={career.controlledTeamId}
-        title={`CLASSIFICAÇÃO · ${userDiv.name.toUpperCase()}`}
+        title={`Classificação · ${userDiv.name}`}
       />
 
-      <div
-        className={`form-actions ${hasHistory ? "form-actions--quadruple" : "form-actions--triple"}`}
-      >
-        <button type="button" className="btn" onClick={onOpenMarket}>
-          [ ABRIR MERCADO ]
-        </button>
-        <button type="button" className="btn" onClick={onAdvanceSeason}>
-          [ INICIAR PRÓXIMA TEMPORADA ]
-        </button>
+      <Group justify="center" gap="sm">
+        <Button onClick={onOpenMarket}>Abrir mercado</Button>
+        <Button onClick={onAdvanceSeason}>Iniciar próxima temporada</Button>
         {hasHistory && (
-          <button type="button" className="btn" onClick={onOpenHistory}>
-            [ HISTÓRICO ]
-          </button>
+          <Button variant="default" onClick={onOpenHistory}>
+            Histórico
+          </Button>
         )}
-        <button type="button" className="btn" onClick={onReset}>
-          [ NOVA CARREIRA ]
-        </button>
-      </div>
-    </>
+        <Button variant="subtle" color="red" onClick={onReset}>
+          Nova carreira
+        </Button>
+      </Group>
+    </Stack>
+  );
+}
+
+/** Label-left / signed-amount-right row used by the FINANÇAS panel. */
+function FinanceRow({
+  label,
+  value,
+  c,
+}: {
+  label: string;
+  value: string;
+  c?: string;
+}) {
+  return (
+    <Group justify="space-between" gap="sm" wrap="nowrap">
+      <Text size="sm">{label}</Text>
+      <Text size="sm" c={c} style={{ fontVariantNumeric: "tabular-nums" }}>
+        {value}
+      </Text>
+    </Group>
   );
 }
 
@@ -985,22 +1001,22 @@ function HistoryView({
   onBack: () => void;
 }) {
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         HISTÓRICO · {career.seasons.length} temporada
         {career.seasons.length === 1 ? "" : "s"}
-      </p>
+      </Text>
 
       {career.seasons.map((s) => (
         <HistoryCard key={s.year} entry={s} />
       ))}
 
-      <div className="form-actions">
-        <button type="button" className="btn" onClick={onBack}>
-          [ VOLTAR ]
-        </button>
-      </div>
-    </>
+      <Group justify="center">
+        <Button variant="default" onClick={onBack}>
+          Voltar
+        </Button>
+      </Group>
+    </Stack>
   );
 }
 
@@ -1011,35 +1027,43 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
       : entry.userOutcome === "relegated"
         ? "▼ Desceu para a Série B"
         : `→ Permaneceu na ${entry.userDivision.name}`;
-  const outcomeClass = `history-card__outcome history-card__outcome--${entry.userOutcome}`;
-  const moneyClass =
-    entry.moneyDelta >= 0
-      ? "history-card__money history-card__money--positive"
-      : "history-card__money history-card__money--negative";
+  const outcomeColor =
+    entry.userOutcome === "promoted"
+      ? "phosphor.4"
+      : entry.userOutcome === "relegated"
+        ? "red.5"
+        : "dimmed";
+  const moneyColor = entry.moneyDelta >= 0 ? "phosphor.4" : "red.5";
   const moneySign = entry.moneyDelta >= 0 ? "+" : "−";
 
   return (
-    <Panel title={`TEMPORADA ${entry.year}`}>
-      <div className="history-card">
-        <p>
+    <Panel title={`Temporada ${entry.year}`}>
+      <Stack gap={2}>
+        <Text size="sm">
           {entry.userDivision.name} · {entry.userPosition}º lugar · {entry.userPoints} pts
-        </p>
-        <p className="muted">Campeão: {entry.champion.teamName}</p>
-        <p className="muted">
+        </Text>
+        <Text size="sm" c="dimmed">
+          Campeão: {entry.champion.teamName}
+        </Text>
+        <Text size="sm" c="dimmed">
           ▲ Subiram: {entry.promoted.map((p) => p.teamName).join(", ")}
-        </p>
-        <p className="muted">
+        </Text>
+        <Text size="sm" c="dimmed">
           ▼ Desceram: {entry.relegated.map((r) => r.teamName).join(", ")}
-        </p>
-        <p className={outcomeClass}>{outcomeText}</p>
-        <p className={moneyClass}>
+        </Text>
+        <Text size="sm" fw={700} c={outcomeColor} mt={4}>
+          {outcomeText}
+        </Text>
+        <Text size="sm" fw={700} c={moneyColor}>
           {moneySign} $ {formatMoney(Math.abs(entry.moneyDelta))} · saldo ${" "}
           {formatMoney(entry.moneyAfter)}
-        </p>
+        </Text>
         {entry.transfers && entry.transfers.length > 0 && (
-          <p className="muted">Transferências: {countTransfers(entry.transfers)}</p>
+          <Text size="sm" c="dimmed">
+            Transferências: {countTransfers(entry.transfers)}
+          </Text>
         )}
-      </div>
+      </Stack>
     </Panel>
   );
 }
