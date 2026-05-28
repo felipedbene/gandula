@@ -69,7 +69,7 @@ single most important property of the engine. See `core/tests/determinism.rs`.
 core/          — domain types, deterministic RNG wrapper, simulation engine
 cli/           — `gandula` binary
 wasm/          — wasm-bindgen wrapper around core for the browser
-web/           — Vite + React + TS career-mode app
+web/           — Vite + React + Mantine career-mode app (responsive)
 assets/teams/  — sample team JSONs (3 at top + 14 in fictional/)
 scripts/       — build helpers (mainly the wasm→web pipeline)
 ARCHITECTURE.md — tick loop + event-weighting formulas (for tuning)
@@ -157,8 +157,9 @@ JSON blobs for the full domain objects — see `ARCHITECTURE.md`.
 
 ## Web app — career mode
 
-The same engine runs in the browser via WebAssembly. A Vite + React + TS app
-lives in `web/`. Full career-mode loop:
+The same engine runs in the browser via WebAssembly. A Vite + React app lives
+in `web/`, with a Mantine-based UI that's responsive on both mobile and
+desktop. Full career-mode loop:
 
 - **Two divisions in parallel.** 17 fictional Brazilian clubs split into Série A
   (top 8) and Série B (bottom 9). User always starts as the weakest team in B.
