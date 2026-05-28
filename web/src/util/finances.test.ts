@@ -9,11 +9,13 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import init, { run_season } from "../wasm/gandula_wasm.js";
 import {
+  MANAGER_FIRING_FLOOR,
   PROMOTION_BONUS,
   RELEGATION_PENALTY,
   SALARY_PER_PLAYER_STRENGTH,
   TICKET_REVENUE_PER_STRENGTH,
   computeSeasonFinances,
+  isManagerFired,
 } from "./finances";
 import { divideIntoDivisions, pickStarterTeam, avgStrength } from "./divisions";
 import { ALL_TEAMS, teamById } from "../teams";
@@ -167,5 +169,18 @@ describe("computeSeasonFinances — net + determinism", () => {
     const a = computeSeasonFinances(c1, "stayed");
     const b = computeSeasonFinances(c2, "stayed");
     expect(a).toEqual(b);
+  });
+});
+
+describe("isManagerFired", () => {
+  it("fires below the floor (negative balance)", () => {
+    expect(isManagerFired(MANAGER_FIRING_FLOOR - 1)).toBe(true);
+    expect(isManagerFired(-1)).toBe(true);
+  });
+
+  it("survives at exactly the floor and above", () => {
+    expect(isManagerFired(MANAGER_FIRING_FLOOR)).toBe(false);
+    expect(isManagerFired(MANAGER_FIRING_FLOOR + 1)).toBe(false);
+    expect(isManagerFired(STARTING_MONEY)).toBe(false);
   });
 });

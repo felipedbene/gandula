@@ -29,7 +29,7 @@ import {
   userOutcomeFromPRResult,
 } from "../util/promotion";
 import { advanceCareer } from "../util/career";
-import { computeSeasonFinances } from "../util/finances";
+import { computeSeasonFinances, isManagerFired } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
@@ -70,6 +70,7 @@ type Phase =
   | { tag: "finale"; career: Career }
   | { tag: "history"; career: Career }
   | { tag: "transferMarket"; career: Career }
+  | { tag: "fired"; career: Career }
   | { tag: "support" };
 
 /**
@@ -437,6 +438,20 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         career.currentSeason,
         career.controlledTeamId,
       );
+
+      // Lose-condition (E.1.f): if the season's net pushes the balance below
+      // the firing floor, the board fires the manager. Checked before the
+      // expensive advanceCareer resim so a doomed career never wastes one.
+      const projectedFinances = computeSeasonFinances(
+        career,
+        userOutcomeFromPRResult(pr),
+      );
+      if (isManagerFired(career.manager.money + projectedFinances.net)) {
+        onStatus("demitido · saldo negativo");
+        setPhase({ tag: "fired", career });
+        return;
+      }
+
       const start = performance.now();
       const { history, nextSeason, finances } = advanceCareer(career, pr);
       const ms = Math.round(performance.now() - start);
@@ -531,6 +546,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           career={phase.career}
           onClose={closeTransferMarket}
         />
+      )}
+      {phase.tag === "fired" && (
+        <FiredView career={phase.career} onNewCareer={resetCareer} />
       )}
       {phase.tag === "support" && <SupportView onBack={backFromSupport} />}
       {error && (
@@ -970,6 +988,62 @@ function FinanceRow({
         {value}
       </Text>
     </Group>
+  );
+}
+
+// ─── Phase: fired (E.1.f) ────────────────────────────────────────────────────
+// Game over — reached from advanceToNextSeason when the season's net would push
+// the balance below the firing floor. Self-contained like SeasonFinale: it
+// recomputes pr + finances from the (un-advanced) career to show the damage.
+// The only way out is a new career.
+function FiredView({
+  career,
+  onNewCareer,
+}: {
+  career: Career;
+  onNewCareer: () => void;
+}) {
+  const season = career.currentSeason;
+  const pr = computePromotionRelegation(season, career.controlledTeamId);
+  const finances = computeSeasonFinances(career, userOutcomeFromPRResult(pr));
+  const finalBalance = career.manager.money + finances.net;
+  const teamName =
+    teamById(career.controlledTeamId)?.name ?? `Time ${career.controlledTeamId}`;
+  const seasonsInCharge = career.seasons.length + 1;
+
+  return (
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
+        FIM DE LINHA · {teamName.toUpperCase()}
+      </Text>
+
+      <Panel title="*** Demitido ***">
+        <Stack gap="sm">
+          <Text c="red.5" fw={700}>
+            O conselho perdeu a paciência: as contas do {teamName} ficaram no
+            vermelho e você foi demitido.
+          </Text>
+          <FinanceRow
+            label="Saldo da temporada"
+            value={`${finances.net >= 0 ? "+" : "−"} $ ${formatMoney(Math.abs(finances.net))}`}
+            c={finances.net >= 0 ? "phosphor.4" : "red.5"}
+          />
+          <FinanceRow
+            label="Saldo final"
+            value={`− $ ${formatMoney(Math.abs(finalBalance))}`}
+            c="red.5"
+          />
+          <Text size="sm" c="dimmed">
+            {seasonsInCharge} temporada{seasonsInCharge === 1 ? "" : "s"} no
+            comando · encerrou no ano {season.year}.
+          </Text>
+        </Stack>
+      </Panel>
+
+      <Group justify="center">
+        <Button onClick={onNewCareer}>Nova carreira</Button>
+      </Group>
+    </Stack>
   );
 }
 

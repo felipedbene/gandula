@@ -25,6 +25,17 @@ export const PROMOTION_BONUS = 500_000;
  *  the salary contraction the user opts into. */
 export const RELEGATION_PENALTY = 200_000;
 
+/** Balance below which the board fires the manager (checked at season end,
+ *  after the season's net is applied). Strict `< 0` — exactly zero survives.
+ *  Raise to a negative number (e.g. -500_000) to allow a grace overdraft. */
+export const MANAGER_FIRING_FLOOR = 0;
+
+/** Whether a manager is fired given their balance after a season's net is
+ *  applied. Single source of truth for the lose-condition (E.1.f). */
+export function isManagerFired(balanceAfterSeason: number): boolean {
+  return balanceAfterSeason < MANAGER_FIRING_FLOOR;
+}
+
 /**
  * Breakdown of a season's net cash flow for the user. All values in
  * moedas; signs match the running-total convention (revenue/bonus
