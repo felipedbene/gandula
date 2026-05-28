@@ -27,10 +27,8 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 ## E.2 — Living world (players age & evolve)
 
 - [x] **E.2.a — Aging (your squad)** · _M, web_ — shipped (see above).
-- [ ] **E.2.a.2 — League-wide aging** · _M, web_
-  Extend aging to opponents. They reset to the registry each season today, so
-  this needs per-team evolving rosters (persist them, or recompute from a base
-  age + elapsed seasons). Makes the whole world age, not just you.
+- [x] **E.2.a.2 — League-wide aging** · _M, web_ — shipped: opponents aged on
+  the fly by elapsed seasons (recompute from registry base, no per-team state).
 - [ ] **E.2.b — Youth / regen** · _M, web_
   Young players entering the pool / an academy, so squads (and eventually the
   league) refresh rather than only decline.
@@ -54,10 +52,10 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 1. ~~E.1.f — manager firing~~ ✓ shipped (with per-round finances + mid-season market)
 2. ~~Scout reports~~ ✓ shipped
 3. ~~E.2.a — aging (your squad)~~ ✓ shipped
-4. **E.2.a.2 league-wide aging** or **E.2.b youth/regen** — finish the living
-   world (contained, web). ← next
-5. **E.3 — self-play AI** — last; biggest (Rust + training), benefits from a
+4. ~~E.2.a.2 — league-wide aging~~ ✓ shipped
+5. **E.2.b — youth / regen** — refresh squads so the world doesn't only
+   decline (contained, web). ← next
+6. **E.3 — self-play AI** — last; biggest (Rust + training), benefits from a
    richer E.2 world + the `Manager`-trait extraction.
 
-Dependencies: league-wide aging ← per-team roster state · self-play ←
-`Manager`-trait extraction + ideally E.2.
+Dependencies: self-play ← `Manager`-trait extraction + ideally E.2.
