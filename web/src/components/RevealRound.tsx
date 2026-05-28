@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Box, Button, Group, Stack, Text } from "@mantine/core";
 import type { Match } from "../types";
 import { findUserDivisionIdxInSeason, type Career } from "../persistence";
 import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
-import Card from "../srcl/Card";
+import { Panel } from "./ui/Panel";
 import MatchReveal, { HALFTIME_PAUSE_MS, REVEAL_MS_PER_MIN } from "./MatchReveal";
 
 type RevealRoundProps = {
@@ -32,10 +33,6 @@ type OtherMatch = {
  * revealing is therefore `userDiv.currentRoundIdx - 1`. F5 mid-reveal
  * autoloads straight back into `running` — animation is lost, save intact.
  *
- * The other division advances silently in the same playRound call; nothing
- * about it is shown here — it's available read-only via the
- * [ VER SÉRIE A/B ] button on the running screen.
- *
  * Bye-round path: Série B is N=9 odd, so the engine schedules a virtual
  * BYE for one team per round; if that team is the user, the user match
  * pane is omitted and the header says "SEU TIME DESCANSA". Série A is
@@ -45,15 +42,9 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const userDiv = season.divisions[userDivIdx];
-  // Per-division seed namespace — matches the XOR used by SeasonView.run()
-  // and util/resimulate's resimulateFromRound so reveal timing stays
-  // deterministic across re-simulations.
   const divSeed = season.seed ^ BigInt(userDiv.tier);
   const revealRound = userDiv.currentRoundIdx - 1;
 
-  // Pair fixtures with matches for the round in question, preserving the
-  // engine's fixtures-array ordering (circle method is deterministic and
-  // the UI shouldn't second-guess it).
   const { userMatch, others } = useMemo(() => {
     const fixtures = userDiv.record.fixtures;
     const matches = userDiv.record.matches;
@@ -77,8 +68,6 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
     return { userMatch: userRow, others: otherRows };
   }, [userDiv, career.controlledTeamId, revealRound]);
 
-  // Deterministic per (divSeed, round): same division + same round always
-  // picks the same reveal-at-minute sequence for parallel matches.
   const otherWithTiming: OtherMatch[] = useMemo(() => {
     const minutes = revealMinutes(divSeed, revealRound, others.length);
     return others.map((r, i) => ({
@@ -93,13 +82,10 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
   const [othersRevealed, setOthersRevealed] = useState<boolean[]>(() =>
     new Array(otherWithTiming.length).fill(false),
   );
-  // Bye round → no user match, treat as done immediately so the only signal
-  // we wait on is the parallel matches finishing.
   const [userDone, setUserDone] = useState(userMatch === undefined);
   const [skipAll, setSkipAll] = useState(false);
   const doneFiredRef = useRef(false);
 
-  // Schedule the parallel-match reveals.
   useEffect(() => {
     const timers = otherWithTiming.map((om, i) => {
       const delay =
@@ -117,7 +103,6 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
     return () => timers.forEach(window.clearTimeout);
   }, [otherWithTiming]);
 
-  // PULAR: jump everything to the end.
   useEffect(() => {
     if (!skipAll) return;
     setOthersRevealed(new Array(otherWithTiming.length).fill(true));
@@ -126,13 +111,9 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
     }
   }, [skipAll, otherWithTiming.length, userMatch]);
 
-  // Bye round with no parallel matches at all (impossible in practice — a
-  // round always has at least one fixture — but the math collapses cleanly
-  // and we exit immediately).
   const allOthersDone =
     otherWithTiming.length === 0 || othersRevealed.every((b) => b);
 
-  // Fire onDone once when everything wraps.
   useEffect(() => {
     if (!doneFiredRef.current && userDone && allOthersDone) {
       doneFiredRef.current = true;
@@ -147,8 +128,10 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
   const isPlaying = !userDone || !allOthersDone;
 
   return (
-    <>
-      <p className="reveal-header muted">{headerText}</p>
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
+        {headerText}
+      </Text>
 
       {userMatch && (
         <MatchReveal
@@ -158,11 +141,11 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
         />
       )}
 
-      <Card title="OUTROS JOGOS">
+      <Panel title="Outros jogos">
         {otherWithTiming.length === 0 ? (
-          <p className="muted">Nenhum outro jogo nesta rodada.</p>
+          <Text c="dimmed">Nenhum outro jogo nesta rodada.</Text>
         ) : (
-          <pre className="other-matches">
+          <Stack gap={4}>
             {otherWithTiming.map((om, i) => (
               <OtherMatchRow
                 key={om.index}
@@ -172,24 +155,25 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
                 revealed={othersRevealed[i]}
               />
             ))}
-          </pre>
+          </Stack>
         )}
-      </Card>
+      </Panel>
 
       {isPlaying && (
-        <div className="form-actions">
-          <button type="button" className="btn" onClick={() => setSkipAll(true)}>
-            [ PULAR ]
-          </button>
-        </div>
+        <Group justify="center">
+          <Button variant="default" onClick={() => setSkipAll(true)}>
+            Pular
+          </Button>
+        </Group>
       )}
-    </>
+    </Stack>
   );
 }
 
 /**
- * Single row in the OUTROS JOGOS card. Padded to a fixed column width so
- * the score (or pending `×`) lines up vertically across all rows.
+ * One row in the OUTROS JOGOS list: home (right) · score/pending (center) ·
+ * away (left). A 3-column grid keeps the score column centered regardless of
+ * team-name length.
  */
 function OtherMatchRow({
   match,
@@ -202,27 +186,31 @@ function OtherMatchRow({
   awayName: string;
   revealed: boolean;
 }) {
-  const HOME_W = 24;
-  const SCORE_W = 7; // " N - N " or "  ×    "
-  const home = homeName.padEnd(HOME_W);
-  const away = awayName;
-  if (!revealed) {
-    return (
-      <span className="other-matches__row">
-        {home}
-        <span className="other-matches__pending">{"   ×   ".padEnd(SCORE_W)}</span>
-        {away}
-        {"\n"}
-      </span>
-    );
-  }
-  const score = ` ${match.result.home_goals} - ${match.result.away_goals} `;
   return (
-    <span className="other-matches__row">
-      {home}
-      <span className="other-matches__score">{score.padEnd(SCORE_W)}</span>
-      {away}
-      {"\n"}
-    </span>
+    <Box
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr auto 1fr",
+        alignItems: "center",
+      }}
+    >
+      <Text ta="right" size="sm">
+        {homeName}
+      </Text>
+      <Text
+        px="md"
+        size="sm"
+        ff="monospace"
+        fw={revealed ? 700 : 400}
+        c={revealed ? undefined : "dimmed"}
+      >
+        {revealed
+          ? `${match.result.home_goals} - ${match.result.away_goals}`
+          : "×"}
+      </Text>
+      <Text ta="left" size="sm">
+        {awayName}
+      </Text>
+    </Box>
   );
 }
