@@ -14,7 +14,9 @@ import {
   canBuy,
   canSell,
   generateFreeAgents,
+  playerOverall,
   playerPrice,
+  scoutReport,
 } from "./transfer-market";
 import {
   FIRST_YEAR,
@@ -281,5 +283,62 @@ describe("canSell", () => {
     const r = canSell(c, 1000);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toMatch(/Tire do XI/);
+  });
+});
+
+describe("scoutReport", () => {
+  // A player whose every attribute equals `level`, so playerOverall === level.
+  function atLevel(
+    id: number,
+    position: "GK" | "DEF" | "MID" | "FWD",
+    level: number,
+  ): Player {
+    return {
+      id,
+      name: `P${id}`,
+      age: 25,
+      position,
+      attributes: {
+        pace: level,
+        technique: level,
+        passing: level,
+        defending: level,
+        finishing: level,
+        stamina: level,
+      },
+    };
+  }
+
+  const roster: Player[] = [
+    atLevel(1, "MID", 60),
+    atLevel(2, "MID", 70),
+    atLevel(3, "DEF", 80),
+  ];
+
+  it("overall is the rounded mean of attributes", () => {
+    expect(playerOverall(atLevel(9, "MID", 64))).toBe(64);
+  });
+
+  it("compares against the same-position squad average", () => {
+    const r = scoutReport(atLevel(9, "MID", 80), roster);
+    expect(r.overall).toBe(80);
+    expect(r.samePositionCount).toBe(2);
+    expect(r.positionAvg).toBe(65); // mean of 60, 70
+    expect(r.delta).toBe(15);
+    expect(r.rank).toBe(1); // better than both MIDs
+  });
+
+  it("ranks a weaker agent below the squad", () => {
+    const r = scoutReport(atLevel(9, "MID", 50), roster);
+    expect(r.delta).toBe(-15);
+    expect(r.rank).toBe(3); // both MIDs are better
+  });
+
+  it("handles a position the squad has none of", () => {
+    const r = scoutReport(atLevel(9, "FWD", 55), roster);
+    expect(r.samePositionCount).toBe(0);
+    expect(r.positionAvg).toBe(0);
+    expect(r.delta).toBe(0);
+    expect(r.rank).toBe(1);
   });
 });

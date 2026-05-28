@@ -169,6 +169,48 @@ function avgAttrs(p: Player): number {
   return (a.pace + a.technique + a.passing + a.defending + a.finishing + a.stamina) / 6;
 }
 
+// ─── Scouting ──────────────────────────────────────────────────────────────
+
+/** Rounded overall (mean of the six attributes). The pricing path uses the
+ *  raw avgAttrs; this is the integer rating surfaced to the user. */
+export function playerOverall(p: Player): number {
+  return Math.round(avgAttrs(p));
+}
+
+/**
+ * Scouting verdict for a player relative to a roster at the same position:
+ * their overall, the squad's positional average, the delta, and where they'd
+ * rank among the same-position players (1 = best). `samePositionCount === 0`
+ * means the squad has nobody in that position (rank defaults to 1).
+ */
+export type ScoutReport = {
+  overall: number;
+  samePositionCount: number;
+  positionAvg: number;
+  delta: number;
+  rank: number;
+};
+
+export function scoutReport(player: Player, roster: Player[]): ScoutReport {
+  const overall = playerOverall(player);
+  const samePos = roster.filter((p) => p.position === player.position);
+  const samePositionCount = samePos.length;
+  if (samePositionCount === 0) {
+    return { overall, samePositionCount: 0, positionAvg: 0, delta: 0, rank: 1 };
+  }
+  const positionAvg = Math.round(
+    samePos.reduce((s, p) => s + playerOverall(p), 0) / samePositionCount,
+  );
+  const better = samePos.filter((p) => playerOverall(p) > overall).length;
+  return {
+    overall,
+    samePositionCount,
+    positionAvg,
+    delta: overall - positionAvg,
+    rank: better + 1,
+  };
+}
+
 /**
  * Age curve multiplier. Mirrors how real football values rise then fall:
  *   < 21: 1.5x — high ceiling, scouts pay a premium

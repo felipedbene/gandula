@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { userTeam } from "../util/roster";
 import {
   MAX_ROSTER,
@@ -6,12 +6,14 @@ import {
   canSell,
   generateFreeAgents,
   playerPrice,
+  scoutReport,
+  type ScoutReport,
   type TransferAction,
 } from "../util/transfer-market";
 import { formatMoney } from "../util/money";
 import type { Career, TransferRecord } from "../persistence";
 import type { Player } from "../types";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Group, Progress, SimpleGrid, Stack, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 
 type TransferMarketViewProps = {
@@ -51,6 +53,8 @@ export default function TransferMarketView({
 }: TransferMarketViewProps) {
   const [working, setWorking] = useState<Career>(career);
   const [actions, setActions] = useState<TransferAction[]>([]);
+  // Which free agent's scout report is expanded (id), or null.
+  const [expandedAgent, setExpandedAgent] = useState<number | null>(null);
 
   // Pool depends only on career.seed + year — both immutable for the
   // life of this market session. Recomputing on render is cheap
@@ -191,17 +195,24 @@ export default function TransferMarketView({
             availableAgents.map((p) => {
               const price = playerPrice(p, "buy");
               const check = canBuy(working, price);
+              const scouted = expandedAgent === p.id;
               return (
-                <TransferRow
-                  key={p.id}
-                  player={p}
-                  price={price}
-                  action="comprar"
-                  enabled={check.ok}
-                  reason={check.ok ? undefined : check.reason}
-                  inXi={false}
-                  onClick={() => buy(p)}
-                />
+                <Fragment key={p.id}>
+                  <TransferRow
+                    player={p}
+                    price={price}
+                    action="comprar"
+                    enabled={check.ok}
+                    reason={check.ok ? undefined : check.reason}
+                    inXi={false}
+                    onClick={() => buy(p)}
+                    scouted={scouted}
+                    onScout={() => setExpandedAgent(scouted ? null : p.id)}
+                  />
+                  {scouted && (
+                    <ScoutPanel player={p} report={scoutReport(p, team.roster)} />
+                  )}
+                </Fragment>
               );
             })
           )}
@@ -257,6 +268,8 @@ function TransferRow({
   reason,
   inXi,
   onClick,
+  onScout,
+  scouted,
 }: {
   player: Player;
   price: number;
@@ -265,6 +278,9 @@ function TransferRow({
   reason?: string;
   inXi: boolean;
   onClick: () => void;
+  /** When provided, renders a scout toggle (▾/▴) that expands the report. */
+  onScout?: () => void;
+  scouted?: boolean;
 }) {
   const label = action === "comprar" ? "Comprar" : enabled ? "Vender" : "—";
   const stamina = player.attributes.stamina;
@@ -296,6 +312,17 @@ function TransferRow({
       <Text span size="sm" c="dimmed" style={{ fontVariantNumeric: "tabular-nums" }}>
         $ {formatMoney(price)}
       </Text>
+      {onScout && (
+        <Button
+          size="compact-xs"
+          variant="subtle"
+          color="gray"
+          onClick={onScout}
+          title="Scout"
+        >
+          {scouted ? "▴" : "▾"}
+        </Button>
+      )}
       <Button
         size="compact-xs"
         variant={action === "comprar" ? "filled" : "default"}
@@ -306,5 +333,81 @@ function TransferRow({
         {label}
       </Button>
     </Group>
+  );
+}
+
+/** Attribute order + short PT labels for the scout report bars. */
+const SCOUT_ATTRS: { key: keyof Player["attributes"]; label: string }[] = [
+  { key: "pace", label: "VEL" },
+  { key: "technique", label: "TÉC" },
+  { key: "passing", label: "PAS" },
+  { key: "defending", label: "DEF" },
+  { key: "finishing", label: "FIN" },
+  { key: "stamina", label: "FÔL" },
+];
+
+/**
+ * Expanded scouting report for a free agent: attribute bars + an overall
+ * rating and a verdict relative to the user's squad at that position.
+ */
+function ScoutPanel({
+  player,
+  report,
+}: {
+  player: Player;
+  report: ScoutReport;
+}) {
+  return (
+    <Stack
+      gap={6}
+      pl="md"
+      mt={2}
+      mb={4}
+      style={{ borderLeft: "1px solid var(--mantine-color-dark-4)" }}
+    >
+      <SimpleGrid cols={2} spacing="md" verticalSpacing={4}>
+        {SCOUT_ATTRS.map(({ key, label }) => {
+          const v = player.attributes[key];
+          return (
+            <Group key={key} gap="xs" wrap="nowrap">
+              <Text size="xs" c="dimmed" w={30}>
+                {label}
+              </Text>
+              <Progress value={v} color="phosphor" size="sm" style={{ flex: 1 }} />
+              <Text
+                size="xs"
+                w={22}
+                ta="right"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {v}
+              </Text>
+            </Group>
+          );
+        })}
+      </SimpleGrid>
+
+      <Group gap="md" wrap="wrap">
+        <Text size="sm">
+          Geral <b>{report.overall}</b>
+        </Text>
+        {report.samePositionCount > 0 ? (
+          <>
+            <Text size="sm" c={report.delta >= 0 ? "phosphor.4" : "red.5"}>
+              vs seus {player.position}: {report.delta >= 0 ? "+" : "−"}
+              {Math.abs(report.delta)}
+            </Text>
+            <Text size="sm" c="dimmed">
+              seria seu Nº {report.rank} de {report.samePositionCount + 1}{" "}
+              {player.position}
+            </Text>
+          </>
+        ) : (
+          <Text size="sm" c="dimmed">
+            seu 1º {player.position}
+          </Text>
+        )}
+      </Group>
+    </Stack>
   );
 }
