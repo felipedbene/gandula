@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import {
   divideIntoDivisions,
   pickStarterTeam,
+  pickRandomStarter,
   avgStrength,
   TIER_A_SIZE,
   TIER_B_SIZE,
@@ -54,5 +55,19 @@ describe("pickStarterTeam", () => {
 
   it("throws on empty tierB", () => {
     expect(() => pickStarterTeam([])).toThrow();
+  });
+});
+
+describe("pickRandomStarter", () => {
+  it("always returns a team from Série B", () => {
+    const { tierB } = divideIntoDivisions(ALL_TEAMS);
+    const ids = new Set(tierB.map((t) => t.id));
+    for (let i = 0; i < 50; i++) {
+      expect(ids.has(pickRandomStarter(tierB).id)).toBe(true);
+    }
+  });
+
+  it("throws on empty tierB", () => {
+    expect(() => pickRandomStarter([])).toThrow();
   });
 });

@@ -23,7 +23,7 @@ import {
   topAssister,
   topScorer,
 } from "../util/season-stats";
-import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
+import { divideIntoDivisions, pickRandomStarter } from "../util/divisions";
 import {
   computePromotionRelegation,
   userOutcomeFromPRResult,
@@ -167,7 +167,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         );
       }
       const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-      const starterTeam = pickStarterTeam(tierB);
+      const starterTeam = pickRandomStarter(tierB);
       const careerSeed = BigInt(seed);
       const seasonSeed = careerSeed ^ BigInt(FIRST_YEAR);
 
@@ -573,8 +573,8 @@ function NewSeasonForm({
       >
         <Stack gap="md">
           <Text c="dimmed" size="sm">
-            17 times divididos em Série A (8) + Série B (9). Você assume o time
-            mais fraco da Série B.
+            17 times divididos em Série A (8) + Série B (9). Você assume um time
+            aleatório da Série B.
           </Text>
           <TextInput
             label="Liga"

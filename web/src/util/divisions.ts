@@ -78,3 +78,18 @@ export function pickStarterTeam(tierB: Team[]): Team {
     return b.id - a.id; // tiebreak: higher id last in sort
   })[0];
 }
+
+/**
+ * Pick the team the player manages at the start of a new career: any team
+ * in Série B, chosen at random. Intentionally non-deterministic (Math.random)
+ * so every new career hands you a different club instead of always the
+ * weakest. The season simulation stays fully seed-deterministic — only which
+ * Série B team you control varies — and the choice is persisted on the Career
+ * (controlledTeamId), so a reloaded career is stable.
+ */
+export function pickRandomStarter(tierB: Team[]): Team {
+  if (tierB.length === 0) {
+    throw new Error("pickRandomStarter: empty tierB");
+  }
+  return tierB[Math.floor(Math.random() * tierB.length)];
+}
