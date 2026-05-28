@@ -9,15 +9,18 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
   the `Career` schema (currently v5) + in-place migrations, the finances layer,
   and the transfer market.
 - **E.1.f — Manager firing** — lose-condition when the balance goes negative.
-  Shipped beyond the original plan: finances now accrue **per round** (home
-  gate + wage slice), so you can go broke — and be fired — mid-season, and the
-  transfer market is openable **every round**, not just at the finale.
+  Grew beyond the plan: finances accrue **per round** (home gate + wage slice),
+  so you can go broke — and be fired — mid-season, and the transfer market is
+  openable **every round**, not just at the finale.
+- **Scout reports** — free agents expand to an inline report: attribute bars,
+  overall, and a verdict vs your squad at that position (delta + where they'd
+  rank), so buys aren't blind.
 - **Platform** — Mantine UI (responsive, dark phosphor theme), tick-by-tick
   match reveal with a running clock (on bye rounds too), randomized new careers
   (random Série B club + random seed), and GitHub Actions CI/CD (build wasm →
   test → deploy).
 
-## E.2 — Living world (players age & evolve)
+## E.2 — Living world (players age & evolve) ← next
 
 - [ ] **E.2.a — Aging** · _M, core + wasm + web_
   Age++ per season and drift attributes along an age curve (peak years, decline
@@ -37,9 +40,6 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 
 ## Polish (small, slot in anytime)
 
-- [ ] **Scout reports** · _S, web-only_ ← **next**
-  Richer free-agent browsing layered on top of the transfer market (attributes,
-  comparisons, recommendations) so buys aren't blind.
 - [~] **Live playback** · _S–M, web_
   Running match clock during the reveal landed (incl. bye rounds). Further
   playback polish (per-event pacing tweaks, highlights) can still be layered on.
@@ -47,10 +47,10 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 ## Suggested order
 
 1. ~~E.1.f — manager firing~~ ✓ shipped (with per-round finances + mid-season market)
-2. **Scout reports** — quick web-only win. ← next
-3. **E.2.a — aging** — deepens multi-season play.
+2. ~~Scout reports~~ ✓ shipped
+3. **E.2.a — aging** — deepens multi-season play. ← next
 4. **E.3 — self-play AI** — last; biggest, and benefits from E.2 + the
    `Manager` trait extraction.
 
-Dependencies: scout reports ← transfer market (done) · aging ← stays
-deterministic in `core` · self-play ← `Manager`-trait extraction + ideally E.2.
+Dependencies: aging ← stays deterministic in `core` · self-play ←
+`Manager`-trait extraction + ideally E.2.
