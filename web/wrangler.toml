@@ -1,0 +1,29 @@
+# Cloudflare Workers config — assets-only deploy.
+#
+# Serves the Vite build output (`./dist`) directly as static assets via
+# CF's Workers Static Assets pipeline. No Worker script (`main`) is set
+# because there's no server-side logic to run — every request is either
+# a static asset hit or the SPA fallback to index.html. WASM is just
+# another asset; CF infers application/wasm from the extension.
+#
+# First deploy:
+#   npx wrangler login                # interactive, opens browser
+#   npm run deploy                    # builds + uploads
+#
+# The route below maps gandula.debene.dev to this Worker. `debene.dev`
+# is already on Cloudflare's nameservers, so `custom_domain = true`
+# auto-creates the proxy DNS record on first deploy.
+
+name = "gandula"
+compatibility_date = "2026-05-27"
+
+[assets]
+directory = "./dist"
+# SPA fallback: any unmatched route serves index.html so the React
+# app's in-memory state machine handles the rest. Gandula doesn't use
+# URL routing today, but this also forgives typos in the bare URL.
+not_found_handling = "single-page-application"
+
+[[routes]]
+pattern = "gandula.debene.dev"
+custom_domain = true
