@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { openDB } from "idb";
 import {
   FIRST_YEAR,
+  STARTING_MONEY,
   clearCareer,
   loadCareer,
   migrateV2toV3,
@@ -139,9 +140,9 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v3 Career is present", async () => {
+  it("returns kind:'loaded' when a v4 Career is present", async () => {
     const career: Career = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       savedAt: "2026-01-01T00:00:00Z",
       seed: 1998n,
       controlledTeamId: 201,
@@ -151,32 +152,103 @@ describe("loadCareer", () => {
         seed: 1998n ^ BigInt(FIRST_YEAR),
         divisions: [],
       },
+      manager: { money: STARTING_MONEY },
     };
     await saveCareer(career);
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
       expect(result.career.controlledTeamId).toBe(201);
+      expect(result.career.manager.money).toBe(STARTING_MONEY);
     }
   });
 
-  it("migrates a v2 payload in place and persists the v3 result", async () => {
+  it("cascades a v2 payload through v3 to v4 in one load", async () => {
     const v2 = makeV2Save({ seed: 1998n, controlledTeamId: 201 });
     await writeRaw(v2);
 
     const first = await loadCareer();
+    // Kind preserves the original starting point even though the
+    // cascade went v2 → v3 → v4 internally.
     expect(first.kind).toBe("migratedV2");
     if (first.kind === "migratedV2") {
-      expect(first.career.schemaVersion).toBe(3);
+      expect(first.career.schemaVersion).toBe(4);
       expect(first.career.controlledTeamId).toBe(201);
       expect(first.career.currentSeason.year).toBe(FIRST_YEAR);
       expect(first.career.currentSeason.divisions).toHaveLength(2);
+      expect(first.career.manager.money).toBe(STARTING_MONEY);
     }
 
-    // Second call must read the persisted v3 directly — proves the
-    // migration write hit the store.
+    // Second call must read the persisted v4 directly — proves the
+    // cascade write hit the store.
     const second = await loadCareer();
     expect(second.kind).toBe("loaded");
+  });
+
+  it("migrates a v3 payload in place to v4", async () => {
+    // Hand-write a v3-shaped payload (no manager, no money fields on
+    // history) and confirm loadCareer upgrades it.
+    const v3 = {
+      schemaVersion: 3,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 42n,
+      controlledTeamId: 201,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 42n ^ BigInt(FIRST_YEAR),
+        divisions: [],
+      },
+    };
+    await writeRaw(v3);
+
+    const first = await loadCareer();
+    expect(first.kind).toBe("migratedV3");
+    if (first.kind === "migratedV3") {
+      expect(first.career.schemaVersion).toBe(4);
+      expect(first.career.controlledTeamId).toBe(201);
+      expect(first.career.manager.money).toBe(STARTING_MONEY);
+    }
+
+    // Persisted as v4 — second load is the fast path.
+    const second = await loadCareer();
+    expect(second.kind).toBe("loaded");
+  });
+
+  it("backfills moneyDelta=0 and moneyAfter=STARTING_MONEY on v3 history entries", async () => {
+    // v3 history entries had no money fields; the cascade backfills.
+    const v3 = {
+      schemaVersion: 3,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 7n,
+      controlledTeamId: 201,
+      seasons: [
+        {
+          year: 2025,
+          userDivision: { tier: 2, name: "Série B" },
+          userPosition: 3,
+          userPoints: 30,
+          champion: { tier: 2, teamId: 209, teamName: "x" },
+          promoted: [],
+          relegated: [],
+          userOutcome: "stayed",
+        },
+      ],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 7n ^ BigInt(FIRST_YEAR),
+        divisions: [],
+      },
+    };
+    await writeRaw(v3);
+
+    const result = await loadCareer();
+    expect(result.kind).toBe("migratedV3");
+    if (result.kind === "migratedV3") {
+      expect(result.career.seasons).toHaveLength(1);
+      expect(result.career.seasons[0].moneyDelta).toBe(0);
+      expect(result.career.seasons[0].moneyAfter).toBe(STARTING_MONEY);
+    }
   });
 
   it("discards a payload with no recognisable schemaVersion", async () => {

@@ -12,7 +12,7 @@ import init, { run_season } from "../wasm/gandula_wasm.js";
 import TacticsView from "./TacticsView";
 import { ALL_TEAMS, teamById } from "../teams";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
-import { FIRST_YEAR, type Career } from "../persistence";
+import { FIRST_YEAR, STARTING_MONEY, type Career } from "../persistence";
 import type { SeasonRecord } from "../types";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -38,7 +38,7 @@ function makeCareer(): { career: Career; starterId: number } {
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const career: Career = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -51,6 +51,7 @@ function makeCareer(): { career: Career; starterId: number } {
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
       ],
     },
+    manager: { money: STARTING_MONEY },
   };
   return { career, starterId: starter.id };
 }

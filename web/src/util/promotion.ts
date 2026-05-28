@@ -77,3 +77,17 @@ export function computePromotionRelegation(
     userRelegated: relegated.some((s) => s.team_id === controlledTeamId),
   };
 }
+
+/**
+ * Collapse the two boolean flags on PRResult into the single string the
+ * history record + finances UI consume. Shared so the derivation lives
+ * in one place — buildSeasonHistory (career.ts) and computeSeasonFinances
+ * (finances.ts) both call this rather than duplicating the ternary.
+ */
+export function userOutcomeFromPRResult(
+  pr: PRResult,
+): "promoted" | "relegated" | "stayed" {
+  if (pr.userPromoted) return "promoted";
+  if (pr.userRelegated) return "relegated";
+  return "stayed";
+}

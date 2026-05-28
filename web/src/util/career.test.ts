@@ -13,7 +13,7 @@ import { advanceCareer } from "./career";
 import { computePromotionRelegation } from "./promotion";
 import { divideIntoDivisions, pickStarterTeam } from "./divisions";
 import { ALL_TEAMS, teamById } from "../teams";
-import { FIRST_YEAR, type Career } from "../persistence";
+import { FIRST_YEAR, STARTING_MONEY, type Career } from "../persistence";
 import type { SeasonRecord } from "../types";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -39,7 +39,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalA = Math.max(...recordA.fixtures.map((f) => f.round)) + 1;
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -52,6 +52,7 @@ function makeFinishedCareer(seed: bigint): Career {
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: totalB },
       ],
     },
+    manager: { money: STARTING_MONEY },
   };
 }
 
@@ -221,6 +222,42 @@ describe("advanceCareer — nextSeason", () => {
       // "stayed" keeps them in B. Either way they remain in tier 2.
       expect(inB).toBe(true);
     }
+  });
+});
+
+describe("advanceCareer — finances", () => {
+  it("AdvanceResult includes finances breakdown", () => {
+    const career = makeFinishedCareer(1998n);
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const result = advanceCareer(career, pr);
+    expect(result.finances).toBeDefined();
+    expect(typeof result.finances.ticketRevenue).toBe("number");
+    expect(typeof result.finances.salaries).toBe("number");
+    expect(typeof result.finances.prBonus).toBe("number");
+    expect(typeof result.finances.net).toBe("number");
+  });
+
+  it("history.moneyDelta equals finances.net", () => {
+    const career = makeFinishedCareer(1998n);
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const { history, finances } = advanceCareer(career, pr);
+    expect(history.moneyDelta).toBe(finances.net);
+  });
+
+  it("history.moneyAfter equals career.manager.money + finances.net", () => {
+    const career = makeFinishedCareer(1998n);
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const { history, finances } = advanceCareer(career, pr);
+    expect(history.moneyAfter).toBe(career.manager.money + finances.net);
   });
 });
 

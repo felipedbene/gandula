@@ -13,6 +13,7 @@ import {
 } from "../persistence";
 import { teamById } from "../teams";
 import { resimulateFromRound } from "../util/resimulate";
+import { formatMoney } from "../util/money";
 import Card from "../srcl/Card";
 import TacticsForm, {
   type TacticsFormState,
@@ -115,7 +116,11 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
   }
 
   return (
-    <Card title={`TÁTICA · ${teamName.toUpperCase()}`}>
+    <>
+      <p className="campeonato-header muted">
+        ANO {season.year} · TÁTICA · {teamName.toUpperCase()} · $ {formatMoney(career.manager.money)}
+      </p>
+      <Card title={`TÁTICA · ${teamName.toUpperCase()}`}>
       <form
         className="form"
         onSubmit={(e) => {
@@ -149,6 +154,7 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
         </div>
       </form>
     </Card>
+    </>
   );
 }
 

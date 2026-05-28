@@ -12,6 +12,7 @@ import { ALL_TEAMS, teamById } from "../teams";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
 import {
   FIRST_YEAR,
+  STARTING_MONEY,
   findUserDivisionIdxInSeason,
   type Career,
   type Division,
@@ -40,7 +41,7 @@ function makeCareer(): Career {
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -53,6 +54,7 @@ function makeCareer(): Career {
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
       ],
     },
+    manager: { money: STARTING_MONEY },
   };
 }
 

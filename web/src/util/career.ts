@@ -8,7 +8,8 @@ import {
   type Season,
   type SeasonHistory,
 } from "../persistence";
-import type { PRResult } from "./promotion";
+import { userOutcomeFromPRResult, type PRResult } from "./promotion";
+import { computeSeasonFinances, type SeasonFinances } from "./finances";
 
 /**
  * Result of advancing the career one season. The caller (E.1.c.3 UI)
@@ -24,30 +25,38 @@ export type AdvanceResult = {
    *  re-simulated end-to-end via run_season — schedule and matches are
    *  fresh, but team rosters carry over from the registry. */
   nextSeason: Season;
+  /** Breakdown of money flow for the just-finished season. Surfaced so
+   *  the UI can show line items without recomputing. */
+  finances: SeasonFinances;
 };
 
 /**
- * Advance a career by one season. Composes three things:
+ * Advance a career by one season. Composes four things:
  *
- *   1. Builds a `SeasonHistory` summarising the current season's outcome
- *      (champion of user's division, user's final position, P/R applied).
- *   2. Recomposes the two divisions by applying P/R: relegated teams
+ *   1. Computes finances (ticket revenue / salaries / P/R bonus) for the
+ *      just-finished season — needed both for the SeasonHistory record
+ *      and so the caller can apply the delta to `career.manager.money`.
+ *   2. Builds a `SeasonHistory` summarising the current season's outcome
+ *      (champion of user's division, user's final position, P/R applied,
+ *      moneyDelta / moneyAfter).
+ *   3. Recomposes the two divisions by applying P/R: relegated teams
  *      move from A → B, promoted teams from B → A. Survivors stay put.
- *   3. Simulates next season's schedule + matches via `run_season` twice
+ *   4. Simulates next season's schedule + matches via `run_season` twice
  *      (once per tier), using a per-season seed namespace
  *      `career.seed XOR BigInt(nextYear)` so each (career, year)
  *      combination is deterministic and distinct.
  *
- * Caller (E.1.c.3) orchestrates:
- *   const prResult = computePromotionRelegation(
+ * Caller (SeasonView.advanceToNextSeason) orchestrates:
+ *   const pr = computePromotionRelegation(
  *     career.currentSeason,
  *     career.controlledTeamId,
  *   );
- *   const { history, nextSeason } = advanceCareer(career, prResult);
+ *   const { history, nextSeason, finances } = advanceCareer(career, pr);
  *   const newCareer: Career = {
  *     ...career,
  *     seasons: [...career.seasons, history],
  *     currentSeason: nextSeason,
+ *     manager: { ...career.manager, money: career.manager.money + finances.net },
  *   };
  *   await saveCareer(newCareer);
  *
@@ -57,18 +66,23 @@ export function advanceCareer(
   career: Career,
   prResult: PRResult,
 ): AdvanceResult {
-  const history = buildSeasonHistory(career, prResult);
+  const userOutcome = userOutcomeFromPRResult(prResult);
+  const finances = computeSeasonFinances(career, userOutcome);
+  const history = buildSeasonHistory(career, prResult, userOutcome, finances);
   const nextSeason = buildNextSeason(career, career.currentSeason, prResult);
-  return { history, nextSeason };
+  return { history, nextSeason, finances };
 }
 
 /**
  * Compose the SeasonHistory for the just-finished season. All data
- * sourced from `career.currentSeason` plus the pre-computed PRResult.
+ * sourced from `career.currentSeason` plus the pre-computed PRResult,
+ * userOutcome (derived once in advanceCareer), and finances.
  */
 function buildSeasonHistory(
   career: Career,
   prResult: PRResult,
+  userOutcome: "promoted" | "relegated" | "stayed",
+  finances: SeasonFinances,
 ): SeasonHistory {
   const current = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(
@@ -89,12 +103,6 @@ function buildSeasonHistory(
   const championTeamName =
     teamById(championStats.team_id)?.name ?? `Time ${championStats.team_id}`;
 
-  const userOutcome: "promoted" | "relegated" | "stayed" = prResult.userPromoted
-    ? "promoted"
-    : prResult.userRelegated
-      ? "relegated"
-      : "stayed";
-
   return {
     year: current.year,
     userDivision: { tier: userDiv.tier, name: userDiv.name },
@@ -114,6 +122,8 @@ function buildSeasonHistory(
       teamName: teamById(s.team_id)?.name ?? `Time ${s.team_id}`,
     })),
     userOutcome,
+    moneyDelta: finances.net,
+    moneyAfter: career.manager.money + finances.net,
   };
 }
 

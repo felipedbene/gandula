@@ -16,6 +16,7 @@ import {
 import { teamById } from "../teams";
 import { resimulateFromRound } from "../util/resimulate";
 import { avgStrength } from "../util/divisions";
+import { formatMoney } from "../util/money";
 import Card from "../srcl/Card";
 import TacticsForm, {
   type TacticsFormState,
@@ -152,7 +153,7 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
     <>
       <p className="campeonato-header muted">
         PREPARAR · {userDiv.name} · RODADA {userDiv.currentRoundIdx + 1} /{" "}
-        {totalRounds}
+        {totalRounds} · $ {formatMoney(career.manager.money)}
       </p>
 
       {isBye ? (

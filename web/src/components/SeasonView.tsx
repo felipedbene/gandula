@@ -5,6 +5,7 @@ import type { SeasonRecord, TeamStats } from "../types";
 import { computeStandings, goalDifference, points } from "../types";
 import {
   FIRST_YEAR,
+  STARTING_MONEY,
   clearCareer,
   findUserDivisionIdxInSeason,
   loadCareer,
@@ -22,8 +23,13 @@ import {
   topScorer,
 } from "../util/season-stats";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
-import { computePromotionRelegation } from "../util/promotion";
+import {
+  computePromotionRelegation,
+  userOutcomeFromPRResult,
+} from "../util/promotion";
 import { advanceCareer } from "../util/career";
+import { computeSeasonFinances } from "../util/finances";
+import { formatMoney } from "../util/money";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -94,7 +100,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   useEffect(() => {
     loadCareer()
       .then((result) => {
-        if (result.kind === "loaded" || result.kind === "migratedV2") {
+        if (
+          result.kind === "loaded" ||
+          result.kind === "migratedV2" ||
+          result.kind === "migratedV3"
+        ) {
           const career = result.career;
           const userDivIdx = findUserDivisionIdxInSeason(
             career.currentSeason,
@@ -105,9 +115,13 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             teamById(career.controlledTeamId)?.name ??
             `Time ${career.controlledTeamId}`;
           const prefix =
-            result.kind === "migratedV2" ? "save v2 migrado" : "save carregado";
+            result.kind === "migratedV2"
+              ? "save v2 migrado"
+              : result.kind === "migratedV3"
+                ? "save v3 migrado"
+                : "save carregado";
           onStatus(
-            `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx}`,
+            `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
           setPhase(initialPhaseFor(career));
         } else if (result.kind === "discardedV1") {
@@ -154,7 +168,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 3,
+        schemaVersion: 4,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -167,12 +181,13 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
           ],
         },
+        manager: { money: STARTING_MONEY },
       };
 
       saveCareer(newCareer)
         .then(() => {
           onStatus(
-            `nova carreira · ${starterTeam.name} (Série B) · ano ${FIRST_YEAR} · 2 ligas simuladas em ${ms}ms · seed ${seed}`,
+            `nova carreira · ${starterTeam.name} (Série B) · ano ${FIRST_YEAR} · 2 ligas simuladas em ${ms}ms · seed ${seed} · $ ${formatMoney(STARTING_MONEY)}`,
           );
           setPhase({ tag: "running", career: newCareer });
         })
@@ -369,13 +384,17 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         career.controlledTeamId,
       );
       const start = performance.now();
-      const { history, nextSeason } = advanceCareer(career, pr);
+      const { history, nextSeason, finances } = advanceCareer(career, pr);
       const ms = Math.round(performance.now() - start);
       const newCareer: Career = {
         ...career,
         savedAt: new Date().toISOString(),
         seasons: [...career.seasons, history],
         currentSeason: nextSeason,
+        manager: {
+          ...career.manager,
+          money: career.manager.money + finances.net,
+        },
       };
       await saveCareer(newCareer);
       const teamName =
@@ -386,8 +405,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         newCareer.controlledTeamId,
       );
       const newUserDiv = nextSeason.divisions[newUserDivIdx];
+      const deltaSign = finances.net >= 0 ? "+" : "−";
       onStatus(
-        `temporada ${nextSeason.year} iniciada · ${teamName} (${newUserDiv.name}) · 2 ligas re-simuladas em ${ms}ms`,
+        `temporada ${nextSeason.year} iniciada · ${teamName} (${newUserDiv.name}) · ${deltaSign} $ ${formatMoney(Math.abs(finances.net))} · saldo $ ${formatMoney(newCareer.manager.money)} · ${ms}ms`,
       );
       setPhase({ tag: "running", career: newCareer });
     } catch (e) {
@@ -556,7 +576,7 @@ function CampeonatoEmCurso({
     <>
       <p className="campeonato-header muted">
         ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {teamName} · RODADA{" "}
-        {userDiv.currentRoundIdx + 1} / {totalRounds}
+        {userDiv.currentRoundIdx + 1} / {totalRounds} · $ {formatMoney(career.manager.money)}
       </p>
 
       <Card title={`RODADA ${userDiv.currentRoundIdx + 1}`}>
@@ -630,7 +650,8 @@ function OtherDivisionView({
         ANO {season.year} · DIVISÃO: {otherDiv.name} ·{" "}
         {isFinished
           ? `ENCERRADA · ${total} / ${total}`
-          : `RODADA ${otherDiv.currentRoundIdx + 1} / ${total}`}
+          : `RODADA ${otherDiv.currentRoundIdx + 1} / ${total}`}{" "}
+        · $ {formatMoney(career.manager.money)}
       </p>
 
       <StandingsTable
@@ -701,6 +722,10 @@ function SeasonFinale({
     () => computePromotionRelegation(season, career.controlledTeamId),
     [season, career.controlledTeamId],
   );
+  const finances = useMemo(
+    () => computeSeasonFinances(career, userOutcomeFromPRResult(prResult)),
+    [career, prResult],
+  );
   const tierASize =
     season.divisions.find((d) => d.tier === 1)?.record.standings.length ?? 0;
 
@@ -710,7 +735,7 @@ function SeasonFinale({
     <>
       <p className="campeonato-header muted">
         ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {userTeamName} · ENCERRADA · {totalRounds} /{" "}
-        {totalRounds}
+        {totalRounds} · $ {formatMoney(career.manager.money)}
       </p>
 
       <Card title={isUserChamp ? "*** CAMPEÃO ***" : "CAMPEÃO"}>
@@ -758,6 +783,56 @@ function SeasonFinale({
               {userStats.lost}D
             </li>
           )}
+        </ul>
+      </Card>
+
+      <Card title="FINANÇAS DA TEMPORADA">
+        <ul className="finances-list">
+          <li className="finances-row">
+            <span>Receita de bilheteria</span>
+            <span className="finances-row--positive">
+              + $ {formatMoney(finances.ticketRevenue)}
+            </span>
+          </li>
+          <li className="finances-row">
+            <span>Salários</span>
+            <span className="finances-row--negative">
+              − $ {formatMoney(finances.salaries)}
+            </span>
+          </li>
+          {finances.prBonus > 0 && (
+            <li className="finances-row">
+              <span>Bônus promoção</span>
+              <span className="finances-row--positive">
+                + $ {formatMoney(finances.prBonus)}
+              </span>
+            </li>
+          )}
+          {finances.prBonus < 0 && (
+            <li className="finances-row">
+              <span>Multa rebaixamento</span>
+              <span className="finances-row--negative">
+                − $ {formatMoney(Math.abs(finances.prBonus))}
+              </span>
+            </li>
+          )}
+          <li className="finances-divider" />
+          <li className="finances-row">
+            <span>Saldo da temporada</span>
+            <span
+              className={
+                finances.net >= 0
+                  ? "finances-row--positive"
+                  : "finances-row--negative"
+              }
+            >
+              {finances.net >= 0 ? "+" : "−"} $ {formatMoney(Math.abs(finances.net))}
+            </span>
+          </li>
+          <li className="finances-row">
+            <span>Saldo total</span>
+            <span>$ {formatMoney(career.manager.money + finances.net)}</span>
+          </li>
         </ul>
       </Card>
 
@@ -877,6 +952,11 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
         ? "▼ Desceu para a Série B"
         : `→ Permaneceu na ${entry.userDivision.name}`;
   const outcomeClass = `history-card__outcome history-card__outcome--${entry.userOutcome}`;
+  const moneyClass =
+    entry.moneyDelta >= 0
+      ? "history-card__money history-card__money--positive"
+      : "history-card__money history-card__money--negative";
+  const moneySign = entry.moneyDelta >= 0 ? "+" : "−";
 
   return (
     <Card title={`TEMPORADA ${entry.year}`}>
@@ -892,6 +972,10 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
           ▼ Desceram: {entry.relegated.map((r) => r.teamName).join(", ")}
         </p>
         <p className={outcomeClass}>{outcomeText}</p>
+        <p className={moneyClass}>
+          {moneySign} $ {formatMoney(Math.abs(entry.moneyDelta))} · saldo ${" "}
+          {formatMoney(entry.moneyAfter)}
+        </p>
       </div>
     </Card>
   );

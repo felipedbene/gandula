@@ -652,6 +652,55 @@ fieldset legend {
   color: var(--fg-dim);
 }
 
+/* Per-season financial summary appended below the outcome line. Sign
+   colour mirrors the FINANÇAS Card register (positive green, negative
+   red) so the eye picks up the trend at a glance scrolling history. */
+.history-card__money {
+  margin-top: 2px;
+  font-weight: bold;
+}
+
+.history-card__money--positive {
+  color: var(--accent-gol);
+}
+
+.history-card__money--negative {
+  color: var(--accent-red);
+}
+
+/* E.1.d — FINANÇAS DA TEMPORADA card on SeasonFinale ────────────────────── */
+
+/* Two-column row: label on the left, signed amount on the right. Monospace
+   inherits from the global Card register; flex layout keeps the right
+   column aligned without padding gymnastics. */
+.finances-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.finances-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+
+.finances-row--positive {
+  color: var(--accent-gol);
+}
+
+.finances-row--negative {
+  color: var(--accent-red);
+}
+
+/* Visual separator between the line items and the totals. Same dim
+   green as other dividers in the app for register consistency. */
+.finances-divider {
+  border-top: 1px solid var(--fg-dim);
+  margin: 4px 0;
+  list-style: none;
+}
+
 /* D.1.f — Bench editor (BANCO section header + ADICIONAR JOGADOR area) */
 
 /* Section header sitting above the bench list, with the count fraction
