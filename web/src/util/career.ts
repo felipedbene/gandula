@@ -11,7 +11,8 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
-import { ageRoster, applyAgingSeasons } from "./aging";
+import { ageRoster } from "./aging";
+import { evolveTeam } from "./regen";
 import { userTeam } from "./roster";
 
 /**
@@ -206,16 +207,17 @@ function buildNextSeason(
   // next season's run_season sees the bought/sold roster, not the registry
   // default. The user's roster is already aged by advanceCareer (E.2.a).
   //
-  // E.2.a.2: opponents reset to the immutable registry each season, so age
-  // them on the fly by the elapsed-season count — matching the user's
-  // incrementally-aged squad so the whole league ages in lockstep. The
-  // controlled team is left as the (already-aged) userTeam view.
+  // E.2.a.2 / E.2.b: opponents reset to the immutable registry each season, so
+  // we replay their evolution from the registry base by the elapsed-season
+  // count — aging plus retire/youth/rebuild (evolveTeam) — so the league ages
+  // AND refreshes rather than only decaying. The controlled team is left as the
+  // (already-aged) userTeam view; the user refreshes via the market.
   const userTeamWithRoster = userTeam(career);
   const elapsed = current.year + 1 - FIRST_YEAR;
   const composeTeam = (t: Team): Team =>
     t.id === career.controlledTeamId
       ? userTeamWithRoster
-      : { ...t, roster: applyAgingSeasons(t.roster, elapsed) };
+      : evolveTeam(t, elapsed, career.seed);
 
   const tierATeams: Team[] = [...tierASurvivors, ...newPromoted].map(composeTeam);
   const tierBTeams: Team[] = [...tierBSurvivors, ...newRelegated].map(composeTeam);

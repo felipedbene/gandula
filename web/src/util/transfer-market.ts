@@ -30,6 +30,19 @@ export const FREE_AGENT_ID_BASE = 900_000;
  *  to grow significantly without collisions. */
 export const FREE_AGENT_ID_YEAR_STRIDE = 1000;
 
+/** Base offset for regen/youth player IDs (E.2.b). Far above free agents'
+ *  900k, and `regenId` partitions the space by team/year/slot so no two
+ *  generated youths — across any team, season, or the registry/free-agent
+ *  pools — ever collide. Stays within u32 (engine PlayerId). */
+export const REGEN_ID_BASE = 2_000_000_000;
+
+/** Deterministic, collision-free id for a regen youth: `teamId` occupies the
+ *  high stride (×10k), the season offset and slot the low digits (each < 100,
+ *  so they never spill into the team band). */
+export function regenId(teamId: number, yearOffset: number, slot: number): number {
+  return REGEN_ID_BASE + teamId * 10_000 + yearOffset * 100 + slot;
+}
+
 // ─── Pricing ──────────────────────────────────────────────────────────────
 
 /** Multiplier applied to base price on purchase (full price). */
@@ -157,6 +170,21 @@ function buildFreeAgent(rng: () => number, id: number, position: Position): Play
     id,
     name: generateName(rng),
     age: 18 + Math.floor(rng() * 17), // [18, 34]
+    position,
+    attributes: scaleByPosition(rng, position),
+  };
+}
+
+/**
+ * A regen youth (E.2.b): a young player (age 16–19) for a given position. Same
+ * attribute generator as free agents — they start modest and grow via aging's
+ * sub-23 bump. Used by the opponent-evolve cycle to replace retirees.
+ */
+export function buildYouth(rng: () => number, id: number, position: Position): Player {
+  return {
+    id,
+    name: generateName(rng),
+    age: 16 + Math.floor(rng() * 4), // [16, 19]
     position,
     attributes: scaleByPosition(rng, position),
   };

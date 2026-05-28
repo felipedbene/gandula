@@ -9,7 +9,6 @@ import {
   ageDelta,
   agePlayer,
   ageRoster,
-  applyAgingSeasons,
 } from "./aging";
 import type { Player } from "../types";
 
@@ -91,22 +90,5 @@ describe("ageRoster", () => {
     expect(aged[1].age).toBe(39);
     expect(aged[0].attributes.pace).toBe(61); // young: +1
     expect(aged[1].attributes.pace).toBe(57); // 39 → -3
-  });
-});
-
-describe("applyAgingSeasons", () => {
-  it("aging N times equals N successive seasons", () => {
-    const roster = [player(38, 60)];
-    const folded = applyAgingSeasons(roster, 2);
-    const manual = ageRoster(ageRoster(roster));
-    expect(folded[0].age).toBe(40);
-    expect(folded[0].attributes.pace).toBe(manual[0].attributes.pace);
-  });
-
-  it("returns an unchanged copy for 0 seasons", () => {
-    const roster = [player(30, 70)];
-    const out = applyAgingSeasons(roster, 0);
-    expect(out).not.toBe(roster);
-    expect(out[0]).toEqual(roster[0]);
   });
 });
