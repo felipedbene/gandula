@@ -491,13 +491,17 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       }
 
       const start = performance.now();
-      const { history, nextSeason, finances } = advanceCareer(career, pr);
+      const { history, nextSeason, finances, agedUserRoster } = advanceCareer(
+        career,
+        pr,
+      );
       const ms = Math.round(performance.now() - start);
       const newCareer: Career = {
         ...career,
         savedAt: new Date().toISOString(),
         seasons: [...career.seasons, history],
         currentSeason: nextSeason,
+        userRoster: agedUserRoster,
         manager: {
           ...career.manager,
           money: career.manager.money + finances.prBonus,

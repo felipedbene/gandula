@@ -110,7 +110,7 @@ export default function BenchEditor({ team, state, onChange }: BenchEditorProps)
                 {player?.name ?? `Player ${playerId}`}
               </Text>
               <Text span size="sm" c="dimmed">
-                STAM {player?.attributes.stamina ?? "?"}
+                {player?.age ?? "?"}a · STAM {player?.attributes.stamina ?? "?"}
               </Text>
               <Button
                 size="compact-xs"
@@ -160,7 +160,7 @@ export default function BenchEditor({ team, state, onChange }: BenchEditorProps)
                   {c.name}
                 </Text>
                 <Text span size="sm" c="dimmed">
-                  STAM {c.attributes.stamina}
+                  {c.age}a · STAM {c.attributes.stamina}
                 </Text>
                 <Button
                   size="compact-xs"

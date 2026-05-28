@@ -1,6 +1,6 @@
 import { run_season } from "../wasm/gandula_wasm.js";
 import { teamById } from "../teams";
-import { points, type SeasonRecord, type Team } from "../types";
+import { points, type Player, type SeasonRecord, type Team } from "../types";
 import {
   findUserDivisionIdxInSeason,
   type Career,
@@ -10,6 +10,7 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
+import { ageRoster } from "./aging";
 import { userTeam } from "./roster";
 
 /**
@@ -29,6 +30,9 @@ export type AdvanceResult = {
   /** Breakdown of money flow for the just-finished season. Surfaced so
    *  the UI can show line items without recomputing. */
   finances: SeasonFinances;
+  /** The user's roster aged one season (E.2.a). The caller persists it as
+   *  `Career.userRoster`; it's also what next season was simulated against. */
+  agedUserRoster: Player[];
 };
 
 /**
@@ -72,8 +76,18 @@ export function advanceCareer(
   const userOutcome = userOutcomeFromPRResult(prResult);
   const finances = computeSeasonFinances(career, userOutcome);
   const history = buildSeasonHistory(career, prResult, userOutcome, finances);
-  const nextSeason = buildNextSeason(career, career.currentSeason, prResult);
-  return { history, nextSeason, finances };
+
+  // E.2.a: age the user's squad one season before composing the next one, so
+  // next season is simulated against the aged attributes. ageRoster(userTeam…)
+  // also materializes a still-empty userRoster from the registry, so a
+  // transfer-free career still ages.
+  const agedUserRoster = ageRoster(userTeam(career).roster);
+  const nextSeason = buildNextSeason(
+    { ...career, userRoster: agedUserRoster },
+    career.currentSeason,
+    prResult,
+  );
+  return { history, nextSeason, finances, agedUserRoster };
 }
 
 /**
