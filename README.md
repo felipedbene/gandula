@@ -220,10 +220,6 @@ repo secret. To deploy by hand instead, run `npm run deploy` from `web/`.
 
 ## What's next
 
-On the roadmap:
-
-- Manager firing when finances run dry (E.1.f)
-- Player evolution / aging across seasons
-- Scout reports for free agents (richer pool browsing)
-- Self-play training for rival-manager AIs
-- Tick-by-tick live playback (extending the existing reveal ticker)
+See [`ROADMAP.md`](ROADMAP.md) for the structured plan. In short: **E.1.f**
+manager firing (next), then **E.2** player aging/evolution, **E.3** self-play
+rival AIs, plus a polish track (scout reports, live playback).
