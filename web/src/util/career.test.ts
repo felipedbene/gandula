@@ -252,14 +252,16 @@ describe("advanceCareer — finances", () => {
     expect(history.moneyDelta).toBe(finances.net);
   });
 
-  it("history.moneyAfter equals career.manager.money + finances.net", () => {
+  it("history.moneyAfter equals career.manager.money + finances.prBonus", () => {
+    // Tickets/salaries accrue per round into manager.money during the season,
+    // so only the P/R bonus is added at the boundary.
     const career = makeFinishedCareer(1998n);
     const pr = computePromotionRelegation(
       career.currentSeason,
       career.controlledTeamId,
     );
     const { history, finances } = advanceCareer(career, pr);
-    expect(history.moneyAfter).toBe(career.manager.money + finances.net);
+    expect(history.moneyAfter).toBe(career.manager.money + finances.prBonus);
   });
 });
 

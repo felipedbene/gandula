@@ -57,7 +57,9 @@ export type AdvanceResult = {
  *     ...career,
  *     seasons: [...career.seasons, history],
  *     currentSeason: nextSeason,
- *     manager: { ...career.manager, money: career.manager.money + finances.net },
+ *     // tickets/salaries accrue per round during the season; only the P/R
+ *     // bonus is applied at the boundary.
+ *     manager: { ...career.manager, money: career.manager.money + finances.prBonus },
  *   };
  *   await saveCareer(newCareer);
  *
@@ -123,8 +125,12 @@ function buildSeasonHistory(
       teamName: teamById(s.team_id)?.name ?? `Time ${s.team_id}`,
     })),
     userOutcome,
+    // moneyDelta is the season's full P&L (the change over the season).
+    // moneyAfter adds only the P/R bonus: tickets/salaries already accrued
+    // into manager.money per round, so career.manager.money here is the
+    // pre-bonus end-of-season balance.
     moneyDelta: finances.net,
-    moneyAfter: career.manager.money + finances.net,
+    moneyAfter: career.manager.money + finances.prBonus,
     // Transfer-market activity that happened during this season is
     // surfaced into history as a non-empty array; skipped markets stay
     // `undefined` so HistoryCard can short-circuit cleanly. The market

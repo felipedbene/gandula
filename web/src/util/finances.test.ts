@@ -15,7 +15,10 @@ import {
   SALARY_PER_PLAYER_STRENGTH,
   TICKET_REVENUE_PER_STRENGTH,
   computeSeasonFinances,
+  homeTicketForRound,
   isManagerFired,
+  roundCashDelta,
+  salarySliceForRound,
 } from "./finances";
 import { divideIntoDivisions, pickStarterTeam, avgStrength } from "./divisions";
 import { ALL_TEAMS, teamById } from "../teams";
@@ -23,6 +26,7 @@ import {
   FIRST_YEAR,
   STARTING_MONEY,
   findUserDivisionIdxInSeason,
+  totalRoundsOf,
   type Career,
 } from "../persistence";
 import type { SeasonRecord } from "../types";
@@ -182,5 +186,50 @@ describe("isManagerFired", () => {
     expect(isManagerFired(MANAGER_FIRING_FLOOR)).toBe(false);
     expect(isManagerFired(MANAGER_FIRING_FLOOR + 1)).toBe(false);
     expect(isManagerFired(STARTING_MONEY)).toBe(false);
+  });
+});
+
+describe("per-round finances", () => {
+  function userRounds(career: Career): number {
+    const idx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    return totalRoundsOf(career.currentSeason.divisions[idx]);
+  }
+
+  it("home tickets per round sum to the season ticket revenue", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += homeTicketForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").ticketRevenue);
+  });
+
+  it("salary slices sum EXACTLY to the season salary (fair rounding)", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += salarySliceForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").salaries);
+  });
+
+  it("roundCashDelta = home ticket − salary slice, every round", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    for (let r = 0; r < total; r++) {
+      expect(roundCashDelta(career, r)).toBe(
+        homeTicketForRound(career, r) - salarySliceForRound(career, r),
+      );
+    }
+  });
+
+  it("per-round deltas sum to the season net minus the P/R bonus", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += roundCashDelta(career, r);
+    const fin = computeSeasonFinances(career, "stayed");
+    expect(sum).toBe(fin.net - fin.prBonus);
   });
 });

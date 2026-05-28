@@ -2,6 +2,7 @@ import { teamById } from "../teams";
 import { avgStrength } from "./divisions";
 import {
   findUserDivisionIdxInSeason,
+  totalRoundsOf,
   type Career,
 } from "../persistence";
 import type { Player } from "../types";
@@ -30,10 +31,62 @@ export const RELEGATION_PENALTY = 200_000;
  *  Raise to a negative number (e.g. -500_000) to allow a grace overdraft. */
 export const MANAGER_FIRING_FLOOR = 0;
 
-/** Whether a manager is fired given their balance after a season's net is
- *  applied. Single source of truth for the lose-condition (E.1.f). */
-export function isManagerFired(balanceAfterSeason: number): boolean {
-  return balanceAfterSeason < MANAGER_FIRING_FLOOR;
+/** Whether a manager is fired given their balance. Single source of truth for
+ *  the lose-condition (E.1.f) — checked per round and at season advance. */
+export function isManagerFired(balance: number): boolean {
+  return balance < MANAGER_FIRING_FLOOR;
+}
+
+/**
+ * Home-gate revenue for the user's match in `roundIdx` — same home-only basis
+ * as computeSeasonFinances, just for one round. Away games and byes earn
+ * nothing (the away club banks its own gate).
+ */
+export function homeTicketForRound(career: Career, roundIdx: number): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const { fixtures, matches } = userDiv.record;
+  for (let i = 0; i < fixtures.length; i++) {
+    if (fixtures[i].round !== roundIdx) continue;
+    const m = matches[i];
+    if (m.home === career.controlledTeamId) {
+      const opp = teamById(m.away);
+      return opp ? avgStrength(opp) * TICKET_REVENUE_PER_STRENGTH : 0;
+    }
+    if (m.away === career.controlledTeamId) return 0; // away game
+  }
+  return 0; // bye round — user has no fixture this round
+}
+
+/**
+ * The wage bill, paid in equal per-round slices across the season. Fair
+ * rounding — `round(S·(r+1)/T) − round(S·r/T)` — so the slices sum to the
+ * exact season salary S with no drift (money stays integer and the per-round
+ * total matches computeSeasonFinances.salaries exactly).
+ */
+export function salarySliceForRound(career: Career, roundIdx: number): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const total = totalRoundsOf(season.divisions[userDivIdx]);
+  if (total <= 0) return 0;
+  const userTeam = teamById(career.controlledTeamId);
+  if (!userTeam) return 0;
+  const s = userTeam.roster.reduce(
+    (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
+    0,
+  );
+  return (
+    Math.round((s * (roundIdx + 1)) / total) - Math.round((s * roundIdx) / total)
+  );
+}
+
+/** Net cash for playing `roundIdx`: home gate (if mandante) minus the wage
+ *  slice. Used to move `manager.money` each round. */
+export function roundCashDelta(career: Career, roundIdx: number): number {
+  return (
+    homeTicketForRound(career, roundIdx) - salarySliceForRound(career, roundIdx)
+  );
 }
 
 /**

@@ -29,7 +29,11 @@ import {
   userOutcomeFromPRResult,
 } from "../util/promotion";
 import { advanceCareer } from "../util/career";
-import { computeSeasonFinances, isManagerFired } from "../util/finances";
+import {
+  computeSeasonFinances,
+  isManagerFired,
+  roundCashDelta,
+} from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
@@ -70,7 +74,7 @@ type Phase =
   | { tag: "finale"; career: Career }
   | { tag: "history"; career: Career }
   | { tag: "transferMarket"; career: Career }
-  | { tag: "fired"; career: Career }
+  | { tag: "fired"; career: Career; finalBalance: number }
   | { tag: "support" };
 
 /**
@@ -387,12 +391,26 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       });
     }
 
+    // Per-round cash flow: the round being played is the pre-increment index.
+    // Bank the home gate (if mandante) and pay the wage slice — money moves
+    // every matchday, persisted here with the round advance.
+    const playedRound = season.divisions[userDivIdx].currentRoundIdx;
+    const cashDelta = roundCashDelta(newCareer, playedRound);
+    const cashStr =
+      cashDelta >= 0
+        ? `+ $ ${formatMoney(cashDelta)}`
+        : `− $ ${formatMoney(Math.abs(cashDelta))}`;
+
     const advanced: Career = {
       ...newCareer,
       savedAt: new Date().toISOString(),
       currentSeason: {
         ...season,
         divisions: advancedDivisions,
+      },
+      manager: {
+        ...newCareer.manager,
+        money: newCareer.manager.money + cashDelta,
       },
     };
 
@@ -405,10 +423,12 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       if (resimCount > 0) {
         const plural = resimCount === 1 ? "" : "s";
         onStatus(
-          `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms · rodada ${userDiv.currentRoundIdx} iniciada`,
+          `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms · rodada ${userDiv.currentRoundIdx} · caixa ${cashStr}`,
         );
       } else {
-        onStatus(`avançando para rodada ${userDiv.currentRoundIdx + 1}`);
+        onStatus(
+          `rodada ${userDiv.currentRoundIdx} · caixa ${cashStr} · saldo $ ${formatMoney(advanced.manager.money)}`,
+        );
       }
       setPhase({ tag: "revealing", career: advanced });
     } catch (e) {
@@ -423,6 +443,13 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
    * running for the next round.
    */
   function afterReveal(career: Career) {
+    // Mid-season firing: if this round's wage slice pushed the balance below
+    // the floor, the board fires you right after the reveal.
+    if (isManagerFired(career.manager.money)) {
+      onStatus("demitido · saldo negativo");
+      setPhase({ tag: "fired", career, finalBalance: career.manager.money });
+      return;
+    }
     setPhase(initialPhaseFor(career));
   }
 
@@ -439,16 +466,20 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         career.controlledTeamId,
       );
 
-      // Lose-condition (E.1.f): if the season's net pushes the balance below
-      // the firing floor, the board fires the manager. Checked before the
-      // expensive advanceCareer resim so a doomed career never wastes one.
+      // Tickets/salaries already accrued per round, so the only money event
+      // left at the boundary is the P/R bonus/penalty. Lose-condition: if the
+      // (signed) bonus pushes the balance below the floor — e.g. a relegation
+      // penalty — the board fires the manager. Checked before the expensive
+      // advanceCareer resim so a doomed career never wastes one.
       const projectedFinances = computeSeasonFinances(
         career,
         userOutcomeFromPRResult(pr),
       );
-      if (isManagerFired(career.manager.money + projectedFinances.net)) {
+      const balanceAfterBonus =
+        career.manager.money + projectedFinances.prBonus;
+      if (isManagerFired(balanceAfterBonus)) {
         onStatus("demitido · saldo negativo");
-        setPhase({ tag: "fired", career });
+        setPhase({ tag: "fired", career, finalBalance: balanceAfterBonus });
         return;
       }
 
@@ -462,7 +493,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         currentSeason: nextSeason,
         manager: {
           ...career.manager,
-          money: career.manager.money + finances.net,
+          money: career.manager.money + finances.prBonus,
         },
       };
       await saveCareer(newCareer);
@@ -474,9 +505,13 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         newCareer.controlledTeamId,
       );
       const newUserDiv = nextSeason.divisions[newUserDivIdx];
-      const deltaSign = finances.net >= 0 ? "+" : "−";
+      const bonusSign = finances.prBonus >= 0 ? "+" : "−";
+      const bonusStr =
+        finances.prBonus !== 0
+          ? `bônus ${bonusSign} $ ${formatMoney(Math.abs(finances.prBonus))} · `
+          : "";
       onStatus(
-        `temporada ${nextSeason.year} iniciada · ${teamName} (${newUserDiv.name}) · ${deltaSign} $ ${formatMoney(Math.abs(finances.net))} · saldo $ ${formatMoney(newCareer.manager.money)} · ${ms}ms`,
+        `temporada ${nextSeason.year} iniciada · ${teamName} (${newUserDiv.name}) · ${bonusStr}saldo $ ${formatMoney(newCareer.manager.money)} · ${ms}ms`,
       );
       setPhase({ tag: "running", career: newCareer });
     } catch (e) {
@@ -548,7 +583,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         />
       )}
       {phase.tag === "fired" && (
-        <FiredView career={phase.career} onNewCareer={resetCareer} />
+        <FiredView
+          career={phase.career}
+          finalBalance={phase.finalBalance}
+          onNewCareer={resetCareer}
+        />
       )}
       {phase.tag === "support" && <SupportView onBack={backFromSupport} />}
       {error && (
@@ -847,8 +886,11 @@ function SeasonFinale({
 
       <Panel title="Finanças da temporada">
         <Stack gap={2}>
+          <Text size="xs" c="dimmed">
+            Já creditado no caixa ao longo da temporada:
+          </Text>
           <FinanceRow
-            label="Receita de bilheteria"
+            label="Bilheteria (mandante)"
             value={`+ $ ${formatMoney(finances.ticketRevenue)}`}
             c="phosphor.4"
           />
@@ -857,30 +899,31 @@ function SeasonFinale({
             value={`− $ ${formatMoney(finances.salaries)}`}
             c="red.5"
           />
+          <Divider my={4} />
           {finances.prBonus > 0 && (
             <FinanceRow
-              label="Bônus promoção"
+              label="Bônus promoção (ao avançar)"
               value={`+ $ ${formatMoney(finances.prBonus)}`}
               c="phosphor.4"
             />
           )}
           {finances.prBonus < 0 && (
             <FinanceRow
-              label="Multa rebaixamento"
+              label="Multa rebaixamento (ao avançar)"
               value={`− $ ${formatMoney(Math.abs(finances.prBonus))}`}
               c="red.5"
             />
           )}
-          <Divider my={4} />
           <FinanceRow
-            label="Saldo da temporada"
-            value={`${finances.net >= 0 ? "+" : "−"} $ ${formatMoney(Math.abs(finances.net))}`}
-            c={finances.net >= 0 ? "phosphor.4" : "red.5"}
+            label="Saldo atual"
+            value={`$ ${formatMoney(career.manager.money)}`}
           />
-          <FinanceRow
-            label="Saldo total"
-            value={`$ ${formatMoney(career.manager.money + finances.net)}`}
-          />
+          {finances.prBonus !== 0 && (
+            <FinanceRow
+              label="Saldo ao iniciar a próxima"
+              value={`$ ${formatMoney(career.manager.money + finances.prBonus)}`}
+            />
+          )}
         </Stack>
       </Panel>
 
@@ -992,21 +1035,22 @@ function FinanceRow({
 }
 
 // ─── Phase: fired (E.1.f) ────────────────────────────────────────────────────
-// Game over — reached from advanceToNextSeason when the season's net would push
-// the balance below the firing floor. Self-contained like SeasonFinale: it
-// recomputes pr + finances from the (un-advanced) career to show the damage.
+// Game over — reached when the balance drops below the firing floor, either
+// mid-season (after a round's wage slice, via afterReveal) or at the boundary
+// (after a relegation penalty, via advanceToNextSeason). Takes the triggering
+// `finalBalance` directly rather than recomputing finances/P-R, since
+// mid-season the season isn't over and computePromotionRelegation would throw.
 // The only way out is a new career.
 function FiredView({
   career,
+  finalBalance,
   onNewCareer,
 }: {
   career: Career;
+  finalBalance: number;
   onNewCareer: () => void;
 }) {
   const season = career.currentSeason;
-  const pr = computePromotionRelegation(season, career.controlledTeamId);
-  const finances = computeSeasonFinances(career, userOutcomeFromPRResult(pr));
-  const finalBalance = career.manager.money + finances.net;
   const teamName =
     teamById(career.controlledTeamId)?.name ?? `Time ${career.controlledTeamId}`;
   const seasonsInCharge = career.seasons.length + 1;
@@ -1024,18 +1068,13 @@ function FiredView({
             vermelho e você foi demitido.
           </Text>
           <FinanceRow
-            label="Saldo da temporada"
-            value={`${finances.net >= 0 ? "+" : "−"} $ ${formatMoney(Math.abs(finances.net))}`}
-            c={finances.net >= 0 ? "phosphor.4" : "red.5"}
-          />
-          <FinanceRow
             label="Saldo final"
             value={`− $ ${formatMoney(Math.abs(finalBalance))}`}
             c="red.5"
           />
           <Text size="sm" c="dimmed">
             {seasonsInCharge} temporada{seasonsInCharge === 1 ? "" : "s"} no
-            comando · encerrou no ano {season.year}.
+            comando · ano {season.year}.
           </Text>
         </Stack>
       </Panel>
