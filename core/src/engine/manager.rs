@@ -38,6 +38,41 @@ impl ManagerConfig {
             game_state_rule_min_minute: GAME_STATE_RULE_MIN_MINUTE,
         }
     }
+
+    /// Conservative style: pulls tired players sooner and reacts to the
+    /// scoreline earlier (locks in leads / chases from earlier in the half).
+    pub fn cautious() -> Self {
+        Self {
+            stamina_sub_threshold: 45.0,
+            stamina_rule_min_minute: 50,
+            game_state_rule_min_minute: 65,
+            ..Self::balanced()
+        }
+    }
+
+    /// Bold style: rides the starters longer (only swaps the truly gassed,
+    /// accepts slightly-less-fresh subs) and commits to a game-state change
+    /// late rather than early.
+    pub fn bold() -> Self {
+        Self {
+            stamina_sub_threshold: 35.0,
+            stamina_fresh_threshold: 65.0,
+            stamina_rule_min_minute: 60,
+            game_state_rule_min_minute: 75,
+            ..Self::balanced()
+        }
+    }
+}
+
+/// Deterministic per-club manager style (E.3.b). Clubs are partitioned by id
+/// so rivals manage differently; self-play (E.3.c) will later assign/tune these
+/// per club instead of bucketing by id.
+pub fn manager_config_for(team_id: u32) -> ManagerConfig {
+    match team_id % 3 {
+        0 => ManagerConfig::balanced(),
+        1 => ManagerConfig::cautious(),
+        _ => ManagerConfig::bold(),
+    }
 }
 
 // ─── Read-only view into one team's state ───────────────────────────────────
@@ -64,11 +99,11 @@ pub(crate) enum ManagerAction {
 // The RNG is threaded only so the substitution narration can draw phrasings —
 // the heuristic-decide logic itself stays pure / deterministic without it.
 pub(crate) fn run_managers(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
-    // Both sides use the balanced config for now; per-club styles land in E.3.b.
-    let cfg = ManagerConfig::balanced();
     for side in [Side::Home, Side::Away] {
         let action = {
             let view = build_view(state, side, minute);
+            // E.3.b: each club manages in its own style, keyed off team id.
+            let cfg = manager_config_for(view.team.id.0);
             heuristic_decide(&view, &cfg)
         };
         if let Some(action) = action {
@@ -477,5 +512,31 @@ mod tests {
             heuristic_decide(&view(&team, &xi, &stamina, &bench_used, minute), &eager),
             Some(ManagerAction::Substitute { .. })
         ));
+    }
+
+    #[test]
+    fn manager_config_for_partitions_clubs_by_id() {
+        // Deterministic id → style, covering all three buckets.
+        assert_eq!(
+            manager_config_for(0).stamina_rule_min_minute,
+            ManagerConfig::balanced().stamina_rule_min_minute
+        );
+        assert_eq!(
+            manager_config_for(3).stamina_rule_min_minute,
+            ManagerConfig::balanced().stamina_rule_min_minute
+        );
+        assert_eq!(
+            manager_config_for(1).stamina_rule_min_minute,
+            ManagerConfig::cautious().stamina_rule_min_minute
+        );
+        assert_eq!(
+            manager_config_for(2).stamina_rule_min_minute,
+            ManagerConfig::bold().stamina_rule_min_minute
+        );
+        // The presets are genuinely distinct.
+        assert_ne!(
+            ManagerConfig::cautious().stamina_rule_min_minute,
+            ManagerConfig::bold().stamina_rule_min_minute
+        );
     }
 }
