@@ -127,7 +127,10 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
-        ANO {season.year} · TÁTICA · {teamName.toUpperCase()} · $ {formatMoney(career.manager.money)}
+        <Text span c="gray.0" fw={700}>
+          {teamName} (Você)
+        </Text>{" "}
+        · TÁTICA · ANO {season.year} · $ {formatMoney(career.manager.money)}
       </Text>
       <Panel title={`Tática · ${teamName}`}>
         <form

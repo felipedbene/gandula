@@ -686,8 +686,10 @@ function CampeonatoEmCurso({
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
-        ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {teamName} · RODADA{" "}
-        {userDiv.currentRoundIdx + 1} / {totalRounds} · $ {formatMoney(career.manager.money)}
+        <Text span c="gray.0" fw={700}>
+          {teamName} (Você)
+        </Text>{" "}
+        · {userDiv.name} · ANO {season.year} · RODADA {userDiv.currentRoundIdx + 1} / {totalRounds} · $ {formatMoney(career.manager.money)}
       </Text>
 
       <Panel title={`Rodada ${userDiv.currentRoundIdx + 1}`}>
@@ -849,8 +851,10 @@ function SeasonFinale({
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
-        ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {userTeamName} · ENCERRADA · {totalRounds} /{" "}
-        {totalRounds} · $ {formatMoney(career.manager.money)}
+        <Text span c="gray.0" fw={700}>
+          {userTeamName} (Você)
+        </Text>{" "}
+        · {userDiv.name} · ANO {season.year} · ENCERRADA · {totalRounds} / {totalRounds} · $ {formatMoney(career.manager.money)}
       </Text>
 
       <Panel title={isUserChamp ? "*** Campeão ***" : "Campeão"}>
@@ -1075,7 +1079,10 @@ function FiredView({
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
-        FIM DE LINHA · {teamName.toUpperCase()}
+        <Text span c="gray.0" fw={700}>
+          {teamName} (Você)
+        </Text>{" "}
+        · FIM DE LINHA
       </Text>
 
       <Panel title="*** Demitido ***">
