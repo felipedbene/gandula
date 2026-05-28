@@ -1,0 +1,66 @@
+name: Deploy to Cloudflare
+
+# Builds the wasm engine + the web app and deploys to gandula.debene.dev.
+# Auto-runs on pushes to main that touch the app/engine, and can be triggered
+# manually from the Actions tab. Needs a CLOUDFLARE_API_TOKEN repo secret
+# (Cloudflare dashboard → "Edit Cloudflare Workers" token template).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "wasm/**"
+      - "core/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+# One in-flight deploy at a time; a newer push cancels an older running deploy.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (wasm32 target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Build wasm module
+        run: wasm-pack build wasm --target web --out-dir ../web/src/wasm
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install JS deps
+        working-directory: web
+        run: npm ci
+
+      - name: Test
+        working-directory: web
+        run: npm run test:run
+
+      - name: Build web bundle
+        working-directory: web
+        run: npm run build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: web
+          command: deploy
