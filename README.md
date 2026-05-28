@@ -9,9 +9,10 @@ management games (Elifoot, mainly): tight simulation loop, legible numbers, one
 season fits in an evening, and a clear cause-and-effect line between the
 tactics you set and the result you read.
 
-**Play it now:** [gandula.debene.dev](https://gandula.debene.dev). Manage the
-weakest team in the Brasileirão Imaginário's Série B and try to climb. State
-lives in your browser's IndexedDB; no account, no tracking, no server.
+**Play it now:** [gandula.debene.dev](https://gandula.debene.dev). Each new
+career drops you into a random Série B club in the Brasileirão Imaginário —
+try to climb. State lives in your browser's IndexedDB; no account, no
+tracking, no server.
 
 Enjoying it? [Buy me a coffee on Ko-fi](https://ko-fi.com/felipedebene) — keeps
 the side-project lights on.
@@ -162,10 +163,12 @@ in `web/`, with a Mantine-based UI that's responsive on both mobile and
 desktop. Full career-mode loop:
 
 - **Two divisions in parallel.** 17 fictional Brazilian clubs split into Série A
-  (top 8) and Série B (bottom 9). User always starts as the weakest team in B.
+  (top 8) and Série B (bottom 9). Each new career drops you into a *random*
+  Série B club (the season seed is randomized too — a fresh league every time).
 - **Round-by-round reveal.** Pre-simulated season; rounds reveal one at a time
-  with a live-feel ticker animation. F5 mid-reveal autoloads cleanly into the
-  saved state — animation is lost, save intact.
+  with a tick-by-tick animation — a running match clock plus a live event feed
+  (goals, cards, subs). F5 mid-reveal autoloads cleanly into the saved state —
+  animation is lost, save intact.
 - **Tactics.** Per-season formation, mentality, tempo, pressing, width, plus
   starting XI + bench. Mid-season changes re-simulate the user's remaining
   fixtures only; other matches stay frozen.
@@ -196,7 +199,7 @@ cd web && npm run dev
 # Production bundle in web/dist/
 cd web && npm run build
 
-# Run the JS test suite (115 tests covering schema, persistence,
+# Run the JS test suite (117 tests covering schema, persistence,
 # simulation parity, finances, transfer market, components).
 cd web && npm run test:run
 ```
@@ -208,7 +211,12 @@ to regenerate the wasm module.
 
 The production site at [gandula.debene.dev](https://gandula.debene.dev) runs
 as a Cloudflare Workers static-asset deploy. `wrangler.toml` in `web/` carries
-the full config; `npm run deploy` builds and uploads.
+the full config.
+
+Pushes to `main` that touch `web/`, `wasm/`, or `core/` **auto-deploy** via
+GitHub Actions (`.github/workflows/deploy.yml`): it builds the wasm module,
+runs the test suite as a gate, then deploys. Needs a `CLOUDFLARE_API_TOKEN`
+repo secret. To deploy by hand instead, run `npm run deploy` from `web/`.
 
 ## What's next
 

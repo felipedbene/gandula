@@ -338,8 +338,13 @@ The same `core` simulation runs in the browser. Two additions, sibling to
 
 ```
 wasm/   — Rust crate, cdylib, thin wasm-bindgen shim over core
-web/    — Vite + React + TS app, consumes the wasm module
+web/    — Vite + React + Mantine app, consumes the wasm module
 ```
+
+The web app has since grown from a single-match demo into a full **career
+mode** (two divisions, promotion/relegation, finances, transfers, multi-season
+history). The engine is unchanged; everything below the wasm boundary is the
+same `core`.
 
 `core` and `cli` are unchanged in behavior — `cli` keeps SQLite, `wasm` never
 sees SQLite.
@@ -380,23 +385,58 @@ lives in `web/src/wasm/` (gitignored — regenerated on each build).
 
 ### Browser state
 
-Ephemeral. No IndexedDB, no localStorage. SQLite doesn't compile cleanly to
-WASM (and we don't ship a JS SQLite implementation either). When persistence
-matters on the web, add IndexedDB or another browser-native store — that's a
-later phase.
+Career mode persists to **IndexedDB** via the `idb` library (see
+`web/src/persistence.ts`). The whole career — controlled team, both divisions'
+`SeasonRecord`s, current round, finances, roster, transfers, tactics, and
+past-season history — is one versioned record. Schema is at **v5**, with
+in-place migrations cascading v2→v3→v4→v5 on load (`loadCareer`). SQLite still
+doesn't target wasm; IndexedDB is the browser-native store. Clearing it (or
+"Nova carreira") starts fresh.
 
 ### Aesthetic
 
-Monospace stack, dark-on-light, no animations. Goal lines highlighted green;
-red cards highlighted red. Matches the CLI's tight-numbers, terminal-y feel.
+A Mantine UI on a dark **phosphor-green** theme (`web/src/theme.ts`),
+responsive on mobile and desktop. A bitmap font (PxPlus IBM VGA 9x16) keeps the
+terminal feel; goals render green, red cards red, subs blue, bookings yellow.
+The only hand-written CSS left is the `@font-face` and the blinking status
+cursor — layout and color come from Mantine theme tokens + component props.
 
-### Known Phase 5 simplifications
+### Match reveal pacing (web)
 
-- Only the 3 bundled sample teams are pickable in the UI (no team editor).
-- No live tick-by-tick playback — the feed renders the full event log after
-  the match completes.
-- No browser persistence.
-- No tests on the React side. Visual verification via dev server is enough at
-  this stage; tests come when there's logic beyond rendering.
-- Desktop-first layout. Mobile responsive comes later.
+The engine resolves a match in <5ms, but the round reveal *replays* it
+tick-by-tick for an Elifoot-y feel (`web/src/components/MatchReveal.tsx`).
+Tunables:
+
+- `REVEAL_MS_PER_MIN` (220) — wall-clock ms per match minute; a 90' match
+  unrolls in ~20s.
+- `HALFTIME_PAUSE_MS` (1500) — extra hold at the interval.
+- `MIN_EVENT_GAP_MS` (600) — floor between consecutive lances so a burst in the
+  same minute doesn't flash by all at once.
+
+The scoreboard clock is a separate continuous timer mapping wall-clock back to
+match minute (linear 0→45, hold at 45 during the pause, linear 45→90), so it
+ticks up during calm stretches instead of jumping between events. PULAR snaps
+everything to full time. Parallel matches in the round reveal their final
+scores at deterministic minutes seeded off the division seed (`util/prng.ts`).
+
+New careers are randomized and have no form inputs: a random Série B club
+(`pickRandomStarter`) and a random season seed (`randomSeed`), neither
+user-editable. The engine stays deterministic given a seed — it's just not
+surfaced for editing.
+
+### Known web simplifications
+
+- No team editor — the 17 fictional clubs are fixed; you don't create or edit
+  teams in the UI.
+- The career seed isn't surfaced for re-entry, so a specific league can't be
+  reproduced or shared from the UI (the engine is still deterministic
+  underneath — see "Match reveal pacing").
+- The whole `@mantine/core` stylesheet is imported rather than per-component
+  CSS (~32kB gzip) — fine at this size, trimmable later.
+- Rival clubs use the same heuristic manager from the engine; no per-club AI.
+
+The web app is covered by a Vitest suite (117 tests: schema/migrations,
+persistence, simulation parity, finances, transfer market, and the editor
+components). CI builds the wasm, runs the suite, and deploys on push to `main`
+(`.github/workflows/deploy.yml`).
 
