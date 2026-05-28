@@ -74,10 +74,15 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
   }, [season.userTactics, baseTeam]);
 
   const initialLineup: LineupState = useMemo(() => {
+    // Keep only bench ids still in the roster — a player sold while a
+    // userTactics overlay existed can leave a phantom id that would render
+    // as "Player <id>" in the bench editor. (baseTeam.bench is already
+    // reconciled by userTeam.)
+    const rosterIds = new Set((baseTeam?.roster ?? []).map((p) => p.id));
     if (season.userTactics) {
       return {
         starting_xi: season.userTactics.starting_xi.slice(),
-        bench: season.userTactics.bench.slice(),
+        bench: season.userTactics.bench.filter((id) => rosterIds.has(id)),
       };
     }
     return {
