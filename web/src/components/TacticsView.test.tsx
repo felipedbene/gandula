@@ -12,7 +12,7 @@ import init, { run_season } from "../wasm/gandula_wasm.js";
 import TacticsView from "./TacticsView";
 import { ALL_TEAMS, teamById } from "../teams";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
-import type { SavedSeason } from "../persistence";
+import { FIRST_YEAR, type Career } from "../persistence";
 import type { SeasonRecord } from "../types";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -24,35 +24,41 @@ beforeAll(async () => {
 });
 
 /**
- * Build a v2 SavedSeason with both divisions simulated. User is the
- * weakest team in Série B via pickStarterTeam (deterministic). The
- * dropdown initialization in TacticsView reads from the base team via
- * teamById(saved.controlledTeamId), so we surface that team back to
- * the tests through `starterTeam` for assertions.
+ * Build a v3 Career with both divisions simulated. User is the weakest
+ * team in Série B via pickStarterTeam (deterministic). The dropdown
+ * initialization in TacticsView reads from the base team via
+ * teamById(career.controlledTeamId), so we surface that team back to the
+ * tests through `starterId` for assertions.
  */
-function makeSaved(): { saved: SavedSeason; starterId: number } {
+function makeCareer(): { career: Career; starterId: number } {
   const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
   const starter = pickStarterTeam(tierB);
   const seed = 1998n;
-  const recordA = run_season(tierA, seed ^ 1n, "Série A") as SeasonRecord;
-  const recordB = run_season(tierB, seed ^ 2n, "Série B") as SeasonRecord;
-  const saved: SavedSeason = {
-    schemaVersion: 2,
+  const seasonSeed = seed ^ BigInt(FIRST_YEAR);
+  const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
+  const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const career: Career = {
+    schemaVersion: 3,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
-    divisions: [
-      { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
-      { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
-    ],
+    seasons: [],
+    currentSeason: {
+      year: FIRST_YEAR,
+      seed: seasonSeed,
+      divisions: [
+        { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
+        { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+      ],
+    },
   };
-  return { saved, starterId: starter.id };
+  return { career, starterId: starter.id };
 }
 
 describe("TacticsView", () => {
   it("initializes dropdowns from base team when no userTactics", () => {
-    const { saved, starterId } = makeSaved();
-    render(<TacticsView saved={saved} onApply={() => {}} onBack={() => {}} />);
+    const { career, starterId } = makeCareer();
+    render(<TacticsView career={career} onApply={() => {}} onBack={() => {}} />);
     const base = teamById(starterId)!;
     const formationSel = screen.getByLabelText(/formação/i) as HTMLSelectElement;
     const posturaSel = screen.getByLabelText(/postura/i) as HTMLSelectElement;
@@ -61,15 +67,15 @@ describe("TacticsView", () => {
   });
 
   it("APLICAR is disabled when no changes made", () => {
-    const { saved } = makeSaved();
-    render(<TacticsView saved={saved} onApply={() => {}} onBack={() => {}} />);
+    const { career } = makeCareer();
+    render(<TacticsView career={career} onApply={() => {}} onBack={() => {}} />);
     const apply = screen.getByRole("button", { name: /aplicar/i });
     expect(apply).toBeDisabled();
   });
 
   it("APLICAR becomes enabled after changing a dropdown", () => {
-    const { saved } = makeSaved();
-    render(<TacticsView saved={saved} onApply={() => {}} onBack={() => {}} />);
+    const { career } = makeCareer();
+    render(<TacticsView career={career} onApply={() => {}} onBack={() => {}} />);
     fireEvent.change(screen.getByLabelText(/postura/i), {
       target: { value: "VeryAttacking" },
     });
@@ -79,35 +85,37 @@ describe("TacticsView", () => {
   });
 
   it("calls onBack without re-simulating", () => {
-    const { saved } = makeSaved();
+    const { career } = makeCareer();
     const onBack = vi.fn();
     const onApply = vi.fn();
-    render(<TacticsView saved={saved} onApply={onApply} onBack={onBack} />);
+    render(<TacticsView career={career} onApply={onApply} onBack={onBack} />);
     fireEvent.click(screen.getByRole("button", { name: /voltar/i }));
     expect(onBack).toHaveBeenCalledOnce();
     expect(onApply).not.toHaveBeenCalled();
   });
 
-  it("calls onApply with re-simulated save when APLICAR clicked", () => {
-    const { saved } = makeSaved();
+  it("calls onApply with re-simulated career when APLICAR clicked", () => {
+    const { career } = makeCareer();
     const onApply = vi.fn();
-    render(<TacticsView saved={saved} onApply={onApply} onBack={() => {}} />);
+    render(<TacticsView career={career} onApply={onApply} onBack={() => {}} />);
     fireEvent.change(screen.getByLabelText(/postura/i), {
       target: { value: "VeryAttacking" },
     });
     fireEvent.click(screen.getByRole("button", { name: /aplicar/i }));
     expect(onApply).toHaveBeenCalledOnce();
-    const [newSaved, resimMs, resimCount] = onApply.mock.calls[0];
-    expect(newSaved.userTactics).toBeDefined();
-    expect(newSaved.userTactics.tactics.mentality).toBe("VeryAttacking");
+    const [newCareer, resimMs, resimCount] = onApply.mock.calls[0];
+    expect(newCareer.currentSeason.userTactics).toBeDefined();
+    expect(newCareer.currentSeason.userTactics.tactics.mentality).toBe(
+      "VeryAttacking",
+    );
     expect(resimMs).toBeGreaterThanOrEqual(0);
     expect(resimCount).toBeGreaterThan(0);
   });
 
   it("initializes from userTactics when present (precedence over base team)", () => {
-    const { saved, starterId } = makeSaved();
+    const { career, starterId } = makeCareer();
     const baseTeam = teamById(starterId)!;
-    saved.userTactics = {
+    career.currentSeason.userTactics = {
       formation: "F433",
       tactics: {
         mentality: "VeryDefensive",
@@ -118,7 +126,7 @@ describe("TacticsView", () => {
       starting_xi: baseTeam.starting_xi.slice(),
       bench: baseTeam.bench?.slice() ?? [],
     };
-    render(<TacticsView saved={saved} onApply={() => {}} onBack={() => {}} />);
+    render(<TacticsView career={career} onApply={() => {}} onBack={() => {}} />);
     const formationSel = screen.getByLabelText(/formação/i) as HTMLSelectElement;
     const posturaSel = screen.getByLabelText(/postura/i) as HTMLSelectElement;
     expect(formationSel.value).toBe("F433");

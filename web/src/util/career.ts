@@ -2,6 +2,7 @@ import { run_season } from "../wasm/gandula_wasm.js";
 import { teamById } from "../teams";
 import { points, type SeasonRecord, type Team } from "../types";
 import {
+  findUserDivisionIdxInSeason,
   type Career,
   type Division,
   type Season,
@@ -203,26 +204,6 @@ function buildNextSeason(
     // userTactics intentionally undefined — fresh season, user reconfigures.
     // E.1.c discussion (decision 1.1): "uma temporada, uma tática".
   };
-}
-
-/**
- * Locate the user's division within a Season. Private to career.ts —
- * if E.1.c.3 adds a second consumer this can be promoted to a shared
- * helper in persistence.ts alongside the SavedSeason variant.
- */
-function findUserDivisionIdxInSeason(
-  season: Season,
-  controlledTeamId: number,
-): number {
-  const idx = season.divisions.findIndex((d) =>
-    d.record.standings.some((s) => s.team_id === controlledTeamId),
-  );
-  if (idx < 0) {
-    throw new Error(
-      `findUserDivisionIdxInSeason: team ${controlledTeamId} not in any division`,
-    );
-  }
-  return idx;
 }
 
 /**

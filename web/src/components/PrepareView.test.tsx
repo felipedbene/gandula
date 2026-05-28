@@ -11,9 +11,10 @@ import PrepareView from "./PrepareView";
 import { ALL_TEAMS, teamById } from "../teams";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
 import {
-  findUserDivisionIdx,
+  FIRST_YEAR,
+  findUserDivisionIdxInSeason,
+  type Career,
   type Division,
-  type SavedSeason,
 } from "../persistence";
 import type { SeasonRecord } from "../types";
 
@@ -26,40 +27,51 @@ beforeAll(async () => {
 });
 
 /**
- * Build a v2 SavedSeason with both divisions simulated. User goes to the
+ * Build a v3 Career with both divisions simulated. User goes to the
  * weakest team in Série B (deterministic via pickStarterTeam), so
- * `findUserDivisionIdx(saved) === 1` is stable across tests.
+ * `findUserDivisionIdxInSeason(career.currentSeason, ...) === 1` is
+ * stable across tests.
  */
-function makeSaved(): SavedSeason {
+function makeCareer(): Career {
   const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
   const starter = pickStarterTeam(tierB);
   const seed = 1998n;
-  const recordA = run_season(tierA, seed ^ 1n, "Série A") as SeasonRecord;
-  const recordB = run_season(tierB, seed ^ 2n, "Série B") as SeasonRecord;
+  const seasonSeed = seed ^ BigInt(FIRST_YEAR);
+  const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
+  const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
-    divisions: [
-      { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
-      { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
-    ],
+    seasons: [],
+    currentSeason: {
+      year: FIRST_YEAR,
+      seed: seasonSeed,
+      divisions: [
+        { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
+        { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+      ],
+    },
   };
 }
 
-function userDivOf(saved: SavedSeason): Division {
-  return saved.divisions[findUserDivisionIdx(saved)];
+function userDivOf(career: Career): Division {
+  const idx = findUserDivisionIdxInSeason(
+    career.currentSeason,
+    career.controlledTeamId,
+  );
+  return career.currentSeason.divisions[idx];
 }
 
 /** First round in the user's division where the controlled team plays. */
-function findPlayingRound(saved: SavedSeason): number {
-  const div = userDivOf(saved);
+function findPlayingRound(career: Career): number {
+  const div = userDivOf(career);
   for (let i = 0; i < div.record.fixtures.length; i++) {
     const m = div.record.matches[i];
     if (
-      m.home === saved.controlledTeamId ||
-      m.away === saved.controlledTeamId
+      m.home === career.controlledTeamId ||
+      m.away === career.controlledTeamId
     ) {
       return div.record.fixtures[i].round;
     }
@@ -69,16 +81,16 @@ function findPlayingRound(saved: SavedSeason): number {
 
 /** First round in the user's division where the team is on bye. Série B
  *  has 9 teams ⇒ 2 byes per team per season via the engine's virtual BYE
- *  — `findUserDivisionIdx` puts the user in B, so this always finds one. */
-function findByeRound(saved: SavedSeason): number | null {
-  const div = userDivOf(saved);
+ *  — pickStarterTeam puts the user in B, so this always finds one. */
+function findByeRound(career: Career): number | null {
+  const div = userDivOf(career);
   const rounds = new Set(div.record.fixtures.map((f) => f.round));
   for (const round of rounds) {
     const userPlays = div.record.fixtures.some((f, i) => {
       if (f.round !== round) return false;
       const m = div.record.matches[i];
       return (
-        m.home === saved.controlledTeamId || m.away === saved.controlledTeamId
+        m.home === career.controlledTeamId || m.away === career.controlledTeamId
       );
     });
     if (!userPlays) return round;
@@ -88,72 +100,74 @@ function findByeRound(saved: SavedSeason): number | null {
 
 describe("PrepareView", () => {
   it("renders PRÓXIMO JOGO card when user plays this round", () => {
-    const saved = makeSaved();
-    const playingRound = findPlayingRound(saved);
-    userDivOf(saved).currentRoundIdx = playingRound;
-    render(<PrepareView saved={saved} onPlay={() => {}} onBack={() => {}} />);
+    const career = makeCareer();
+    const playingRound = findPlayingRound(career);
+    userDivOf(career).currentRoundIdx = playingRound;
+    render(<PrepareView career={career} onPlay={() => {}} onBack={() => {}} />);
     expect(screen.getByText(/PRÓXIMO JOGO/i)).toBeInTheDocument();
   });
 
   it("renders SEM JOGO card on bye rounds", () => {
-    const saved = makeSaved();
-    const byeRound = findByeRound(saved);
+    const career = makeCareer();
+    const byeRound = findByeRound(career);
     if (byeRound === null) {
       throw new Error("Test setup: no bye found in Série B (9-team odd)");
     }
-    userDivOf(saved).currentRoundIdx = byeRound;
-    render(<PrepareView saved={saved} onPlay={() => {}} onBack={() => {}} />);
+    userDivOf(career).currentRoundIdx = byeRound;
+    render(<PrepareView career={career} onPlay={() => {}} onBack={() => {}} />);
     expect(screen.getByText(/SEM JOGO/i)).toBeInTheDocument();
     expect(screen.getByText(/descansa/i)).toBeInTheDocument();
   });
 
   it("VOLTAR fires onBack without re-simulating", () => {
-    const saved = makeSaved();
-    userDivOf(saved).currentRoundIdx = findPlayingRound(saved);
+    const career = makeCareer();
+    userDivOf(career).currentRoundIdx = findPlayingRound(career);
     const onBack = vi.fn();
     const onPlay = vi.fn();
-    render(<PrepareView saved={saved} onPlay={onPlay} onBack={onBack} />);
+    render(<PrepareView career={career} onPlay={onPlay} onBack={onBack} />);
     fireEvent.click(screen.getByRole("button", { name: /voltar/i }));
     expect(onBack).toHaveBeenCalledOnce();
     expect(onPlay).not.toHaveBeenCalled();
   });
 
-  it("JOGAR with no changes returns original save (resimCount = 0)", () => {
-    const saved = makeSaved();
-    userDivOf(saved).currentRoundIdx = findPlayingRound(saved);
+  it("JOGAR with no changes returns original career (resimCount = 0)", () => {
+    const career = makeCareer();
+    userDivOf(career).currentRoundIdx = findPlayingRound(career);
     const onPlay = vi.fn();
-    render(<PrepareView saved={saved} onPlay={onPlay} onBack={() => {}} />);
+    render(<PrepareView career={career} onPlay={onPlay} onBack={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: /jogar/i }));
     expect(onPlay).toHaveBeenCalledOnce();
-    const [returnedSaved, resimMs, resimCount] = onPlay.mock.calls[0];
-    expect(returnedSaved).toBe(saved); // same reference — no re-sim
+    const [returnedCareer, resimMs, resimCount] = onPlay.mock.calls[0];
+    expect(returnedCareer).toBe(career); // same reference — no re-sim
     expect(resimMs).toBe(0);
     expect(resimCount).toBe(0);
   });
 
   it("JOGAR with changes re-simulates and reports counters", () => {
-    const saved = makeSaved();
-    userDivOf(saved).currentRoundIdx = findPlayingRound(saved);
+    const career = makeCareer();
+    userDivOf(career).currentRoundIdx = findPlayingRound(career);
     const onPlay = vi.fn();
-    render(<PrepareView saved={saved} onPlay={onPlay} onBack={() => {}} />);
+    render(<PrepareView career={career} onPlay={onPlay} onBack={() => {}} />);
     fireEvent.change(screen.getByLabelText(/postura/i), {
       target: { value: "VeryAttacking" },
     });
     fireEvent.click(screen.getByRole("button", { name: /jogar/i }));
     expect(onPlay).toHaveBeenCalledOnce();
-    const [newSaved, resimMs, resimCount] = onPlay.mock.calls[0];
-    expect(newSaved).not.toBe(saved); // new reference
-    expect(newSaved.userTactics).toBeDefined();
-    expect(newSaved.userTactics.tactics.mentality).toBe("VeryAttacking");
+    const [newCareer, resimMs, resimCount] = onPlay.mock.calls[0];
+    expect(newCareer).not.toBe(career); // new reference
+    expect(newCareer.currentSeason.userTactics).toBeDefined();
+    expect(newCareer.currentSeason.userTactics.tactics.mentality).toBe(
+      "VeryAttacking",
+    );
     expect(resimMs).toBeGreaterThanOrEqual(0);
     expect(resimCount).toBeGreaterThan(0);
   });
 
   it("initializes from userTactics when present", () => {
-    const saved = makeSaved();
-    userDivOf(saved).currentRoundIdx = findPlayingRound(saved);
-    const baseTeam = teamById(saved.controlledTeamId)!;
-    saved.userTactics = {
+    const career = makeCareer();
+    userDivOf(career).currentRoundIdx = findPlayingRound(career);
+    const baseTeam = teamById(career.controlledTeamId)!;
+    career.currentSeason.userTactics = {
       formation: "F352",
       tactics: {
         mentality: "Defensive",
@@ -164,7 +178,7 @@ describe("PrepareView", () => {
       starting_xi: baseTeam.starting_xi.slice(),
       bench: baseTeam.bench?.slice() ?? [],
     };
-    render(<PrepareView saved={saved} onPlay={() => {}} onBack={() => {}} />);
+    render(<PrepareView career={career} onPlay={() => {}} onBack={() => {}} />);
     const formationSel = screen.getByLabelText(/formação/i) as HTMLSelectElement;
     const posturaSel = screen.getByLabelText(/postura/i) as HTMLSelectElement;
     expect(formationSel.value).toBe("F352");

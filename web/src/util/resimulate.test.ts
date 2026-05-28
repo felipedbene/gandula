@@ -17,8 +17,9 @@ import { applyUserTactics, resimulateFromRound } from "./resimulate";
 import { divideIntoDivisions, pickStarterTeam } from "./divisions";
 import { ALL_TEAMS, teamById } from "../teams";
 import {
-  findUserDivisionIdx,
-  type SavedSeason,
+  FIRST_YEAR,
+  findUserDivisionIdxInSeason,
+  type Career,
   type UserTactics,
 } from "../persistence";
 import type { SeasonRecord } from "../types";
@@ -32,27 +33,33 @@ beforeAll(async () => {
 });
 
 /**
- * Build a v2 SavedSeason with both divisions fully simulated. The user is
+ * Build a v3 Career with both divisions fully simulated. The user is
  * always assigned to Série B's weakest team (via pickStarterTeam) so
- * `findUserDivisionIdx(saved) === 1` is a stable assumption across tests.
- * `currentRoundIdx` is applied to BOTH divisions for simplicity — tests
- * that only care about user-division behavior can ignore Série A's
- * counter.
+ * `findUserDivisionIdxInSeason(career.currentSeason, ...) === 1` is a
+ * stable assumption across tests. `currentRoundIdx` is applied to BOTH
+ * divisions for simplicity — tests that only care about user-division
+ * behavior can ignore Série A's counter.
  */
-function makeSavedSeason(seed: bigint, currentRoundIdx: number): SavedSeason {
+function makeCareer(seed: bigint, currentRoundIdx: number): Career {
   const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
   const starter = pickStarterTeam(tierB);
-  const recordA = run_season(tierA, seed ^ 1n, "Série A") as SeasonRecord;
-  const recordB = run_season(tierB, seed ^ 2n, "Série B") as SeasonRecord;
+  const seasonSeed = seed ^ BigInt(FIRST_YEAR);
+  const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
+  const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
-    divisions: [
-      { tier: 1, name: "Série A", record: recordA, currentRoundIdx },
-      { tier: 2, name: "Série B", record: recordB, currentRoundIdx },
-    ],
+    seasons: [],
+    currentSeason: {
+      year: FIRST_YEAR,
+      seed: seasonSeed,
+      divisions: [
+        { tier: 1, name: "Série A", record: recordA, currentRoundIdx },
+        { tier: 2, name: "Série B", record: recordB, currentRoundIdx },
+      ],
+    },
   };
 }
 
@@ -96,9 +103,9 @@ describe("applyUserTactics", () => {
 
 describe("derive_match_seed parity", () => {
   it("matches the seeds the engine used internally per division (XOR tier)", () => {
-    const saved = makeSavedSeason(1998n, 0);
-    saved.divisions.forEach((div) => {
-      const divSeed = saved.seed ^ BigInt(div.tier);
+    const career = makeCareer(1998n, 0);
+    career.currentSeason.divisions.forEach((div) => {
+      const divSeed = career.currentSeason.seed ^ BigInt(div.tier);
       div.record.matches.forEach((m, i) => {
         const computed = derive_match_seed(divSeed, i);
         expect(m.seed).toBe(computed);
@@ -109,23 +116,29 @@ describe("derive_match_seed parity", () => {
 
 describe("resimulateFromRound", () => {
   it("preserves match count and fixture alignment in the user's division", () => {
-    const saved = makeSavedSeason(1998n, 5);
-    const userDivIdx = findUserDivisionIdx(saved);
-    const userDiv = saved.divisions[userDivIdx];
-    const override = overrideFor(saved.controlledTeamId);
-    const result = resimulateFromRound(saved, 5, override);
-    const newUserDiv = result.divisions[userDivIdx];
+    const career = makeCareer(1998n, 5);
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const userDiv = career.currentSeason.divisions[userDivIdx];
+    const override = overrideFor(career.controlledTeamId);
+    const result = resimulateFromRound(career, 5, override);
+    const newUserDiv = result.currentSeason.divisions[userDivIdx];
     expect(newUserDiv.record.matches.length).toBe(userDiv.record.matches.length);
     expect(newUserDiv.record.fixtures).toEqual(userDiv.record.fixtures);
   });
 
   it("leaves matches before fromRoundIdx untouched", () => {
-    const saved = makeSavedSeason(1998n, 10);
-    const userDivIdx = findUserDivisionIdx(saved);
-    const userDiv = saved.divisions[userDivIdx];
-    const override = overrideFor(saved.controlledTeamId);
-    const result = resimulateFromRound(saved, 10, override);
-    const newUserDiv = result.divisions[userDivIdx];
+    const career = makeCareer(1998n, 10);
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const userDiv = career.currentSeason.divisions[userDivIdx];
+    const override = overrideFor(career.controlledTeamId);
+    const result = resimulateFromRound(career, 10, override);
+    const newUserDiv = result.currentSeason.divisions[userDivIdx];
     userDiv.record.fixtures.forEach((f, i) => {
       if (f.round < 10) {
         expect(newUserDiv.record.matches[i]).toEqual(userDiv.record.matches[i]);
@@ -134,16 +147,19 @@ describe("resimulateFromRound", () => {
   });
 
   it("leaves matches without the user untouched (even after fromRoundIdx)", () => {
-    const saved = makeSavedSeason(1998n, 0);
-    const userDivIdx = findUserDivisionIdx(saved);
-    const userDiv = saved.divisions[userDivIdx];
-    const override = overrideFor(saved.controlledTeamId);
-    const result = resimulateFromRound(saved, 0, override);
-    const newUserDiv = result.divisions[userDivIdx];
+    const career = makeCareer(1998n, 0);
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const userDiv = career.currentSeason.divisions[userDivIdx];
+    const override = overrideFor(career.controlledTeamId);
+    const result = resimulateFromRound(career, 0, override);
+    const newUserDiv = result.currentSeason.divisions[userDivIdx];
     userDiv.record.fixtures.forEach((_, i) => {
       const m = userDiv.record.matches[i];
       const userInvolved =
-        m.home === saved.controlledTeamId || m.away === saved.controlledTeamId;
+        m.home === career.controlledTeamId || m.away === career.controlledTeamId;
       if (!userInvolved) {
         expect(newUserDiv.record.matches[i]).toEqual(userDiv.record.matches[i]);
       }
@@ -151,49 +167,58 @@ describe("resimulateFromRound", () => {
   });
 
   it("leaves the other division entirely untouched", () => {
-    const saved = makeSavedSeason(1998n, 0);
-    const userDivIdx = findUserDivisionIdx(saved);
+    const career = makeCareer(1998n, 0);
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
     const otherDivIdx = 1 - userDivIdx;
-    const otherDiv = saved.divisions[otherDivIdx];
-    const override = overrideFor(saved.controlledTeamId);
-    const result = resimulateFromRound(saved, 0, override);
-    const newOtherDiv = result.divisions[otherDivIdx];
+    const otherDiv = career.currentSeason.divisions[otherDivIdx];
+    const override = overrideFor(career.controlledTeamId);
+    const result = resimulateFromRound(career, 0, override);
+    const newOtherDiv = result.currentSeason.divisions[otherDivIdx];
     expect(newOtherDiv.record.matches).toEqual(otherDiv.record.matches);
     expect(newOtherDiv.record.standings).toEqual(otherDiv.record.standings);
     expect(newOtherDiv.record.fixtures).toEqual(otherDiv.record.fixtures);
   });
 
   it("is deterministic — same input produces identical engine output", () => {
-    const saved = makeSavedSeason(1998n, 0);
-    const userDivIdx = findUserDivisionIdx(saved);
-    const override = overrideFor(saved.controlledTeamId);
-    const a = resimulateFromRound(saved, 0, override);
-    const b = resimulateFromRound(saved, 0, override);
+    const career = makeCareer(1998n, 0);
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const override = overrideFor(career.controlledTeamId);
+    const a = resimulateFromRound(career, 0, override);
+    const b = resimulateFromRound(career, 0, override);
     // savedAt is timestamp-derived (will differ); everything engine-touched
     // must be byte-identical.
-    expect(a.divisions[userDivIdx].record.matches).toEqual(
-      b.divisions[userDivIdx].record.matches,
+    expect(a.currentSeason.divisions[userDivIdx].record.matches).toEqual(
+      b.currentSeason.divisions[userDivIdx].record.matches,
     );
-    expect(a.divisions[userDivIdx].record.standings).toEqual(
-      b.divisions[userDivIdx].record.standings,
+    expect(a.currentSeason.divisions[userDivIdx].record.standings).toEqual(
+      b.currentSeason.divisions[userDivIdx].record.standings,
     );
-    expect(a.userTactics).toEqual(b.userTactics);
+    expect(a.currentSeason.userTactics).toEqual(b.currentSeason.userTactics);
   });
 
-  it("populates userTactics on the returned save", () => {
-    const saved = makeSavedSeason(1998n, 0);
-    expect(saved.userTactics).toBeUndefined();
-    const override = overrideFor(saved.controlledTeamId);
-    const result = resimulateFromRound(saved, 0, override);
-    expect(result.userTactics).toEqual(override);
+  it("populates userTactics on the returned career's currentSeason", () => {
+    const career = makeCareer(1998n, 0);
+    expect(career.currentSeason.userTactics).toBeUndefined();
+    const override = overrideFor(career.controlledTeamId);
+    const result = resimulateFromRound(career, 0, override);
+    expect(result.currentSeason.userTactics).toEqual(override);
   });
 
   it("recomputes standings consistent with the new matches array", () => {
-    const saved = makeSavedSeason(1998n, 0);
-    const userDivIdx = findUserDivisionIdx(saved);
-    const override = overrideFor(saved.controlledTeamId);
-    const result = resimulateFromRound(saved, 0, override);
-    const newUserDiv = result.divisions[userDivIdx];
+    const career = makeCareer(1998n, 0);
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const override = overrideFor(career.controlledTeamId);
+    const result = resimulateFromRound(career, 0, override);
+    const newUserDiv = result.currentSeason.divisions[userDivIdx];
     // Every match counts as "played" for both home and away teams, so the
     // sum across the standings should be exactly 2 × matches.length.
     const totalGames = newUserDiv.record.standings.reduce(

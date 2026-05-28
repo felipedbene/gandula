@@ -4,21 +4,21 @@ import type { Formation, SeasonRecord, Tactics } from "./types";
 /**
  * IndexedDB persistence for the in-progress Elifoot-mode career.
  *
- * Single save slot — exactly one career-in-progress at a time, replacing
+ * Single save slot — exactly one Career-in-progress at a time, replacing
  * whatever was there before. Schema is versioned via `schemaVersion` inside
  * the payload so future migrations can branch on it; the DB-level
  * `DB_VERSION` only governs object-store layout, not record shape.
  *
- * v2 (Fio E.1.a) introduces `divisions: Division[]`. Saves written under
- * v1 (single `record` + top-level `currentRoundIdx`) have no notion of
- * which division a team belonged to, so `loadSeason` discards them rather
- * than attempting a migration.
+ * Schema history:
+ *   - v1 (pre-E.1.a): single record + currentRoundIdx. Discarded on load.
+ *   - v2 (E.1.a): divisions[]. Auto-migrated to v3 by `loadCareer`.
+ *   - v3 (E.1.c): Career wrapping currentSeason + seasons[] history.
  *
- * Storage strategy: each division's SeasonRecord is simulated upfront at
- * save time and persisted whole. `currentRoundIdx` on each Division tracks
- * how many rounds have been "revealed" to the user — the spoiler sits in
- * IndexedDB the whole time; gameplay illusion is purely a reveal cursor
- * over a frozen record.
+ * Storage strategy: each division's SeasonRecord is simulated upfront and
+ * persisted whole. `currentRoundIdx` on each Division tracks how many
+ * rounds have been "revealed" to the user — the spoiler sits in IDB the
+ * whole time; gameplay illusion is purely a reveal cursor over a frozen
+ * record.
  *
  * BigInt support: `seed` is a u64 → `bigint` on the JS side. IndexedDB's
  * structured-clone codec supports BigInt natively in modern browsers
@@ -33,7 +33,7 @@ const SLOT_KEY = "current";
 
 /**
  * User's tactical overrides for their controlled team. When undefined on
- * SavedSeason, the team is used as-is from the JSON registry. When defined,
+ * a Season, the team is used as-is from the JSON registry. When defined,
  * these fields override the JSON defaults at re-simulation time
  * (`util/resimulate.ts`). Stored as a complete object (not a diff) for
  * schema simplicity — applying it is straight field substitution.
@@ -48,7 +48,7 @@ export type UserTactics = {
 /**
  * One competitive division within a career season. The Brasileirão
  * Imaginário has two tiers — Série A (top 8) and Série B (bottom 9) —
- * running in parallel. The user plays in exactly one of them per career.
+ * running in parallel. The user plays in exactly one of them per season.
  *
  * Each division carries its own pre-simulated SeasonRecord plus a
  * per-division `currentRoundIdx`. The fields are independent because
@@ -63,34 +63,8 @@ export type Division = {
   name: string;
   /** Pre-simulated schedule + matches + standings for this division. */
   record: SeasonRecord;
-  /** 0-indexed; equals `totalRounds(record)` once the division is done. */
+  /** 0-indexed; equals `totalRoundsOf(div)` once the division is done. */
   currentRoundIdx: number;
-};
-
-/**
- * @deprecated v2 schema, kept exported so the existing UI code
- * (SeasonView, PrepareView, RevealRound, TacticsView, util/resimulate)
- * continues to compile through E.1.c.1 and E.1.c.2. E.1.c.3 refactors
- * all consumers to read from `Career` instead, and this type is removed
- * at that point.
- */
-export type SavedSeason = {
-  /** Schema version. v1 saves (with top-level `record` + `currentRoundIdx`)
-   *  are discarded on load — no migration path because v1 has no notion
-   *  of which division a team belonged to. */
-  schemaVersion: 2;
-  savedAt: string;
-  /** User-provided u64 seed for the career run. Per-division match seeds
-   *  are derived via `seed XOR BigInt(division.tier)` so the two divisions
-   *  never collide on fixture index in the engine's match_seed namespace. */
-  seed: bigint;
-  controlledTeamId: number;
-  /** Always exactly the two divisions in E.1.a: [Série A, Série B].
-   *  The user's controlledTeamId belongs to whichever division has it in
-   *  `record.standings` (every team gets a TeamStats entry, even at
-   *  zero matches — the engine guarantees this in `compute_standings`). */
-  divisions: Division[];
-  userTactics?: UserTactics;
 };
 
 // ─── Schema v3 (E.1.c) — Career multi-temporada ──────────────────────────
@@ -156,11 +130,6 @@ export type SeasonHistory = {
  * `seasons` holds FINISHED seasons as compact histories; `currentSeason`
  * holds the in-progress one (mutable, has divisions with currentRoundIdx).
  *
- * When `currentSeason` finishes (both divisions hit totalRounds), the UI
- * transitions: user clicks `[ INICIAR PRÓXIMA TEMPORADA ]`, applyPRtoNext-
- * Season (E.1.c.2) generates the next Season, current rolls into seasons[]
- * as a SeasonHistory, year increments.
- *
  * `manager` (reputation, money) intentionally omitted in E.1.c — adds in
  * E.1.d when finances ship. Schema bump to v4 will be in-place migration
  * with default values.
@@ -181,6 +150,21 @@ export type Career = {
   currentSeason: Season;
 };
 
+/**
+ * Legacy v2 payload shape. Kept exported because `migrateV2toV3` (and its
+ * tests) consume it — UI code never touches it directly. After enough
+ * time has passed that no v2 saves exist in the wild, the migration code
+ * and this type can be deleted together.
+ */
+export type SavedSeason = {
+  schemaVersion: 2;
+  savedAt: string;
+  seed: bigint;
+  controlledTeamId: number;
+  divisions: Division[];
+  userTactics?: UserTactics;
+};
+
 async function db(): Promise<IDBPDatabase> {
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(database) {
@@ -191,55 +175,6 @@ async function db(): Promise<IDBPDatabase> {
       }
     },
   });
-}
-
-/**
- * Result of `loadSeason`. Discriminated rather than just nullable so the
- * caller can distinguish "no save" from "v1 save discarded" and surface a
- * status message in the latter case.
- */
-export type LoadResult =
-  | { kind: "loaded"; save: SavedSeason }
-  | { kind: "none" }
-  | { kind: "discardedV1" };
-
-/**
- * Read the current save as v2. Three branches:
- *   - v2 payload → `loaded`.
- *   - v3 payload → `none` WITHOUT deleting. `loadCareer` is the right
- *     reader for v3; deleting here would clobber a successful Career
- *     save the moment a legacy caller happened to run. Once E.1.c.3
- *     refactors all consumers off this function, this branch becomes
- *     dead code and `loadSeason` can be removed.
- *   - anything else (v1, no schemaVersion, etc.) → `discardedV1`. We
- *     drop the payload because v1 has no notion of which division a
- *     team belonged to and we can't migrate it.
- *
- * @deprecated use `loadCareer` once E.1.c.3 lands — see SavedSeason.
- */
-export async function loadSeason(): Promise<LoadResult> {
-  const conn = await db();
-  const value = await conn.get(STORE, SLOT_KEY);
-  if (!value) return { kind: "none" };
-  const candidate = value as { schemaVersion?: number };
-  if (candidate.schemaVersion === 2) {
-    return { kind: "loaded", save: value as SavedSeason };
-  }
-  if (candidate.schemaVersion === 3) return { kind: "none" };
-  await conn.delete(STORE, SLOT_KEY);
-  return { kind: "discardedV1" };
-}
-
-/** @deprecated use `saveCareer` once E.1.c.3 lands — see SavedSeason. */
-export async function saveSeason(s: SavedSeason): Promise<void> {
-  const conn = await db();
-  await conn.put(STORE, s, SLOT_KEY);
-}
-
-/** @deprecated use `clearCareer` once E.1.c.3 lands — see SavedSeason. */
-export async function clearSeason(): Promise<void> {
-  const conn = await db();
-  await conn.delete(STORE, SLOT_KEY);
 }
 
 // ─── Load / save / clear / migrate (v3) ──────────────────────────────────
@@ -348,17 +283,21 @@ export function totalRoundsOf(div: Division): number {
 }
 
 /**
- * Find which division the controlled team belongs to. Throws when the
- * team isn't in any division's standings — that's a save invariant
- * violation, not a runtime expected case.
+ * Locate the user's division within a Season. Throws when the team isn't
+ * in any division's standings — that's a save invariant violation, not a
+ * runtime expected case. Used by every UI/util path that needs to single
+ * out the user's tier from `currentSeason.divisions`.
  */
-export function findUserDivisionIdx(saved: SavedSeason): number {
-  const idx = saved.divisions.findIndex((d) =>
-    d.record.standings.some((s) => s.team_id === saved.controlledTeamId),
+export function findUserDivisionIdxInSeason(
+  season: Season,
+  controlledTeamId: number,
+): number {
+  const idx = season.divisions.findIndex((d) =>
+    d.record.standings.some((s) => s.team_id === controlledTeamId),
   );
   if (idx < 0) {
     throw new Error(
-      `Controlled team ${saved.controlledTeamId} not in any division standings`,
+      `Controlled team ${controlledTeamId} not in any division standings`,
     );
   }
   return idx;

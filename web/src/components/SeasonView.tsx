@@ -4,13 +4,15 @@ import { ALL_TEAMS, teamById } from "../teams";
 import type { SeasonRecord, TeamStats } from "../types";
 import { computeStandings, goalDifference, points } from "../types";
 import {
-  clearSeason,
-  findUserDivisionIdx,
-  loadSeason,
-  saveSeason,
+  FIRST_YEAR,
+  clearCareer,
+  findUserDivisionIdxInSeason,
+  loadCareer,
+  saveCareer,
   totalRoundsOf,
+  type Career,
   type Division,
-  type SavedSeason,
+  type SeasonHistory,
 } from "../persistence";
 import {
   biggestWin,
@@ -21,6 +23,7 @@ import {
 } from "../util/season-stats";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
 import { computePromotionRelegation } from "../util/promotion";
+import { advanceCareer } from "../util/career";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -33,51 +36,80 @@ type SeasonViewProps = {
 /**
  * The view is a state machine bundled into a single useState so the phase
  * tag and its associated data can't drift apart (type-narrowing enforces
- * the invariant that you can't be in `prepare` without a `saved` etc.).
+ * the invariant that you can't be in `prepare` without a `career` etc.).
  *
- * E.1.a removed the `picking` phase — `run()` now assigns the user
- * deterministically to the weakest Série B team via `pickStarterTeam`.
- * E.1.a added `viewOtherDivision` so the running player can peek at the
- * read-only standings of the other tier.
+ * Phase taxonomy:
+ *   - `loading`/`form`: bootstrap.
+ *   - `running`: user's division still has rounds left to play.
+ *   - `viewOtherDivision`/`prepare`/`revealing`/`tactics`: branches off of
+ *     running; all return there or to `finale` once the user's last round
+ *     finishes revealing.
+ *   - `finale`: user's division is done (and so is the other tier — see
+ *     silent-advance in `playRound`). Shows champion, P/R outcome, and
+ *     the next-season / history / new-career buttons.
+ *   - `history`: read-only list of past SeasonHistory entries.
  */
 type Phase =
   | { tag: "loading" }
   | { tag: "form" }
-  | { tag: "running"; saved: SavedSeason }
-  | { tag: "viewOtherDivision"; saved: SavedSeason }
-  | { tag: "prepare"; saved: SavedSeason }
-  | { tag: "revealing"; saved: SavedSeason }
-  | { tag: "tactics"; saved: SavedSeason };
+  | { tag: "running"; career: Career }
+  | { tag: "viewOtherDivision"; career: Career }
+  | { tag: "prepare"; career: Career }
+  | { tag: "revealing"; career: Career }
+  | { tag: "tactics"; career: Career }
+  | { tag: "finale"; career: Career }
+  | { tag: "history"; career: Career };
+
+/**
+ * Pick the right initial phase for a loaded/migrated Career. If the user's
+ * division has played all its rounds, jump straight to `finale` — otherwise
+ * resume in `running`. Used by both the autoload path and by the round
+ * reveal's onDone handoff.
+ */
+function initialPhaseFor(career: Career): Phase {
+  const userDivIdx = findUserDivisionIdxInSeason(
+    career.currentSeason,
+    career.controlledTeamId,
+  );
+  const userDiv = career.currentSeason.divisions[userDivIdx];
+  if (userDiv.currentRoundIdx >= totalRoundsOf(userDiv)) {
+    return { tag: "finale", career };
+  }
+  return { tag: "running", career };
+}
 
 export function SeasonView({ onStatus }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
 
   // Form-field state — only relevant while `phase.tag === "form"`. Kept
   // as independent useStates because they're standard controlled-input
-  // concerns. No more team-selection toggling — the 17 teams are fixed
-  // (Brasileirão Imaginário Série A + B); team assignment happens at
-  // run() time via pickStarterTeam.
+  // concerns. Team assignment happens at run() time via pickStarterTeam.
   const [seed, setSeed] = useState<number>(1998);
   const [name, setName] = useState<string>("Brasileirão Imaginário 2026");
   const [error, setError] = useState<string | null>(null);
 
-  // Autoload once on mount. Discriminated LoadResult lets us emit a
-  // visible status when a v1 save is found and dropped — silent discard
-  // would confuse the user (they'd open the app expecting their save and
-  // find a fresh form with no explanation).
+  // Autoload once on mount. Discriminated LoadCareerResult lets us surface
+  // distinct status messages per scenario (loaded / migratedV2 / discardedV1
+  // / none) — silent transitions would confuse the user.
   useEffect(() => {
-    loadSeason()
+    loadCareer()
       .then((result) => {
-        if (result.kind === "loaded") {
-          const saved = result.save;
-          const userDiv = saved.divisions[findUserDivisionIdx(saved)];
-          const teamName =
-            teamById(saved.controlledTeamId)?.name ??
-            `Time ${saved.controlledTeamId}`;
-          onStatus(
-            `save carregado · ${teamName} (${userDiv.name}) · rodada ${userDiv.currentRoundIdx}`,
+        if (result.kind === "loaded" || result.kind === "migratedV2") {
+          const career = result.career;
+          const userDivIdx = findUserDivisionIdxInSeason(
+            career.currentSeason,
+            career.controlledTeamId,
           );
-          setPhase({ tag: "running", saved });
+          const userDiv = career.currentSeason.divisions[userDivIdx];
+          const teamName =
+            teamById(career.controlledTeamId)?.name ??
+            `Time ${career.controlledTeamId}`;
+          const prefix =
+            result.kind === "migratedV2" ? "save v2 migrado" : "save carregado";
+          onStatus(
+            `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx}`,
+          );
+          setPhase(initialPhaseFor(career));
         } else if (result.kind === "discardedV1") {
           onStatus("save antigo (v1) descartado · iniciando carreira nova");
           setPhase({ tag: "form" });
@@ -95,11 +127,12 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   }, []);
 
   /**
-   * NOVA TEMPORADA. Builds two divisions in parallel (Série A + Série B)
+   * NOVA CARREIRA. Builds two divisions in parallel (Série A + Série B)
    * from ALL_TEAMS, partitioned by `divideIntoDivisions`. Per-division
-   * match-seed namespace via `seed XOR BigInt(tier)` so the two leagues
-   * never collide on fixture index in the engine's match_seed derivation.
-   * Same XOR is used on re-simulation (see `util/resimulate.ts`), keeping
+   * match-seed namespace via `seasonSeed XOR BigInt(tier)` so the two
+   * leagues never collide on fixture index in the engine's match_seed
+   * derivation. Same XOR is used on re-simulation (see `util/resimulate.ts`)
+   * and on next-season generation (see `util/career.ts`), keeping
    * determinism end-to-end.
    */
   function run() {
@@ -112,30 +145,36 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       }
       const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
       const starterTeam = pickStarterTeam(tierB);
-      const userSeed = BigInt(seed);
+      const careerSeed = BigInt(seed);
+      const seasonSeed = careerSeed ^ BigInt(FIRST_YEAR);
 
       const start = performance.now();
-      const recordA = run_season(tierA, userSeed ^ 1n, "Série A") as SeasonRecord;
-      const recordB = run_season(tierB, userSeed ^ 2n, "Série B") as SeasonRecord;
+      const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
+      const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
       const ms = Math.round(performance.now() - start);
 
-      const newSaved: SavedSeason = {
-        schemaVersion: 2,
+      const newCareer: Career = {
+        schemaVersion: 3,
         savedAt: new Date().toISOString(),
-        seed: userSeed,
+        seed: careerSeed,
         controlledTeamId: starterTeam.id,
-        divisions: [
-          { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
-          { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
-        ],
+        seasons: [],
+        currentSeason: {
+          year: FIRST_YEAR,
+          seed: seasonSeed,
+          divisions: [
+            { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
+            { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+          ],
+        },
       };
 
-      saveSeason(newSaved)
+      saveCareer(newCareer)
         .then(() => {
           onStatus(
-            `nova carreira · ${starterTeam.name} (Série B) · 2 ligas simuladas em ${ms}ms · seed ${seed}`,
+            `nova carreira · ${starterTeam.name} (Série B) · ano ${FIRST_YEAR} · 2 ligas simuladas em ${ms}ms · seed ${seed}`,
           );
-          setPhase({ tag: "running", saved: newSaved });
+          setPhase({ tag: "running", career: newCareer });
         })
         .catch((e) => {
           setError(String(e));
@@ -147,9 +186,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     }
   }
 
-  async function resetSeason() {
+  async function resetCareer() {
     try {
-      await clearSeason();
+      await clearCareer();
       onStatus("nova carreira");
       setPhase({ tag: "form" });
     } catch (e) {
@@ -158,80 +197,100 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     }
   }
 
-  function openTactics(saved: SavedSeason) {
+  function openTactics(career: Career) {
     const teamName =
-      teamById(saved.controlledTeamId)?.name ?? `Time ${saved.controlledTeamId}`;
+      teamById(career.controlledTeamId)?.name ??
+      `Time ${career.controlledTeamId}`;
     onStatus(`editando tática · ${teamName}`);
-    setPhase({ tag: "tactics", saved });
+    setPhase({ tag: "tactics", career });
   }
 
-  function backFromTactics(saved: SavedSeason) {
+  function backFromTactics(career: Career) {
     onStatus("sem alterações");
-    setPhase({ tag: "running", saved });
+    setPhase({ tag: "running", career });
   }
 
   async function applyTactics(
-    newSaved: SavedSeason,
+    newCareer: Career,
     resimMs: number,
     resimCount: number,
   ) {
     try {
-      await saveSeason(newSaved);
+      await saveCareer(newCareer);
       const teamName =
-        teamById(newSaved.controlledTeamId)?.name ??
-        `Time ${newSaved.controlledTeamId}`;
+        teamById(newCareer.controlledTeamId)?.name ??
+        `Time ${newCareer.controlledTeamId}`;
       const plural = resimCount === 1 ? "" : "s";
       onStatus(
         `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms`,
       );
-      setPhase({ tag: "running", saved: newSaved });
+      setPhase({ tag: "running", career: newCareer });
     } catch (e) {
       setError(String(e));
       onStatus(`erro ao salvar tática: ${e}`);
     }
   }
 
-  function openPrepare(saved: SavedSeason) {
-    const userDiv = saved.divisions[findUserDivisionIdx(saved)];
+  function openPrepare(career: Career) {
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const userDiv = career.currentSeason.divisions[userDivIdx];
     onStatus(`preparando rodada ${userDiv.currentRoundIdx + 1} (${userDiv.name})`);
-    setPhase({ tag: "prepare", saved });
+    setPhase({ tag: "prepare", career });
   }
 
-  function backFromPrepare(saved: SavedSeason) {
+  function backFromPrepare(career: Career) {
     onStatus("voltou ao painel");
-    setPhase({ tag: "running", saved });
+    setPhase({ tag: "running", career });
   }
 
-  function openOtherDivision(saved: SavedSeason) {
-    const userDivIdx = findUserDivisionIdx(saved);
-    const otherDiv = saved.divisions[1 - userDivIdx];
+  function openOtherDivision(career: Career) {
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const otherDiv = career.currentSeason.divisions[1 - userDivIdx];
     onStatus(`visualizando ${otherDiv.name}`);
-    setPhase({ tag: "viewOtherDivision", saved });
+    setPhase({ tag: "viewOtherDivision", career });
   }
 
-  function backFromOtherDivision(saved: SavedSeason) {
-    setPhase({ tag: "running", saved });
+  function backFromOtherDivision(career: Career) {
+    setPhase({ tag: "running", career });
+  }
+
+  function openHistory(career: Career) {
+    onStatus(`histórico (${career.seasons.length} temporadas)`);
+    setPhase({ tag: "history", career });
+  }
+
+  function backFromHistory(career: Career) {
+    setPhase({ tag: "finale", career });
   }
 
   /**
    * Called when user clicks [ JOGAR ] from PrepareView. The view may have
-   * re-simulated already (if dirty) or returned the original save (if no
+   * re-simulated already (if dirty) or returned the original career (if no
    * tactical change). Either way, persist the incremented rounds FIRST
    * and THEN enter revealing — same persist-before-reveal ordering as
    * pre-E.1.a, so F5 mid-reveal autoloads straight back into running
    * with the new state committed.
    *
-   * Both divisions advance in lockstep until one is exhausted. The other
-   * division (Série A finishes at round 14, Série B at 18) holds at
-   * `totalRounds` once done — see the `< total` guard below.
+   * Both divisions advance in lockstep until one is exhausted. Silent
+   * advance: when the user's division JUST finished its last round, the
+   * other tier is fast-forwarded to its own total — guarantees
+   * `computePromotionRelegation` invariants are satisfied at finale time
+   * even when the user is in Série A (which finishes earlier than Série B).
    */
   async function playRound(
-    newSaved: SavedSeason,
+    newCareer: Career,
     resimMs: number,
     resimCount: number,
   ) {
-    const userDivIdx = findUserDivisionIdx(newSaved);
-    const newDivisions = newSaved.divisions.map((d, i) => {
+    const season = newCareer.currentSeason;
+    const userDivIdx = findUserDivisionIdxInSeason(season, newCareer.controlledTeamId);
+    const advancedDivisions: Division[] = season.divisions.map((d, i) => {
       const total = totalRoundsOf(d);
       if (i === userDivIdx) {
         return { ...d, currentRoundIdx: d.currentRoundIdx + 1 };
@@ -242,18 +301,37 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       return d;
     });
 
-    const advanced: SavedSeason = {
-      ...newSaved,
-      divisions: newDivisions,
+    // Silent-advance: if the user's division just hit its terminal round,
+    // fast-forward any other division still in progress. Without this, a
+    // future user-in-Série-A season would enter `finale` with Série B
+    // still mid-table, and `computePromotionRelegation` would throw.
+    const userDivAdvanced = advancedDivisions[userDivIdx];
+    if (userDivAdvanced.currentRoundIdx >= totalRoundsOf(userDivAdvanced)) {
+      advancedDivisions.forEach((d, i) => {
+        if (i !== userDivIdx) {
+          const total = totalRoundsOf(d);
+          if (d.currentRoundIdx < total) {
+            advancedDivisions[i] = { ...d, currentRoundIdx: total };
+          }
+        }
+      });
+    }
+
+    const advanced: Career = {
+      ...newCareer,
       savedAt: new Date().toISOString(),
+      currentSeason: {
+        ...season,
+        divisions: advancedDivisions,
+      },
     };
 
     try {
-      await saveSeason(advanced);
+      await saveCareer(advanced);
       const teamName =
         teamById(advanced.controlledTeamId)?.name ??
         `Time ${advanced.controlledTeamId}`;
-      const userDiv = advanced.divisions[userDivIdx];
+      const userDiv = advanced.currentSeason.divisions[userDivIdx];
       if (resimCount > 0) {
         const plural = resimCount === 1 ? "" : "s";
         onStatus(
@@ -262,10 +340,59 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       } else {
         onStatus(`avançando para rodada ${userDiv.currentRoundIdx + 1}`);
       }
-      setPhase({ tag: "revealing", saved: advanced });
+      setPhase({ tag: "revealing", career: advanced });
     } catch (e) {
       setError(String(e));
       onStatus(`erro ao salvar avanço: ${e}`);
+    }
+  }
+
+  /**
+   * Called when RevealRound finishes. Same picker as autoload: if the
+   * user's division wrapped up, jump to finale; otherwise return to
+   * running for the next round.
+   */
+  function afterReveal(career: Career) {
+    setPhase(initialPhaseFor(career));
+  }
+
+  /**
+   * INICIAR PRÓXIMA TEMPORADA. Computes P/R from the just-finished season,
+   * calls advanceCareer to recompose + re-simulate divisions, appends a
+   * SeasonHistory entry to seasons[], persists, transitions to running.
+   * Errors surface via the error pre (e.g., IDB write failure).
+   */
+  async function advanceToNextSeason(career: Career) {
+    try {
+      const pr = computePromotionRelegation(
+        career.currentSeason,
+        career.controlledTeamId,
+      );
+      const start = performance.now();
+      const { history, nextSeason } = advanceCareer(career, pr);
+      const ms = Math.round(performance.now() - start);
+      const newCareer: Career = {
+        ...career,
+        savedAt: new Date().toISOString(),
+        seasons: [...career.seasons, history],
+        currentSeason: nextSeason,
+      };
+      await saveCareer(newCareer);
+      const teamName =
+        teamById(newCareer.controlledTeamId)?.name ??
+        `Time ${newCareer.controlledTeamId}`;
+      const newUserDivIdx = findUserDivisionIdxInSeason(
+        nextSeason,
+        newCareer.controlledTeamId,
+      );
+      const newUserDiv = nextSeason.divisions[newUserDivIdx];
+      onStatus(
+        `temporada ${nextSeason.year} iniciada · ${teamName} (${newUserDiv.name}) · 2 ligas re-simuladas em ${ms}ms`,
+      );
+      setPhase({ tag: "running", career: newCareer });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao avançar temporada: ${e}`);
     }
   }
 
@@ -283,37 +410,51 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       )}
       {phase.tag === "running" && (
         <CampeonatoEmCurso
-          saved={phase.saved}
-          onReset={resetSeason}
-          onPrepare={() => openPrepare(phase.saved)}
-          onTactics={() => openTactics(phase.saved)}
-          onViewOtherDivision={() => openOtherDivision(phase.saved)}
+          career={phase.career}
+          onReset={resetCareer}
+          onPrepare={() => openPrepare(phase.career)}
+          onTactics={() => openTactics(phase.career)}
+          onViewOtherDivision={() => openOtherDivision(phase.career)}
         />
       )}
       {phase.tag === "viewOtherDivision" && (
         <OtherDivisionView
-          saved={phase.saved}
-          onBack={() => backFromOtherDivision(phase.saved)}
+          career={phase.career}
+          onBack={() => backFromOtherDivision(phase.career)}
         />
       )}
       {phase.tag === "prepare" && (
         <PrepareView
-          saved={phase.saved}
+          career={phase.career}
           onPlay={playRound}
-          onBack={() => backFromPrepare(phase.saved)}
+          onBack={() => backFromPrepare(phase.career)}
         />
       )}
       {phase.tag === "revealing" && (
         <RevealRound
-          saved={phase.saved}
-          onDone={() => setPhase({ tag: "running", saved: phase.saved })}
+          career={phase.career}
+          onDone={() => afterReveal(phase.career)}
         />
       )}
       {phase.tag === "tactics" && (
         <TacticsView
-          saved={phase.saved}
+          career={phase.career}
           onApply={applyTactics}
-          onBack={() => backFromTactics(phase.saved)}
+          onBack={() => backFromTactics(phase.career)}
+        />
+      )}
+      {phase.tag === "finale" && (
+        <SeasonFinale
+          career={phase.career}
+          onAdvanceSeason={() => advanceToNextSeason(phase.career)}
+          onOpenHistory={() => openHistory(phase.career)}
+          onReset={resetCareer}
+        />
+      )}
+      {phase.tag === "history" && (
+        <HistoryView
+          career={phase.career}
+          onBack={() => backFromHistory(phase.career)}
         />
       )}
       {error && <pre className="error">{error}</pre>}
@@ -322,9 +463,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 }
 
 // ─── Phase: form ────────────────────────────────────────────────────────────
-// E.1.a simplified this — the team checkboxes are gone (the Brasileirão
-// Imaginário plays with all 17 teams fixed) and the user no longer picks
-// a team (assigned to the weakest Série B team via pickStarterTeam).
+// The team checkboxes are gone (the Brasileirão Imaginário plays with all
+// 17 teams fixed) and the user no longer picks a team (assigned to the
+// weakest Série B team via pickStarterTeam).
 function NewSeasonForm({
   name,
   onNameChange,
@@ -379,41 +520,29 @@ function NewSeasonForm({
 
 // ─── Phase: running ─────────────────────────────────────────────────────────
 // Reads from the user's division — fixtures of the current round (no
-// score) and partial standings up to that round. Hands off to the finale
-// view once the user's division is exhausted; the other division may
-// still be in progress at that point (Série A finishes early when user
-// is in Série B), but the user already has nothing left to play.
+// score) and partial standings up to that round. The finale split is now
+// explicit: `running` always implies "user's division still has rounds",
+// and the autoload/afterReveal pickers route to `finale` when done.
 function CampeonatoEmCurso({
-  saved,
+  career,
   onReset,
   onPrepare,
   onTactics,
   onViewOtherDivision,
 }: {
-  saved: SavedSeason;
+  career: Career;
   onReset: () => void;
   onPrepare: () => void;
   onTactics: () => void;
   onViewOtherDivision: () => void;
 }) {
-  const team = teamById(saved.controlledTeamId);
-  const teamName = team?.name ?? `Time ${saved.controlledTeamId}`;
-  const userDivIdx = findUserDivisionIdx(saved);
-  const userDiv = saved.divisions[userDivIdx];
-  const otherDiv = saved.divisions[1 - userDivIdx];
+  const team = teamById(career.controlledTeamId);
+  const teamName = team?.name ?? `Time ${career.controlledTeamId}`;
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const otherDiv = season.divisions[1 - userDivIdx];
   const totalRounds = totalRoundsOf(userDiv);
-  const isFinished = userDiv.currentRoundIdx >= totalRounds;
-
-  if (isFinished) {
-    return (
-      <SeasonFinale
-        saved={saved}
-        userDiv={userDiv}
-        totalRounds={totalRounds}
-        onReset={onReset}
-      />
-    );
-  }
 
   const teamIds = userDiv.record.standings.map((s) => s.team_id);
   const standings = computeStandings(
@@ -426,13 +555,13 @@ function CampeonatoEmCurso({
   return (
     <>
       <p className="campeonato-header muted">
-        DIVISÃO: {userDiv.name} · TIME: {teamName} · RODADA{" "}
+        ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {teamName} · RODADA{" "}
         {userDiv.currentRoundIdx + 1} / {totalRounds}
       </p>
 
       <Card title={`RODADA ${userDiv.currentRoundIdx + 1}`}>
         <div className="round-list">
-          {currentRoundFixtures(saved, userDiv).map((row, i) => (
+          {currentRoundFixtures(career, userDiv).map((row, i) => (
             <div
               key={i}
               className={`round-list__row${row.isUser ? " round-list__row--user" : ""}`}
@@ -450,7 +579,7 @@ function CampeonatoEmCurso({
 
       <StandingsTable
         standings={standings}
-        highlightTeamId={saved.controlledTeamId}
+        highlightTeamId={career.controlledTeamId}
         title={`CLASSIFICAÇÃO · ${userDiv.name.toUpperCase()}`}
       />
 
@@ -465,7 +594,7 @@ function CampeonatoEmCurso({
           [ VER {otherDiv.name.toUpperCase()} ]
         </button>
         <button type="button" className="btn" onClick={onReset}>
-          [ NOVA TEMPORADA ]
+          [ NOVA CARREIRA ]
         </button>
       </div>
     </>
@@ -474,17 +603,17 @@ function CampeonatoEmCurso({
 
 // ─── Phase: viewOtherDivision ───────────────────────────────────────────────
 // Read-only peek at the other tier's standings. Shows "ENCERRADA" when
-// that division has already played all its rounds (Série A at 14 while
-// user's Série B is still climbing 15-18).
+// that division has already played all its rounds.
 function OtherDivisionView({
-  saved,
+  career,
   onBack,
 }: {
-  saved: SavedSeason;
+  career: Career;
   onBack: () => void;
 }) {
-  const userDivIdx = findUserDivisionIdx(saved);
-  const otherDiv = saved.divisions[1 - userDivIdx];
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const otherDiv = season.divisions[1 - userDivIdx];
   const total = totalRoundsOf(otherDiv);
   const isFinished = otherDiv.currentRoundIdx >= total;
 
@@ -498,7 +627,7 @@ function OtherDivisionView({
   return (
     <>
       <p className="campeonato-header muted">
-        DIVISÃO: {otherDiv.name} ·{" "}
+        ANO {season.year} · DIVISÃO: {otherDiv.name} ·{" "}
         {isFinished
           ? `ENCERRADA · ${total} / ${total}`
           : `RODADA ${otherDiv.currentRoundIdx + 1} / ${total}`}
@@ -518,37 +647,39 @@ function OtherDivisionView({
   );
 }
 
-// ─── Phase: running (finale) ────────────────────────────────────────────────
-// Renders when the user's division is exhausted. Champion + season
-// highlights + final standings, all sourced from the user's division.
-// The other division may still be in progress but it doesn't affect the
-// user's finale view.
+// ─── Phase: finale ──────────────────────────────────────────────────────────
+// Renders when both divisions are exhausted. Champion + season highlights
+// + P/R + final standings, all sourced from the user's division. The
+// silent-advance in playRound guarantees both tiers are done by the time
+// we render here, so `computePromotionRelegation` is safe to call.
 function SeasonFinale({
-  saved,
-  userDiv,
-  totalRounds,
+  career,
+  onAdvanceSeason,
+  onOpenHistory,
   onReset,
 }: {
-  saved: SavedSeason;
-  userDiv: Division;
-  totalRounds: number;
+  career: Career;
+  onAdvanceSeason: () => void;
+  onOpenHistory: () => void;
   onReset: () => void;
 }) {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const totalRounds = totalRoundsOf(userDiv);
+
   const champion = userDiv.record.standings[0];
   const champTeam = champion ? teamById(champion.team_id) : undefined;
   const champName = champTeam?.name ?? `Time ${champion?.team_id ?? "?"}`;
-  const isUserChamp = champion?.team_id === saved.controlledTeamId;
+  const isUserChamp = champion?.team_id === career.controlledTeamId;
 
   const userIdx = userDiv.record.standings.findIndex(
-    (s) => s.team_id === saved.controlledTeamId,
+    (s) => s.team_id === career.controlledTeamId,
   );
   const userStats = userIdx >= 0 ? userDiv.record.standings[userIdx] : undefined;
   const userTeamName =
-    teamById(saved.controlledTeamId)?.name ?? `Time ${saved.controlledTeamId}`;
+    teamById(career.controlledTeamId)?.name ?? `Time ${career.controlledTeamId}`;
 
-  // Player lookup + season-stats helpers operate on the user's division's
-  // record. Cross-division stat highlights would be misleading (you don't
-  // celebrate the other tier's golden boot in your own finale).
   const playerLookup = useMemo(
     () => buildPlayerLookup(userDiv.record),
     [userDiv.record],
@@ -561,31 +692,24 @@ function SeasonFinale({
     () => topAssister(userDiv.record, playerLookup),
     [userDiv.record, playerLookup],
   );
-  const biggest = useMemo(
-    () => biggestWin(userDiv.record),
-    [userDiv.record],
-  );
+  const biggest = useMemo(() => biggestWin(userDiv.record), [userDiv.record]);
   const cards = useMemo(
     () => cardLeader(userDiv.record, playerLookup),
     [userDiv.record, playerLookup],
   );
-  // Promotion/relegation is computed from BOTH divisions' final standings,
-  // so it lives outside the per-division stat helpers above. The helper
-  // throws if either division isn't done — at SeasonFinale time both
-  // always are (Série A finishes round 14 < user's Série B 18), but the
-  // throw is a defensive guarantee for E.1.c when the user can be in
-  // either tier.
   const prResult = useMemo(
-    () => computePromotionRelegation(saved, saved.controlledTeamId),
-    [saved],
+    () => computePromotionRelegation(season, career.controlledTeamId),
+    [season, career.controlledTeamId],
   );
   const tierASize =
-    saved.divisions.find((d) => d.tier === 1)?.record.standings.length ?? 0;
+    season.divisions.find((d) => d.tier === 1)?.record.standings.length ?? 0;
+
+  const hasHistory = career.seasons.length >= 1;
 
   return (
     <>
       <p className="campeonato-header muted">
-        DIVISÃO: {userDiv.name} · TIME: {userTeamName} · ENCERRADA · {totalRounds} /{" "}
+        ANO {season.year} · DIVISÃO: {userDiv.name} · TIME: {userTeamName} · ENCERRADA · {totalRounds} /{" "}
         {totalRounds}
       </p>
 
@@ -654,7 +778,7 @@ function SeasonFinale({
           {prResult.promoted.map((s, i) => {
             const team = teamById(s.team_id);
             const name = team?.name ?? `Time ${s.team_id}`;
-            const isUser = s.team_id === saved.controlledTeamId;
+            const isUser = s.team_id === career.controlledTeamId;
             return (
               <li
                 key={s.team_id}
@@ -671,7 +795,7 @@ function SeasonFinale({
           {prResult.relegated.map((s, i) => {
             const team = teamById(s.team_id);
             const name = team?.name ?? `Time ${s.team_id}`;
-            const isUser = s.team_id === saved.controlledTeamId;
+            const isUser = s.team_id === career.controlledTeamId;
             // Position in Série A's standings: with 8 teams and 2 relegated,
             // relegated[0] is 7º, relegated[1] is 8º. Derive from tier A's
             // standings length so the same code works if RELEGATION_SLOTS
@@ -691,16 +815,85 @@ function SeasonFinale({
 
       <StandingsTable
         standings={userDiv.record.standings}
-        highlightTeamId={saved.controlledTeamId}
+        highlightTeamId={career.controlledTeamId}
         title={`CLASSIFICAÇÃO · ${userDiv.name.toUpperCase()}`}
       />
 
-      <div className="form-actions">
+      <div
+        className={`form-actions ${hasHistory ? "form-actions--triple" : "form-actions--pair"}`}
+      >
+        <button type="button" className="btn" onClick={onAdvanceSeason}>
+          [ INICIAR PRÓXIMA TEMPORADA ]
+        </button>
+        {hasHistory && (
+          <button type="button" className="btn" onClick={onOpenHistory}>
+            [ HISTÓRICO ]
+          </button>
+        )}
         <button type="button" className="btn" onClick={onReset}>
-          [ NOVA TEMPORADA ]
+          [ NOVA CARREIRA ]
         </button>
       </div>
     </>
+  );
+}
+
+// ─── Phase: history ─────────────────────────────────────────────────────────
+// Read-only list of past SeasonHistory entries (oldest first, newest last).
+// Compact card per season; full match logs are intentionally not stored
+// (see SeasonHistory doc-comment in persistence.ts).
+function HistoryView({
+  career,
+  onBack,
+}: {
+  career: Career;
+  onBack: () => void;
+}) {
+  return (
+    <>
+      <p className="campeonato-header muted">
+        HISTÓRICO · {career.seasons.length} temporada
+        {career.seasons.length === 1 ? "" : "s"}
+      </p>
+
+      {career.seasons.map((s) => (
+        <HistoryCard key={s.year} entry={s} />
+      ))}
+
+      <div className="form-actions">
+        <button type="button" className="btn" onClick={onBack}>
+          [ VOLTAR ]
+        </button>
+      </div>
+    </>
+  );
+}
+
+function HistoryCard({ entry }: { entry: SeasonHistory }) {
+  const outcomeText =
+    entry.userOutcome === "promoted"
+      ? "▲ Subiu para a Série A"
+      : entry.userOutcome === "relegated"
+        ? "▼ Desceu para a Série B"
+        : `→ Permaneceu na ${entry.userDivision.name}`;
+  const outcomeClass = `history-card__outcome history-card__outcome--${entry.userOutcome}`;
+
+  return (
+    <Card title={`TEMPORADA ${entry.year}`}>
+      <div className="history-card">
+        <p>
+          {entry.userDivision.name} · {entry.userPosition}º lugar · {entry.userPoints} pts
+        </p>
+        <p className="muted">Campeão: {entry.champion.teamName}</p>
+        <p className="muted">
+          ▲ Subiram: {entry.promoted.map((p) => p.teamName).join(", ")}
+        </p>
+        <p className="muted">
+          ▼ Desceram: {entry.relegated.map((r) => r.teamName).join(", ")}
+        </p>
+        <p className={outcomeClass}>{outcomeText}</p>
+      </div>
+    </Card>
   );
 }
 
@@ -710,7 +903,7 @@ function SeasonFinale({
  * we don't re-sort by name or anything else.
  */
 function currentRoundFixtures(
-  saved: SavedSeason,
+  career: Career,
   div: Division,
 ): Array<{ homeName: string; awayName: string; isUser: boolean }> {
   const round = div.currentRoundIdx;
@@ -723,8 +916,8 @@ function currentRoundFixtures(
         homeName: teamById(m.home)?.name ?? `Time ${m.home}`,
         awayName: teamById(m.away)?.name ?? `Time ${m.away}`,
         isUser:
-          m.home === saved.controlledTeamId ||
-          m.away === saved.controlledTeamId,
+          m.home === career.controlledTeamId ||
+          m.away === career.controlledTeamId,
       };
     });
 }

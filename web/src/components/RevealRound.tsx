@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Match } from "../types";
-import { findUserDivisionIdx, type SavedSeason } from "../persistence";
+import { findUserDivisionIdxInSeason, type Career } from "../persistence";
 import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
 import Card from "../srcl/Card";
 import MatchReveal, { HALFTIME_PAUSE_MS, REVEAL_MS_PER_MIN } from "./MatchReveal";
 
 type RevealRoundProps = {
-  saved: SavedSeason;
+  career: Career;
   /** Fires once when the user's match reveal and all parallel matches have
    *  completed (or PULAR was clicked). Parent transitions back to running. */
   onDone: () => void;
 };
 
 type OtherMatch = {
-  index: number;          // index into saved.record.matches/fixtures
+  index: number;          // index into userDiv.record.matches/fixtures
   match: Match;
   homeName: string;
   awayName: string;
@@ -41,13 +41,14 @@ type OtherMatch = {
  * pane is omitted and the header says "SEU TIME DESCANSA". Série A is
  * N=8 even, no byes — user is always playing there.
  */
-export default function RevealRound({ saved, onDone }: RevealRoundProps) {
-  const userDivIdx = findUserDivisionIdx(saved);
-  const userDiv = saved.divisions[userDivIdx];
+export default function RevealRound({ career, onDone }: RevealRoundProps) {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
   // Per-division seed namespace — matches the XOR used by SeasonView.run()
   // and util/resimulate's resimulateFromRound so reveal timing stays
   // deterministic across re-simulations.
-  const divSeed = saved.seed ^ BigInt(userDiv.tier);
+  const divSeed = season.seed ^ BigInt(userDiv.tier);
   const revealRound = userDiv.currentRoundIdx - 1;
 
   // Pair fixtures with matches for the round in question, preserving the
@@ -67,14 +68,14 @@ export default function RevealRound({ saved, onDone }: RevealRoundProps) {
         homeName: teamById(m.home)?.name ?? `Time ${m.home}`,
         awayName: teamById(m.away)?.name ?? `Time ${m.away}`,
         isUser:
-          m.home === saved.controlledTeamId ||
-          m.away === saved.controlledTeamId,
+          m.home === career.controlledTeamId ||
+          m.away === career.controlledTeamId,
       });
     });
     const userRow = rows.find((r) => r.isUser);
     const otherRows = rows.filter((r) => !r.isUser);
     return { userMatch: userRow, others: otherRows };
-  }, [userDiv, saved.controlledTeamId, revealRound]);
+  }, [userDiv, career.controlledTeamId, revealRound]);
 
   // Deterministic per (divSeed, round): same division + same round always
   // picks the same reveal-at-minute sequence for parallel matches.

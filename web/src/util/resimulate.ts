@@ -3,10 +3,10 @@ import type { Match, Team } from "../types";
 import { computeStandings } from "../types";
 import { teamById } from "../teams";
 import {
-  findUserDivisionIdx,
+  findUserDivisionIdxInSeason,
   totalRoundsOf,
+  type Career,
   type Division,
-  type SavedSeason,
   type UserTactics,
 } from "../persistence";
 
@@ -37,47 +37,43 @@ export function applyUserTactics(baseTeam: Team, override: UserTactics): Team {
  * wasted work.
  *
  * Determinism: each fixture's match_seed is derived from a per-division
- * seed namespace `saved.seed XOR BigInt(division.tier)`. The same XOR is
- * used at division creation (`run_season(tier, seed ^ tier, name)` in
- * SeasonView.run()), so calling `derive_match_seed(divSeed, i)` here
- * reproduces the engine's internal derivation exactly.
+ * seed namespace `currentSeason.seed XOR BigInt(division.tier)`. The same
+ * XOR is used at division creation (`run_season(tier, seasonSeed ^ tier,
+ * name)` in SeasonView.run() and advanceCareer), so calling
+ * `derive_match_seed(divSeed, i)` here reproduces the engine's internal
+ * derivation exactly.
  *
- * Returned shape:
- *   - `divisions[userDivIdx].record.matches`: same length and index→fixture
- *     alignment; only the user-involving entries from fromRoundIdx onward
- *     are replaced.
- *   - `divisions[userDivIdx].record.standings`: recomputed from scratch
- *     over the full new matches[] (engine compute_standings and
- *     `computeStandings` mirror each other on tiebreakers).
- *   - other divisions: untouched.
- *   - `userTactics`: populated with the provided override.
- *   - `savedAt`: bumped to now().
+ * Returned shape: a new Career with `currentSeason.divisions[userDivIdx]`
+ * carrying the re-simulated matches/standings and `currentSeason.userTactics`
+ * populated. Other divisions, finished seasons, and career metadata stay
+ * by reference. `savedAt` is bumped to now().
  *
- * Pure: does not touch IndexedDB. Caller is responsible for `saveSeason`.
+ * Pure: does not touch IndexedDB. Caller is responsible for `saveCareer`.
  */
 export function resimulateFromRound(
-  saved: SavedSeason,
+  career: Career,
   fromRoundIdx: number,
   userTactics: UserTactics,
-): SavedSeason {
-  const baseUserTeam = teamById(saved.controlledTeamId);
+): Career {
+  const baseUserTeam = teamById(career.controlledTeamId);
   if (!baseUserTeam) {
     throw new Error(
-      `Controlled team ${saved.controlledTeamId} not found in registry`,
+      `Controlled team ${career.controlledTeamId} not found in registry`,
     );
   }
   const effectiveUserTeam = applyUserTactics(baseUserTeam, userTactics);
 
-  const userDivIdx = findUserDivisionIdx(saved);
-  const userDiv = saved.divisions[userDivIdx];
-  const divSeed = saved.seed ^ BigInt(userDiv.tier);
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const divSeed = season.seed ^ BigInt(userDiv.tier);
 
   const newMatches: Match[] = userDiv.record.matches.slice();
   userDiv.record.fixtures.forEach((f, i) => {
     if (f.round < fromRoundIdx) return;
     const oldMatch = userDiv.record.matches[i];
-    const isUserHome = oldMatch.home === saved.controlledTeamId;
-    const isUserAway = oldMatch.away === saved.controlledTeamId;
+    const isUserHome = oldMatch.home === career.controlledTeamId;
+    const isUserAway = oldMatch.away === career.controlledTeamId;
     if (!isUserHome && !isUserAway) return;
 
     const opponentId = isUserHome ? oldMatch.away : oldMatch.home;
@@ -101,7 +97,7 @@ export function resimulateFromRound(
     teamIds,
   );
 
-  const newDivisions: Division[] = saved.divisions.slice();
+  const newDivisions: Division[] = season.divisions.slice();
   newDivisions[userDivIdx] = {
     ...userDiv,
     record: {
@@ -112,9 +108,12 @@ export function resimulateFromRound(
   };
 
   return {
-    ...saved,
+    ...career,
     savedAt: new Date().toISOString(),
-    divisions: newDivisions,
-    userTactics,
+    currentSeason: {
+      ...season,
+      divisions: newDivisions,
+      userTactics,
+    },
   };
 }

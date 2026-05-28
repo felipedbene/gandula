@@ -7,8 +7,8 @@ import type {
   Width,
 } from "../types";
 import {
-  findUserDivisionIdx,
-  type SavedSeason,
+  findUserDivisionIdxInSeason,
+  type Career,
   type UserTactics,
 } from "../persistence";
 import { teamById } from "../teams";
@@ -26,11 +26,11 @@ import LineupEditor, {
 import BenchEditor from "./BenchEditor";
 
 type TacticsViewProps = {
-  saved: SavedSeason;
-  /** Called when re-simulation is applied. Parent persists the new save
-   *  and transitions back to running. Receives the new SavedSeason plus
+  career: Career;
+  /** Called when re-simulation is applied. Parent persists the new career
+   *  and transitions back to running. Receives the new Career plus
    *  informational counters for the status line. */
-  onApply: (newSaved: SavedSeason, resimMs: number, resimCount: number) => void;
+  onApply: (newCareer: Career, resimMs: number, resimCount: number) => void;
   /** Called when user backs out without changes (or cancels). Parent
    *  transitions back to running without persisting anything. */
   onBack: () => void;
@@ -44,18 +44,19 @@ type TacticsViewProps = {
  * State ownership: this view owns the `TacticsFormState`. The form
  * subcomponent is pure-controlled — see TacticsForm.tsx.
  */
-export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps) {
-  const baseTeam = teamById(saved.controlledTeamId);
-  const teamName = baseTeam?.name ?? `Time ${saved.controlledTeamId}`;
+export default function TacticsView({ career, onApply, onBack }: TacticsViewProps) {
+  const baseTeam = teamById(career.controlledTeamId);
+  const teamName = baseTeam?.name ?? `Time ${career.controlledTeamId}`;
+  const season = career.currentSeason;
 
   const initial: TacticsFormState = useMemo(() => {
-    if (saved.userTactics) {
+    if (season.userTactics) {
       return {
-        formation: saved.userTactics.formation,
-        mentality: saved.userTactics.tactics.mentality,
-        tempo: saved.userTactics.tactics.tempo,
-        pressing: saved.userTactics.tactics.pressing,
-        width: saved.userTactics.tactics.width,
+        formation: season.userTactics.formation,
+        mentality: season.userTactics.tactics.mentality,
+        tempo: season.userTactics.tactics.tempo,
+        pressing: season.userTactics.tactics.pressing,
+        width: season.userTactics.tactics.width,
       };
     }
     return {
@@ -65,20 +66,20 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
       pressing: baseTeam?.tactics.pressing ?? ("Medium" as Pressing),
       width: baseTeam?.tactics.width ?? ("Normal" as Width),
     };
-  }, [saved.userTactics, baseTeam]);
+  }, [season.userTactics, baseTeam]);
 
   const initialLineup: LineupState = useMemo(() => {
-    if (saved.userTactics) {
+    if (season.userTactics) {
       return {
-        starting_xi: saved.userTactics.starting_xi.slice(),
-        bench: saved.userTactics.bench.slice(),
+        starting_xi: season.userTactics.starting_xi.slice(),
+        bench: season.userTactics.bench.slice(),
       };
     }
     return {
       starting_xi: baseTeam?.starting_xi.slice() ?? [],
       bench: baseTeam?.bench?.slice() ?? [],
     };
-  }, [saved.userTactics, baseTeam]);
+  }, [season.userTactics, baseTeam]);
 
   const [current, setCurrent] = useState<TacticsFormState>(initial);
   const [currentLineup, setCurrentLineup] = useState<LineupState>(initialLineup);
@@ -100,14 +101,14 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
       bench: currentLineup.bench.slice(),
     };
     try {
-      const userDivIdx = findUserDivisionIdx(saved);
-      const userDiv = saved.divisions[userDivIdx];
+      const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+      const userDiv = season.divisions[userDivIdx];
       const fromRound = userDiv.currentRoundIdx;
       const start = performance.now();
-      const newSaved = resimulateFromRound(saved, fromRound, override);
+      const newCareer = resimulateFromRound(career, fromRound, override);
       const ms = Math.round(performance.now() - start);
-      const resimCount = countUserMatchesFromRound(saved, fromRound);
-      onApply(newSaved, ms, resimCount);
+      const resimCount = countUserMatchesFromRound(career, fromRound);
+      onApply(newCareer, ms, resimCount);
     } catch (e) {
       setError(String(e));
     }
@@ -157,16 +158,17 @@ export default function TacticsView({ saved, onApply, onBack }: TacticsViewProps
  * number in their status lines without duplicating the loop.
  */
 export function countUserMatchesFromRound(
-  saved: SavedSeason,
+  career: Career,
   fromRoundIdx: number,
 ): number {
-  const userDivIdx = findUserDivisionIdx(saved);
-  const userDiv = saved.divisions[userDivIdx];
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
   return userDiv.record.fixtures.reduce((acc, f, i) => {
     if (f.round < fromRoundIdx) return acc;
     const m = userDiv.record.matches[i];
     const involves =
-      m.home === saved.controlledTeamId || m.away === saved.controlledTeamId;
+      m.home === career.controlledTeamId || m.away === career.controlledTeamId;
     return acc + (involves ? 1 : 0);
   }, 0);
 }

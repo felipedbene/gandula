@@ -8,9 +8,9 @@ import type {
   Width,
 } from "../types";
 import {
-  findUserDivisionIdx,
+  findUserDivisionIdxInSeason,
   totalRoundsOf,
-  type SavedSeason,
+  type Career,
   type UserTactics,
 } from "../persistence";
 import { teamById } from "../teams";
@@ -30,10 +30,10 @@ import BenchEditor from "./BenchEditor";
 import { countUserMatchesFromRound } from "./TacticsView";
 
 type PrepareViewProps = {
-  saved: SavedSeason;
+  career: Career;
   /** User clicked [ JOGAR ]. Parent receives the (possibly re-simulated)
-   *  new SavedSeason and transitions to revealing. */
-  onPlay: (newSaved: SavedSeason, resimMs: number, resimCount: number) => void;
+   *  new Career and transitions to revealing. */
+  onPlay: (newCareer: Career, resimMs: number, resimCount: number) => void;
   /** User clicked [ VOLTAR ]. Parent transitions to running without
    *  persisting anything; pending dropdown changes are lost. */
   onBack: () => void;
@@ -44,25 +44,26 @@ type PrepareViewProps = {
  * round reveal. Shows the next opponent (or "SEM JOGO" for bye rounds)
  * in the user's division, plus the tactical form. Re-simulation on JOGAR
  * runs only when the form is dirty; clean JOGAR forwards the original
- * save through to the reveal so the user doesn't eat the ~160ms freeze
+ * career through to the reveal so the user doesn't eat the ~160ms freeze
  * when they just want to play with the current tactics.
  *
  * State ownership: this view owns the TacticsFormState + LineupState. All
  * form subcomponents are pure-controlled.
  */
-export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps) {
-  const baseTeam = teamById(saved.controlledTeamId);
-  const userDivIdx = findUserDivisionIdx(saved);
-  const userDiv = saved.divisions[userDivIdx];
+export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps) {
+  const baseTeam = teamById(career.controlledTeamId);
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
 
   const initial: TacticsFormState = useMemo(() => {
-    if (saved.userTactics) {
+    if (season.userTactics) {
       return {
-        formation: saved.userTactics.formation,
-        mentality: saved.userTactics.tactics.mentality,
-        tempo: saved.userTactics.tactics.tempo,
-        pressing: saved.userTactics.tactics.pressing,
-        width: saved.userTactics.tactics.width,
+        formation: season.userTactics.formation,
+        mentality: season.userTactics.tactics.mentality,
+        tempo: season.userTactics.tactics.tempo,
+        pressing: season.userTactics.tactics.pressing,
+        width: season.userTactics.tactics.width,
       };
     }
     return {
@@ -72,20 +73,20 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
       pressing: baseTeam?.tactics.pressing ?? ("Medium" as Pressing),
       width: baseTeam?.tactics.width ?? ("Normal" as Width),
     };
-  }, [saved.userTactics, baseTeam]);
+  }, [season.userTactics, baseTeam]);
 
   const initialLineup: LineupState = useMemo(() => {
-    if (saved.userTactics) {
+    if (season.userTactics) {
       return {
-        starting_xi: saved.userTactics.starting_xi.slice(),
-        bench: saved.userTactics.bench.slice(),
+        starting_xi: season.userTactics.starting_xi.slice(),
+        bench: season.userTactics.bench.slice(),
       };
     }
     return {
       starting_xi: baseTeam?.starting_xi.slice() ?? [],
       bench: baseTeam?.bench?.slice() ?? [],
     };
-  }, [saved.userTactics, baseTeam]);
+  }, [season.userTactics, baseTeam]);
 
   const [current, setCurrent] = useState<TacticsFormState>(initial);
   const [currentLineup, setCurrentLineup] = useState<LineupState>(initialLineup);
@@ -104,14 +105,14 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
       if (fixtures[i].round !== userDiv.currentRoundIdx) continue;
       const m = matches[i];
       if (
-        m.home === saved.controlledTeamId ||
-        m.away === saved.controlledTeamId
+        m.home === career.controlledTeamId ||
+        m.away === career.controlledTeamId
       ) {
         return { fixtureIdx: i, match: m };
       }
     }
     return null;
-  }, [userDiv, saved.controlledTeamId]);
+  }, [userDiv, career.controlledTeamId]);
 
   const isBye = userFixture === null;
 
@@ -121,10 +122,10 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
       return;
     }
     if (!dirty) {
-      // No tactical change — skip re-simulation, hand the original save
+      // No tactical change — skip re-simulation, hand the original career
       // through. resimMs=0 / resimCount=0 signals "nothing re-simulated"
       // to the parent's status line logic.
-      onPlay(saved, 0, 0);
+      onPlay(career, 0, 0);
       return;
     }
     const { formation, tactics } = tacticsFormStateToOverride(current);
@@ -136,10 +137,10 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
     };
     try {
       const start = performance.now();
-      const newSaved = resimulateFromRound(saved, userDiv.currentRoundIdx, override);
+      const newCareer = resimulateFromRound(career, userDiv.currentRoundIdx, override);
       const ms = Math.round(performance.now() - start);
-      const resimCount = countUserMatchesFromRound(saved, userDiv.currentRoundIdx);
-      onPlay(newSaved, ms, resimCount);
+      const resimCount = countUserMatchesFromRound(career, userDiv.currentRoundIdx);
+      onPlay(newCareer, ms, resimCount);
     } catch (e) {
       setError(String(e));
     }
@@ -159,7 +160,7 @@ export default function PrepareView({ saved, onPlay, onBack }: PrepareViewProps)
       ) : (
         <NextOpponentCard
           userMatch={userFixture.match}
-          controlledTeamId={saved.controlledTeamId}
+          controlledTeamId={career.controlledTeamId}
         />
       )}
 

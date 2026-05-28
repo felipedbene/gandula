@@ -624,6 +624,34 @@ fieldset legend {
   padding: 1px 0;
 }
 
+/* E.1.c.3 — History card on the HISTÓRICO phase ──────────────────────────── */
+
+/* Compact body for one past season — first line is plain (user's standing),
+   rest are muted (champion, P/R summary), final line is the outcome with a
+   semantic color. Spacing matches the existing Card content register. */
+.history-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-card__outcome {
+  margin-top: 6px;
+  font-weight: bold;
+}
+
+.history-card__outcome--promoted {
+  color: var(--accent-gol);
+}
+
+.history-card__outcome--relegated {
+  color: var(--accent-red);
+}
+
+.history-card__outcome--stayed {
+  color: var(--fg-dim);
+}
+
 /* D.1.f — Bench editor (BANCO section header + ADICIONAR JOGADOR area) */
 
 /* Section header sitting above the bench list, with the count fraction
