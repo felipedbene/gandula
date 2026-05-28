@@ -13,6 +13,8 @@
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
+    "@mantine/core": "^9.2.2",
+    "@mantine/hooks": "^9.2.2",
     "idb": "^8.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
