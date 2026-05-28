@@ -14,6 +14,7 @@ import {
   type Career,
   type Division,
   type SeasonHistory,
+  type TransferRecord,
 } from "../persistence";
 import {
   biggestWin,
@@ -30,6 +31,7 @@ import {
 import { advanceCareer } from "../util/career";
 import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
+import TransferMarketView from "./TransferMarketView";
 import Card from "../srcl/Card";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -64,7 +66,8 @@ type Phase =
   | { tag: "revealing"; career: Career }
   | { tag: "tactics"; career: Career }
   | { tag: "finale"; career: Career }
-  | { tag: "history"; career: Career };
+  | { tag: "history"; career: Career }
+  | { tag: "transferMarket"; career: Career };
 
 /**
  * Pick the right initial phase for a loaded/migrated Career. If the user's
@@ -289,6 +292,34 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     setPhase({ tag: "finale", career });
   }
 
+  function openTransferMarket(career: Career) {
+    onStatus(`mercado aberto · ano ${career.currentSeason.year}`);
+    setPhase({ tag: "transferMarket", career });
+  }
+
+  /**
+   * Called when TransferMarketView fires onClose. The view passes back
+   * a Career with userRoster / manager.money / currentSeason.transfers
+   * (and optionally userTactics.bench after lazy-prune) already
+   * mutated. Persist and bounce back to finale — the user still hasn't
+   * advanced to next year.
+   */
+  async function closeTransferMarket(newCareer: Career) {
+    try {
+      await saveCareer(newCareer);
+      const txCount = newCareer.currentSeason.transfers.length;
+      onStatus(
+        txCount === 0
+          ? "mercado fechado · sem transações"
+          : `mercado fechado · ${txCount} transação${txCount === 1 ? "" : "ões"}`,
+      );
+      setPhase({ tag: "finale", career: newCareer });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar mercado: ${e}`);
+    }
+  }
+
   /**
    * Called when user clicks [ JOGAR ] from PrepareView. The view may have
    * re-simulated already (if dirty) or returned the original career (if no
@@ -471,6 +502,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       {phase.tag === "finale" && (
         <SeasonFinale
           career={phase.career}
+          onOpenMarket={() => openTransferMarket(phase.career)}
           onAdvanceSeason={() => advanceToNextSeason(phase.career)}
           onOpenHistory={() => openHistory(phase.career)}
           onReset={resetCareer}
@@ -480,6 +512,12 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         <HistoryView
           career={phase.career}
           onBack={() => backFromHistory(phase.career)}
+        />
+      )}
+      {phase.tag === "transferMarket" && (
+        <TransferMarketView
+          career={phase.career}
+          onClose={closeTransferMarket}
         />
       )}
       {error && <pre className="error">{error}</pre>}
@@ -680,11 +718,13 @@ function OtherDivisionView({
 // we render here, so `computePromotionRelegation` is safe to call.
 function SeasonFinale({
   career,
+  onOpenMarket,
   onAdvanceSeason,
   onOpenHistory,
   onReset,
 }: {
   career: Career;
+  onOpenMarket: () => void;
   onAdvanceSeason: () => void;
   onOpenHistory: () => void;
   onReset: () => void;
@@ -900,8 +940,11 @@ function SeasonFinale({
       />
 
       <div
-        className={`form-actions ${hasHistory ? "form-actions--triple" : "form-actions--pair"}`}
+        className={`form-actions ${hasHistory ? "form-actions--quadruple" : "form-actions--triple"}`}
       >
+        <button type="button" className="btn" onClick={onOpenMarket}>
+          [ ABRIR MERCADO ]
+        </button>
         <button type="button" className="btn" onClick={onAdvanceSeason}>
           [ INICIAR PRÓXIMA TEMPORADA ]
         </button>
@@ -981,9 +1024,37 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
           {moneySign} $ {formatMoney(Math.abs(entry.moneyDelta))} · saldo ${" "}
           {formatMoney(entry.moneyAfter)}
         </p>
+        {entry.transfers && entry.transfers.length > 0 && (
+          <p className="muted">Transferências: {countTransfers(entry.transfers)}</p>
+        )}
       </div>
     </Card>
   );
+}
+
+/**
+ * Compact one-liner summary of a season's transfer activity. Parity
+ * with the FINANÇAS Card register: uses the proper minus sign (U+2212)
+ * for outflows. Either side (buys / sells) is omitted when zero so the
+ * line stays short when only one direction had activity.
+ */
+function countTransfers(transfers: TransferRecord[]): string {
+  const buys = transfers.filter((t) => t.kind === "buy");
+  const sells = transfers.filter((t) => t.kind === "sell");
+  const buyTotal = buys.reduce((s, t) => s + t.price, 0);
+  const sellTotal = sells.reduce((s, t) => s + t.price, 0);
+  const parts: string[] = [];
+  if (buys.length > 0) {
+    parts.push(
+      `${buys.length} compra${buys.length === 1 ? "" : "s"} (− $ ${formatMoney(buyTotal)})`,
+    );
+  }
+  if (sells.length > 0) {
+    parts.push(
+      `${sells.length} venda${sells.length === 1 ? "" : "s"} (+ $ ${formatMoney(sellTotal)})`,
+    );
+  }
+  return parts.join(", ");
 }
 
 /**

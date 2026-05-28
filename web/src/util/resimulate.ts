@@ -2,6 +2,7 @@ import { play_match, derive_match_seed } from "../wasm/gandula_wasm.js";
 import type { Match, Team } from "../types";
 import { computeStandings } from "../types";
 import { teamById } from "../teams";
+import { userTeam } from "./roster";
 import {
   findUserDivisionIdxInSeason,
   totalRoundsOf,
@@ -55,12 +56,11 @@ export function resimulateFromRound(
   fromRoundIdx: number,
   userTactics: UserTactics,
 ): Career {
-  const baseUserTeam = teamById(career.controlledTeamId);
-  if (!baseUserTeam) {
-    throw new Error(
-      `Controlled team ${career.controlledTeamId} not found in registry`,
-    );
-  }
+  // userTeam swaps in career.userRoster when the user has bought/sold
+  // since the season started; falls back to the registry default
+  // otherwise. Always returns a Team — throws on a missing id, which
+  // is a save invariant violation.
+  const baseUserTeam = userTeam(career);
   const effectiveUserTeam = applyUserTactics(baseUserTeam, userTactics);
 
   const season = career.currentSeason;

@@ -14,6 +14,7 @@ import {
   type UserTactics,
 } from "../persistence";
 import { teamById } from "../teams";
+import { userTeam } from "../util/roster";
 import { resimulateFromRound } from "../util/resimulate";
 import { avgStrength } from "../util/divisions";
 import { formatMoney } from "../util/money";
@@ -52,7 +53,11 @@ type PrepareViewProps = {
  * form subcomponents are pure-controlled.
  */
 export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps) {
-  const baseTeam = teamById(career.controlledTeamId);
+  // userTeam returns the registry default when career.userRoster is
+  // empty (no transfers yet), or the custom roster when E.1.e.2 has
+  // mutated it. Either way, downstream readers (LineupEditor,
+  // BenchEditor, resimulate) see the user's effective roster.
+  const baseTeam = userTeam(career);
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const userDiv = season.divisions[userDivIdx];
@@ -211,16 +216,21 @@ function NextOpponentCard({
   controlledTeamId: number;
 }) {
   const isUserHome = userMatch.home === controlledTeamId;
-  const userTeam = teamById(controlledTeamId);
+  // `controlledTeam` (not `userTeam`) avoids shadowing the imported
+  // userTeam(career) helper at module scope. NextOpponentCard doesn't
+  // see Career — it just gets the id — so registry teamById is the
+  // right lookup here; transfer-market roster mutations don't affect
+  // the opponent or the team-name strength display.
+  const controlledTeam = teamById(controlledTeamId);
   const opponentId = isUserHome ? userMatch.away : userMatch.home;
   const opponentTeam = teamById(opponentId);
 
-  const userName = userTeam?.name ?? `Time ${controlledTeamId}`;
+  const userName = controlledTeam?.name ?? `Time ${controlledTeamId}`;
   const opponentName = opponentTeam?.name ?? `Time ${opponentId}`;
   const userVenue = isUserHome ? "(CASA)" : "(FORA)";
   const opponentVenue = isUserHome ? "(FORA)" : "(CASA)";
 
-  const userStrength = userTeam ? avgStrength(userTeam) : 0;
+  const userStrength = controlledTeam ? avgStrength(controlledTeam) : 0;
   const opponentStrength = opponentTeam ? avgStrength(opponentTeam) : 0;
 
   return (

@@ -11,7 +11,7 @@ import {
   type Career,
   type UserTactics,
 } from "../persistence";
-import { teamById } from "../teams";
+import { userTeam } from "../util/roster";
 import { resimulateFromRound } from "../util/resimulate";
 import { formatMoney } from "../util/money";
 import Card from "../srcl/Card";
@@ -46,8 +46,11 @@ type TacticsViewProps = {
  * subcomponent is pure-controlled — see TacticsForm.tsx.
  */
 export default function TacticsView({ career, onApply, onBack }: TacticsViewProps) {
-  const baseTeam = teamById(career.controlledTeamId);
-  const teamName = baseTeam?.name ?? `Time ${career.controlledTeamId}`;
+  // userTeam returns registry default when career.userRoster is empty,
+  // or the transfer-market-modified roster otherwise. LineupEditor +
+  // BenchEditor receive this through the `team` prop unchanged.
+  const baseTeam = userTeam(career);
+  const teamName = baseTeam.name;
   const season = career.currentSeason;
 
   const initial: TacticsFormState = useMemo(() => {

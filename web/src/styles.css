@@ -668,6 +668,49 @@ fieldset legend {
   color: var(--accent-red);
 }
 
+/* E.1.e.2 — Transfer market view ──────────────────────────────────────── */
+
+/* Column of buy/sell rows inside the JOGADORES DISPONÍVEIS and MEU ELENCO
+   cards. Tight vertical gap so the lists feel like a single ledger rather
+   than a list of standalone cards. */
+.transfer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* One transaction row — position / name / age / stamina / price / button.
+   gap pulls the columns apart without padding gymnastics, and the button
+   pushes to the right via margin-left:auto so the action stays visually
+   anchored regardless of the name length. */
+.transfer-row {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--char-w) * 2);
+  font-family: monospace;
+  padding: 1px 0;
+}
+
+.transfer-row__pos {
+  color: var(--fg-dim);
+}
+
+.transfer-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.transfer-row__age,
+.transfer-row__stat,
+.transfer-row__price {
+  color: var(--fg-dim);
+  white-space: pre;
+}
+
+.transfer-row__btn {
+  margin-left: auto;
+}
+
 /* E.1.d — FINANÇAS DA TEMPORADA card on SeasonFinale ────────────────────── */
 
 /* Two-column row: label on the left, signed amount on the right. Monospace

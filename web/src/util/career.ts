@@ -10,6 +10,7 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
+import { userTeam } from "./roster";
 
 /**
  * Result of advancing the career one season. The caller (E.1.c.3 UI)
@@ -124,6 +125,13 @@ function buildSeasonHistory(
     userOutcome,
     moneyDelta: finances.net,
     moneyAfter: career.manager.money + finances.net,
+    // Transfer-market activity that happened during this season is
+    // surfaced into history as a non-empty array; skipped markets stay
+    // `undefined` so HistoryCard can short-circuit cleanly. The market
+    // phase always writes to `currentSeason.transfers`, even on
+    // FECHAR-without-changes, so this branch is the source of truth.
+    transfers:
+      current.transfers.length > 0 ? current.transfers : undefined,
   };
 }
 
@@ -172,8 +180,21 @@ function buildNextSeason(
     mustGetTeam(s.team_id),
   );
 
-  const tierATeams: Team[] = [...tierASurvivors, ...newPromoted];
-  const tierBTeams: Team[] = [...tierBSurvivors, ...newRelegated];
+  // Substitute the user's team (wherever it ends up post-P/R) with the
+  // userTeam() view so transfer-market activity (E.1.e+) flows through:
+  // next season's run_season sees the bought/sold roster, not the
+  // registry default. The substitution is a no-op when userRoster is
+  // empty — userTeam falls back to the registry team.
+  const userTeamWithRoster = userTeam(career);
+  const useUserRosterIfControlled = (t: Team): Team =>
+    t.id === career.controlledTeamId ? userTeamWithRoster : t;
+
+  const tierATeams: Team[] = [...tierASurvivors, ...newPromoted].map(
+    useUserRosterIfControlled,
+  );
+  const tierBTeams: Team[] = [...tierBSurvivors, ...newRelegated].map(
+    useUserRosterIfControlled,
+  );
 
   // Invariant: division sizes must match the previous season. Mismatch
   // would mean PRResult was malformed or the standings were missing teams.
