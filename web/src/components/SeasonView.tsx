@@ -73,7 +73,7 @@ type Phase =
   | { tag: "tactics"; career: Career }
   | { tag: "finale"; career: Career }
   | { tag: "history"; career: Career }
-  | { tag: "transferMarket"; career: Career }
+  | { tag: "transferMarket"; career: Career; returnTo: "running" | "finale" }
   | { tag: "fired"; career: Career; finalBalance: number }
   | { tag: "support" };
 
@@ -305,9 +305,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
     setPhase({ tag: "finale", career });
   }
 
-  function openTransferMarket(career: Career) {
+  function openTransferMarket(career: Career, returnTo: "running" | "finale") {
     onStatus(`mercado aberto · ano ${career.currentSeason.year}`);
-    setPhase({ tag: "transferMarket", career });
+    setPhase({ tag: "transferMarket", career, returnTo });
   }
 
   function openSupport() {
@@ -323,11 +323,14 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   /**
    * Called when TransferMarketView fires onClose. The view passes back
    * a Career with userRoster / manager.money / currentSeason.transfers
-   * (and optionally userTactics.bench after lazy-prune) already
-   * mutated. Persist and bounce back to finale — the user still hasn't
-   * advanced to next year.
+   * (and optionally userTactics.bench after lazy-prune) already mutated.
+   * Persist and return to wherever the market was opened from — mid-season
+   * (`running`) or at the season boundary (`finale`).
    */
-  async function closeTransferMarket(newCareer: Career) {
+  async function closeTransferMarket(
+    newCareer: Career,
+    returnTo: "running" | "finale",
+  ) {
     try {
       await saveCareer(newCareer);
       const txCount = newCareer.currentSeason.transfers.length;
@@ -336,7 +339,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           ? "mercado fechado · sem transações"
           : `mercado fechado · ${txCount} transação${txCount === 1 ? "" : "ões"}`,
       );
-      setPhase({ tag: "finale", career: newCareer });
+      if (returnTo === "running") {
+        setPhase({ tag: "running", career: newCareer });
+      } else {
+        setPhase({ tag: "finale", career: newCareer });
+      }
     } catch (e) {
       setError(String(e));
       onStatus(`erro ao salvar mercado: ${e}`);
@@ -533,6 +540,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           onPrepare={() => openPrepare(phase.career)}
           onTactics={() => openTactics(phase.career)}
           onViewOtherDivision={() => openOtherDivision(phase.career)}
+          onOpenMarket={() => openTransferMarket(phase.career, "running")}
         />
       )}
       {phase.tag === "viewOtherDivision" && (
@@ -564,7 +572,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       {phase.tag === "finale" && (
         <SeasonFinale
           career={phase.career}
-          onOpenMarket={() => openTransferMarket(phase.career)}
+          onOpenMarket={() => openTransferMarket(phase.career, "finale")}
           onAdvanceSeason={() => advanceToNextSeason(phase.career)}
           onOpenHistory={() => openHistory(phase.career)}
           onReset={resetCareer}
@@ -579,7 +587,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       {phase.tag === "transferMarket" && (
         <TransferMarketView
           career={phase.career}
-          onClose={closeTransferMarket}
+          onClose={(c) => closeTransferMarket(c, phase.returnTo)}
         />
       )}
       {phase.tag === "fired" && (
@@ -646,12 +654,14 @@ function CampeonatoEmCurso({
   onPrepare,
   onTactics,
   onViewOtherDivision,
+  onOpenMarket,
 }: {
   career: Career;
   onReset: () => void;
   onPrepare: () => void;
   onTactics: () => void;
   onViewOtherDivision: () => void;
+  onOpenMarket: () => void;
 }) {
   const team = teamById(career.controlledTeamId);
   const teamName = team?.name ?? `Time ${career.controlledTeamId}`;
@@ -705,6 +715,9 @@ function CampeonatoEmCurso({
         <Button onClick={onPrepare}>Avançar rodada</Button>
         <Button variant="default" onClick={onTactics}>
           Tática
+        </Button>
+        <Button variant="default" onClick={onOpenMarket}>
+          Mercado
         </Button>
         <Button variant="default" onClick={onViewOtherDivision}>
           Ver {otherDiv.name}
