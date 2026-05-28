@@ -62,5 +62,10 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Account ID is not secret (it shows up in dashboard URLs). Passing
+          # it lets a scoped API token skip the /memberships account lookup,
+          # which a scoped token can't call (auth error 9106).
+          accountId: b16a8a579828f17deecf2f2f0da24752
+          wranglerVersion: "4.95.0"
           workingDirectory: web
           command: deploy
