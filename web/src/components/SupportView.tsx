@@ -1,4 +1,5 @@
-import Card from "../srcl/Card";
+import { Button, Group, Stack, Text } from "@mantine/core";
+import { Panel } from "./ui/Panel";
 
 type SupportViewProps = {
   onBack: () => void;
@@ -16,49 +17,54 @@ type SupportViewProps = {
  */
 export default function SupportView({ onBack }: SupportViewProps) {
   return (
-    <>
-      <p className="campeonato-header muted">APOIAR O PROJETO</p>
+    <Stack gap="md">
+      <Text c="dimmed" size="sm" tt="uppercase">
+        Apoiar o projeto
+      </Text>
 
-      <Card title="GANDULA">
-        <p>
-          Gandula é um projeto pessoal — uma carta de amor aos simuladores
-          de futebol em texto dos anos 90 (Elifoot, principalmente).
-        </p>
-        <p>
-          Sem ads, sem tracking, sem servidor: tudo roda direto no seu
-          navegador, e o código é aberto.
-        </p>
-        <p>
-          Se está curtindo a experiência e quer ajudar a manter o projeto
-          rolando, qualquer apoio é bem-vindo. Tudo vai pra manter as luzes
-          acesas e a motivação alta pra novos features.
-        </p>
+      <Panel title="Gandula">
+        <Stack gap="sm">
+          <Text>
+            Gandula é um projeto pessoal — uma carta de amor aos simuladores
+            de futebol em texto dos anos 90 (Elifoot, principalmente).
+          </Text>
+          <Text>
+            Sem ads, sem tracking, sem servidor: tudo roda direto no seu
+            navegador, e o código é aberto.
+          </Text>
+          <Text>
+            Se está curtindo a experiência e quer ajudar a manter o projeto
+            rolando, qualquer apoio é bem-vindo. Tudo vai pra manter as luzes
+            acesas e a motivação alta pra novos features.
+          </Text>
 
-        <div className="support-links">
-          <a
-            href="https://ko-fi.com/felipedebene"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn"
-          >
-            [ KO-FI ]
-          </a>
-          <a
-            href="https://github.com/felipedbene/gandula"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn"
-          >
-            [ GITHUB ]
-          </a>
-        </div>
-      </Card>
+          <Group gap="sm">
+            <Button
+              component="a"
+              href="https://ko-fi.com/felipedebene"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Ko-fi
+            </Button>
+            <Button
+              component="a"
+              variant="default"
+              href="https://github.com/felipedbene/gandula"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </Button>
+          </Group>
+        </Stack>
+      </Panel>
 
-      <div className="form-actions">
-        <button type="button" className="btn" onClick={onBack}>
-          [ VOLTAR ]
-        </button>
-      </div>
-    </>
+      <Group justify="center">
+        <Button variant="default" onClick={onBack}>
+          Voltar
+        </Button>
+      </Group>
+    </Stack>
   );
 }

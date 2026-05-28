@@ -33,7 +33,7 @@ import { computeSeasonFinances } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import { Button, Group, Stack, Table, Text } from "@mantine/core";
+import { Button, Group, NumberInput, Stack, Table, Text, TextInput } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
 import TacticsView from "./TacticsView";
@@ -560,42 +560,35 @@ function NewSeasonForm({
   onSupport: () => void;
 }) {
   return (
-    <Panel title="NOVA CARREIRA">
+    <Panel title="Nova carreira">
       <form
-        className="form"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit();
         }}
       >
-        <p className="muted">
-          17 times divididos em Série A (8) + Série B (9). Você assume o time
-          mais fraco da Série B.
-        </p>
-        <label>
-          <span>Liga</span>
-          <input
-            type="text"
+        <Stack gap="md">
+          <Text c="dimmed" size="sm">
+            17 times divididos em Série A (8) + Série B (9). Você assume o time
+            mais fraco da Série B.
+          </Text>
+          <TextInput
+            label="Liga"
             value={name}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={(e) => onNameChange(e.currentTarget.value)}
           />
-        </label>
-        <label>
-          <span>Semente</span>
-          <input
-            type="number"
+          <NumberInput
+            label="Semente"
             value={seed}
-            onChange={(e) => onSeedChange(Number(e.target.value))}
+            onChange={(v) => onSeedChange(Number(v))}
           />
-        </label>
-        <div className="form-actions form-actions--pair">
-          <button type="submit" className="btn">
-            [ INICIAR CARREIRA ]
-          </button>
-          <button type="button" className="btn" onClick={onSupport}>
-            [ APOIAR PROJETO ]
-          </button>
-        </div>
+          <Group justify="center" gap="sm">
+            <Button type="submit">Iniciar carreira</Button>
+            <Button type="button" variant="default" onClick={onSupport}>
+              Apoiar projeto
+            </Button>
+          </Group>
+        </Stack>
       </form>
     </Panel>
   );
