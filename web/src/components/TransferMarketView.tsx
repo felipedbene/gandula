@@ -11,7 +11,8 @@ import {
 import { formatMoney } from "../util/money";
 import type { Career, TransferRecord } from "../persistence";
 import type { Player } from "../types";
-import Card from "../srcl/Card";
+import { Button, Group, Stack, Text } from "@mantine/core";
+import { Panel } from "./ui/Panel";
 
 type TransferMarketViewProps = {
   career: Career;
@@ -175,17 +176,17 @@ export default function TransferMarketView({
     working.currentSeason.userTactics?.starting_xi ?? team.starting_xi;
 
   return (
-    <>
-      <p className="campeonato-header muted">
+    <Stack gap="md">
+      <Text c="dimmed" size="sm">
         MERCADO · ANO {working.currentSeason.year} · SALDO ${" "}
         {formatMoney(working.manager.money)} · ROSTER {team.roster.length}/
         {MAX_ROSTER}
-      </p>
+      </Text>
 
-      <Card title={`JOGADORES DISPONÍVEIS (${availableAgents.length})`}>
-        <div className="transfer-list">
+      <Panel title={`Jogadores disponíveis (${availableAgents.length})`}>
+        <Stack gap={2}>
           {availableAgents.length === 0 ? (
-            <p className="muted">Mercado esgotado nesta janela.</p>
+            <Text c="dimmed">Mercado esgotado nesta janela.</Text>
           ) : (
             availableAgents.map((p) => {
               const price = playerPrice(p, "buy");
@@ -204,11 +205,11 @@ export default function TransferMarketView({
               );
             })
           )}
-        </div>
-      </Card>
+        </Stack>
+      </Panel>
 
-      <Card title={`MEU ELENCO (${team.roster.length})`}>
-        <div className="transfer-list">
+      <Panel title={`Meu elenco (${team.roster.length})`}>
+        <Stack gap={2}>
           {team.roster.map((p) => {
             const price = playerPrice(p, "sell");
             const check = canSell(working, p.id);
@@ -225,23 +226,20 @@ export default function TransferMarketView({
               />
             );
           })}
-        </div>
-      </Card>
+        </Stack>
+      </Panel>
 
-      <div className="form-actions form-actions--pair">
-        <button type="button" className="btn" onClick={() => onClose(working)}>
-          [ FECHAR MERCADO ]
-        </button>
-        <button
-          type="button"
-          className="btn"
+      <Group justify="center" gap="sm">
+        <Button onClick={() => onClose(working)}>Fechar mercado</Button>
+        <Button
+          variant="default"
           onClick={undoLast}
           disabled={actions.length === 0}
         >
-          [ DESFAZER ÚLTIMA ]
-        </button>
-      </div>
-    </>
+          Desfazer última
+        </Button>
+      </Group>
+    </Stack>
   );
 }
 
@@ -268,28 +266,45 @@ function TransferRow({
   inXi: boolean;
   onClick: () => void;
 }) {
-  const label =
-    action === "comprar" ? "[ COMPRAR ]" : enabled ? "[ VENDER ]" : "[ — ]";
+  const label = action === "comprar" ? "Comprar" : enabled ? "Vender" : "—";
   const stamina = player.attributes.stamina;
   return (
-    <div className="transfer-row">
-      <span className="transfer-row__pos">{player.position.padEnd(4)}</span>
-      <span className="transfer-row__name">
+    <Group gap="xs" wrap="nowrap">
+      <Text span size="sm" c="dimmed">
+        {player.position}
+      </Text>
+      <Text
+        span
+        size="sm"
+        style={{
+          flex: 1,
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
         {player.name}
         {inXi ? " (XI)" : ""}
-      </span>
-      <span className="transfer-row__age">{player.age}a</span>
-      <span className="transfer-row__stat">STAM {stamina}</span>
-      <span className="transfer-row__price">$ {formatMoney(price)}</span>
-      <button
-        type="button"
-        className="btn transfer-row__btn"
+      </Text>
+      <Text span size="sm" c="dimmed" visibleFrom="sm">
+        {player.age}a
+      </Text>
+      <Text span size="sm" c="dimmed" visibleFrom="sm">
+        STAM {stamina}
+      </Text>
+      <Text span size="sm" c="dimmed" style={{ fontVariantNumeric: "tabular-nums" }}>
+        $ {formatMoney(price)}
+      </Text>
+      <Button
+        size="compact-xs"
+        variant={action === "comprar" ? "filled" : "default"}
         onClick={onClick}
         disabled={!enabled}
         title={reason}
       >
         {label}
-      </button>
-    </div>
+      </Button>
+    </Group>
   );
 }
