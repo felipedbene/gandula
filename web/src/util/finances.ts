@@ -1,12 +1,35 @@
 import { teamById } from "../teams";
 import { avgStrength } from "./divisions";
 import { userTeam } from "./roster";
+import { evolveTeam } from "./regen";
 import {
+  FIRST_YEAR,
   findUserDivisionIdxInSeason,
   totalRoundsOf,
   type Career,
 } from "../persistence";
 import type { Player } from "../types";
+
+/**
+ * Strength of the opponent the user actually faced in `oppId`'s season —
+ * the EVOLVED team, not the immutable registry. buildNextSeason composes
+ * every opponent each season as `evolveTeam(registry, year − FIRST_YEAR,
+ * career.seed)` (age + retire + youth + rebuild), so the side on the pitch
+ * diverges from the registry from season 2 on. Bilheteria scales with that
+ * on-pitch strength, so we replay the SAME deterministic evolution here:
+ * identical inputs ⇒ the exact roster the engine simulated against.
+ *
+ * Season 0 (year === FIRST_YEAR) evolves by 0 — evolveTeam returns the
+ * registry team unchanged — so the first season is unaffected, matching how
+ * the initial season is built straight from the registry.
+ */
+function opponentStrength(career: Career, oppId: number): number {
+  const base = teamById(oppId);
+  if (!base) return 0;
+  const elapsed = career.currentSeason.year - FIRST_YEAR;
+  const onPitch = elapsed > 0 ? evolveTeam(base, elapsed, career.seed) : base;
+  return avgStrength(onPitch);
+}
 
 /** Home ticket revenue per opponent-strength point. Tuned so a Série A
  *  home game vs a strong opponent (~65 avg) yields ~65k and a Série B
@@ -52,8 +75,7 @@ export function homeTicketForRound(career: Career, roundIdx: number): number {
     if (fixtures[i].round !== roundIdx) continue;
     const m = matches[i];
     if (m.home === career.controlledTeamId) {
-      const opp = teamById(m.away);
-      return opp ? avgStrength(opp) * TICKET_REVENUE_PER_STRENGTH : 0;
+      return opponentStrength(career, m.away) * TICKET_REVENUE_PER_STRENGTH;
     }
     if (m.away === career.controlledTeamId) return 0; // away game
   }
@@ -126,7 +148,9 @@ function avgAttributes(player: Player): number {
  *
  * Ticket revenue: home games only. The away-team revenue belongs to the
  * away team's manager (which the user doesn't manage in E.1.d). Sum is
- * `Σ opponent.avgStrength × TICKET_REVENUE_PER_STRENGTH`.
+ * `Σ opponentStrength × TICKET_REVENUE_PER_STRENGTH`, where opponentStrength
+ * is the EVOLVED opponent that actually played (see `opponentStrength`), not
+ * the static registry — so revenue tracks the side on the pitch from season 2.
  *
  * Salaries: paid across the FULL roster (XI + bench + reserves), not
  * just the starting eleven — bench players cost money in real sports
@@ -151,9 +175,7 @@ export function computeSeasonFinances(
   let ticketRevenue = 0;
   userDiv.record.matches.forEach((m) => {
     if (m.home !== career.controlledTeamId) return;
-    const opponent = teamById(m.away);
-    if (!opponent) return;
-    ticketRevenue += avgStrength(opponent) * TICKET_REVENUE_PER_STRENGTH;
+    ticketRevenue += opponentStrength(career, m.away) * TICKET_REVENUE_PER_STRENGTH;
   });
 
   const salaries = team.roster.reduce(
