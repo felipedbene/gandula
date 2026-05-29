@@ -29,7 +29,7 @@ import {
   totalRoundsOf,
   type Career,
 } from "../persistence";
-import type { SeasonRecord } from "../types";
+import type { Player, SeasonRecord } from "../types";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const WASM_PATH = resolve(HERE, "../wasm/gandula_wasm_bg.wasm");
@@ -133,6 +133,88 @@ describe("computeSeasonFinances — salaries", () => {
 
     const fin = computeSeasonFinances(career, "stayed");
     expect(fin.salaries).toBe(expected);
+  });
+});
+
+describe("computeSeasonFinances — salaries follow the effective roster", () => {
+  // Regression for the latent bug where salaries were charged against the
+  // immutable registry roster (teamById) rather than the manager's actual
+  // squad (userTeam → userRoster). Strong squads you build must now cost
+  // proportionally more to maintain.
+  const expensivePlayer: Player = {
+    id: 999_999,
+    name: "Galáctico",
+    age: 26,
+    position: "FWD",
+    attributes: {
+      pace: 95,
+      technique: 95,
+      passing: 95,
+      defending: 95,
+      finishing: 95,
+      stamina: 95,
+    },
+  };
+
+  it("buying an expensive player increases salaries by exactly his wage", () => {
+    const career = makeFinishedCareer(1998n);
+    const registryRoster = teamById(career.controlledTeamId)!.roster;
+
+    // Baseline: empty userRoster → effective roster falls back to registry.
+    const base = computeSeasonFinances(career, "stayed").salaries;
+
+    // Buy: registry roster + the galáctico, persisted into userRoster.
+    const bought: Career = {
+      ...career,
+      userRoster: [...registryRoster, expensivePlayer],
+    };
+    const after = computeSeasonFinances(bought, "stayed").salaries;
+
+    expect(after).toBeGreaterThan(base);
+    expect(after - base).toBe(95 * SALARY_PER_PLAYER_STRENGTH);
+  });
+
+  it("salary slices still sum EXACTLY to the season salary with a custom roster", () => {
+    const career = makeFinishedCareer(1998n);
+    const registryRoster = teamById(career.controlledTeamId)!.roster;
+    const bought: Career = {
+      ...career,
+      userRoster: [...registryRoster, expensivePlayer],
+    };
+
+    const idx = findUserDivisionIdxInSeason(
+      bought.currentSeason,
+      bought.controlledTeamId,
+    );
+    const total = totalRoundsOf(bought.currentSeason.divisions[idx]);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += salarySliceForRound(bought, r);
+    expect(sum).toBe(computeSeasonFinances(bought, "stayed").salaries);
+  });
+
+  it("an aged roster (lower attributes) lowers salaries", () => {
+    const career = makeFinishedCareer(1998n);
+    const registryRoster = teamById(career.controlledTeamId)!.roster;
+    const base = computeSeasonFinances(career, "stayed").salaries;
+
+    // Age every player: clamp each attribute down by 10 (floor 1).
+    const aged: Career = {
+      ...career,
+      userRoster: registryRoster.map((p) => ({
+        ...p,
+        age: p.age + 5,
+        attributes: {
+          pace: Math.max(1, p.attributes.pace - 10),
+          technique: Math.max(1, p.attributes.technique - 10),
+          passing: Math.max(1, p.attributes.passing - 10),
+          defending: Math.max(1, p.attributes.defending - 10),
+          finishing: Math.max(1, p.attributes.finishing - 10),
+          stamina: Math.max(1, p.attributes.stamina - 10),
+        },
+      })),
+    };
+    const after = computeSeasonFinances(aged, "stayed").salaries;
+    expect(after).toBeLessThan(base);
   });
 });
 
