@@ -3,7 +3,7 @@
 // Pure unit tests for opponent regen — no WASM/DOM. Operates on the static
 // ALL_TEAMS registry.
 import { describe, expect, it } from "vitest";
-import { RETIREMENT_AGE, evolveTeam } from "./regen";
+import { RETIREMENT_AGE, evolveTeam, evolveRoster } from "./regen";
 import { REGEN_ID_BASE } from "./transfer-market";
 import { ALL_TEAMS } from "../teams";
 import type { Team } from "../types";
@@ -53,5 +53,38 @@ describe("evolveTeam", () => {
 
   it("0 seasons is a no-op", () => {
     expect(evolveTeam(team, 0, 1998n)).toEqual(team);
+  });
+});
+
+describe("evolveRoster (E.2.c — shared user/opponent squad churn)", () => {
+  it("ages survivors and holds roster size", () => {
+    const out = evolveRoster(team.roster, 1998n, team.id, 1);
+    expect(out.length).toBe(team.roster.length);
+    // A player who didn't retire is one year older.
+    const survivor = team.roster.find((p) => p.age + 1 < RETIREMENT_AGE)!;
+    const after = out.find((p) => p.id === survivor.id)!;
+    expect(after.age).toBe(survivor.age + 1);
+  });
+
+  it("retires players who reach RETIREMENT_AGE and replaces them with same-position youth", () => {
+    // Age the first starter to one year shy of retirement so this season tips
+    // them over (age+1 ≥ RETIREMENT_AGE).
+    const victim = team.roster[0];
+    const roster = team.roster.map((p) =>
+      p.id === victim.id ? { ...p, age: RETIREMENT_AGE - 1 } : p,
+    );
+    const out = evolveRoster(roster, 1998n, team.id, 1);
+
+    expect(out.some((p) => p.id === victim.id)).toBe(false); // retired
+    expect(out.length).toBe(roster.length); // size held
+    const youth = out.filter((p) => p.id >= REGEN_ID_BASE);
+    expect(youth.length).toBe(1);
+    expect(youth[0].position).toBe(victim.position); // same-position replacement
+  });
+
+  it("is deterministic in (roster, seed, teamId, yearOffset)", () => {
+    const a = evolveRoster(team.roster, 1998n, team.id, 3);
+    const b = evolveRoster(team.roster, 1998n, team.id, 3);
+    expect(a).toEqual(b);
   });
 });

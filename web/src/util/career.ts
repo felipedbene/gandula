@@ -11,8 +11,7 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
-import { ageRoster } from "./aging";
-import { evolveTeam } from "./regen";
+import { evolveTeam, evolveRoster } from "./regen";
 import { userTeam } from "./roster";
 
 /**
@@ -32,7 +31,10 @@ export type AdvanceResult = {
   /** Breakdown of money flow for the just-finished season. Surfaced so
    *  the UI can show line items without recomputing. */
   finances: SeasonFinances;
-  /** The user's roster aged one season (E.2.a). The caller persists it as
+  /** The user's roster after one season of churn (E.2.a/E.2.c): every player
+   *  aged, retirees (≥ RETIREMENT_AGE) replaced by same-position youth —
+   *  symmetric with the opponent evolution. (Name kept for call-site stability;
+   *  it's now evolved, not merely aged.) The caller persists it as
    *  `Career.userRoster`; it's also what next season was simulated against. */
   agedUserRoster: Player[];
 };
@@ -79,11 +81,21 @@ export function advanceCareer(
   const finances = computeSeasonFinances(career, userOutcome);
   const history = buildSeasonHistory(career, prResult, userOutcome, finances);
 
-  // E.2.a: age the user's squad one season before composing the next one, so
-  // next season is simulated against the aged attributes. ageRoster(userTeam…)
-  // also materializes a still-empty userRoster from the registry, so a
-  // transfer-free career still ages.
-  const agedUserRoster = ageRoster(userTeam(career).roster);
+  // E.2.a/E.2.c: churn the user's squad one season before composing the next
+  // one, so next season is simulated against the evolved roster. evolveRoster
+  // ages every player, retires those ≥ RETIREMENT_AGE, and replaces each with a
+  // same-position youth — symmetric with the opponent evolution below (same
+  // yearOffset, keyed on the controlled team id). It reads userTeam().roster,
+  // which materializes a still-empty userRoster from the registry, so a
+  // transfer-free career still ages and renews. userTeam() reconciles the XI on
+  // read, so a retired starter can't leave next season's auto-sim short of 11.
+  const elapsed = career.currentSeason.year + 1 - FIRST_YEAR;
+  const agedUserRoster = evolveRoster(
+    userTeam(career).roster,
+    career.seed,
+    career.controlledTeamId,
+    elapsed,
+  );
   const nextSeason = buildNextSeason(
     { ...career, userRoster: agedUserRoster },
     career.currentSeason,

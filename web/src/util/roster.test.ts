@@ -44,4 +44,30 @@ describe("userTeam", () => {
     // Bench ids still present in the roster survive, in order.
     expect(t.bench).toEqual(team.bench!.filter((id) => id !== soldBenchId));
   });
+
+  it("leaves the starting XI untouched when every starter is still rostered", () => {
+    // Drop a bench player only — no starter affected. XI is unchanged.
+    const soldBenchId = team.bench![0];
+    const userRoster = team.roster.filter((p) => p.id !== soldBenchId);
+    const t = userTeam(careerWith(userRoster));
+    expect(t.starting_xi).toEqual(team.starting_xi);
+  });
+
+  it("backfills the starting XI to a fieldable 11 when a starter has left the roster", () => {
+    // E.2.c: retirement can remove a starter outright (canSell blocks selling
+    // one). userTeam must drop the dangling id and refill so the engine sees 11.
+    const goneStarter = team.starting_xi[0];
+    const userRoster = team.roster.filter((p) => p.id !== goneStarter);
+    const t = userTeam(careerWith(userRoster));
+
+    expect(t.starting_xi).toHaveLength(11);
+    expect(new Set(t.starting_xi).size).toBe(11); // distinct
+    expect(t.starting_xi).not.toContain(goneStarter);
+    // Every XI id is a real rostered player.
+    const rosterIds = new Set(userRoster.map((p) => p.id));
+    for (const id of t.starting_xi) expect(rosterIds.has(id)).toBe(true);
+    // XI and bench stay disjoint.
+    const xi = new Set(t.starting_xi);
+    for (const id of t.bench ?? []) expect(xi.has(id)).toBe(false);
+  });
 });

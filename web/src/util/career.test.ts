@@ -12,8 +12,16 @@ import init, { run_season } from "../wasm/gandula_wasm.js";
 import { advanceCareer } from "./career";
 import { computePromotionRelegation } from "./promotion";
 import { divideIntoDivisions, pickStarterTeam } from "./divisions";
+import { RETIREMENT_AGE } from "./regen";
+import { REGEN_ID_BASE } from "./transfer-market";
+import { userTeam } from "./roster";
 import { ALL_TEAMS, teamById } from "../teams";
-import { FIRST_YEAR, STARTING_MONEY, type Career } from "../persistence";
+import {
+  FIRST_YEAR,
+  STARTING_MONEY,
+  totalRoundsOf,
+  type Career,
+} from "../persistence";
 import type { SeasonRecord } from "../types";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -290,6 +298,74 @@ describe("advanceCareer — determinism", () => {
     const r1 = advanceCareer(c1, pr1);
     const r2 = advanceCareer(c2, pr2);
     expect(r1.nextSeason.seed).not.toBe(r2.nextSeason.seed);
+  });
+});
+
+/** Drive the advance pipeline `n` times, mirroring SeasonView: persist the
+ *  evolved roster + P/R bonus, and mark the fresh season terminal so the next
+ *  computePromotionRelegation sees a finished season. */
+function advanceSeasons(career: Career, n: number): Career {
+  let c = career;
+  for (let i = 0; i < n; i++) {
+    const pr = computePromotionRelegation(c.currentSeason, c.controlledTeamId);
+    const { nextSeason, finances, agedUserRoster } = advanceCareer(c, pr);
+    c = {
+      ...c,
+      currentSeason: {
+        ...nextSeason,
+        divisions: nextSeason.divisions.map((d) => ({
+          ...d,
+          currentRoundIdx: totalRoundsOf(d),
+        })),
+      },
+      manager: { ...c.manager, money: c.manager.money + finances.prBonus },
+      userRoster: agedUserRoster,
+    };
+  }
+  return c;
+}
+
+describe("advanceCareer — user squad evolution (E.2.c)", () => {
+  it("retires a 36+ user player next season and keeps a fieldable roster", () => {
+    const career = makeFinishedCareer(1998n);
+    const base = teamById(career.controlledTeamId)!;
+    // Seed userRoster from the registry with one STARTER one year shy of
+    // retirement, so this advance ages them over the threshold.
+    const victimId = base.starting_xi[0];
+    const userRoster = base.roster.map((p) =>
+      p.id === victimId ? { ...p, age: RETIREMENT_AGE - 1 } : { ...p },
+    );
+    const c = { ...career, userRoster };
+    const pr = computePromotionRelegation(c.currentSeason, c.controlledTeamId);
+    const { agedUserRoster } = advanceCareer(c, pr);
+
+    expect(agedUserRoster.some((p) => p.id === victimId)).toBe(false); // retired
+    expect(agedUserRoster.length).toBe(userRoster.length); // size held by youth
+    // The resulting effective team is engine-valid (XI backfilled past the gap).
+    const t = userTeam({ ...c, userRoster: agedUserRoster });
+    expect(t.starting_xi).toHaveLength(11);
+    expect(t.starting_xi).not.toContain(victimId);
+    const ids = new Set(agedUserRoster.map((p) => p.id));
+    for (const id of t.starting_xi) expect(ids.has(id)).toBe(true);
+  });
+
+  it("runs 20 seasons without the user squad degenerating to all-floor veterans", () => {
+    const c = advanceSeasons(makeFinishedCareer(1998n), 20);
+    // Retirement caps age: nobody is past the threshold (they'd have retired).
+    const maxAge = Math.max(...c.userRoster.map((p) => p.age));
+    expect(maxAge).toBeLessThan(RETIREMENT_AGE);
+    // The squad has refreshed — regen youth are present, not just decayed
+    // registry originals.
+    expect(c.userRoster.some((p) => p.id >= REGEN_ID_BASE)).toBe(true);
+    // Still fieldable after a long career.
+    const t = userTeam(c);
+    expect(t.starting_xi).toHaveLength(11);
+  });
+
+  it("user squad evolution is deterministic for a fixed seed", () => {
+    const a = advanceSeasons(makeFinishedCareer(1998n), 5).userRoster;
+    const b = advanceSeasons(makeFinishedCareer(1998n), 5).userRoster;
+    expect(a).toEqual(b);
   });
 });
 
