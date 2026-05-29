@@ -3,7 +3,9 @@ import type { Match, Team } from "../types";
 import { computeStandings } from "../types";
 import { teamById } from "../teams";
 import { userTeam } from "./roster";
+import { evolveTeam } from "./regen";
 import {
+  FIRST_YEAR,
   findUserDivisionIdxInSeason,
   totalRoundsOf,
   type Career,
@@ -68,6 +70,26 @@ export function resimulateFromRound(
   const userDiv = season.divisions[userDivIdx];
   const divSeed = season.seed ^ BigInt(userDiv.tier);
 
+  // Opponents the season was played against are the EVOLVED registry teams
+  // (buildNextSeason composes them as evolveTeam(registry, elapsed, seed)).
+  // Re-simulating against the static registry would diverge from season 2 on,
+  // so a re-sim with unchanged tactics wouldn't reproduce the original result.
+  // Replay the same (team, elapsed, seed) evolution; season 0 → elapsed 0 →
+  // registry unchanged. Memoized: the user faces each opponent twice.
+  const elapsed = season.year - FIRST_YEAR;
+  const evolvedCache = new Map<number, Team>();
+  const liveOpponent = (id: number): Team => {
+    const cached = evolvedCache.get(id);
+    if (cached) return cached;
+    const base = teamById(id);
+    if (!base) {
+      throw new Error(`Opponent team ${id} not found in registry`);
+    }
+    const evolved = evolveTeam(base, elapsed, career.seed);
+    evolvedCache.set(id, evolved);
+    return evolved;
+  };
+
   const newMatches: Match[] = userDiv.record.matches.slice();
   userDiv.record.fixtures.forEach((f, i) => {
     if (f.round < fromRoundIdx) return;
@@ -77,10 +99,7 @@ export function resimulateFromRound(
     if (!isUserHome && !isUserAway) return;
 
     const opponentId = isUserHome ? oldMatch.away : oldMatch.home;
-    const opponentTeam = teamById(opponentId);
-    if (!opponentTeam) {
-      throw new Error(`Opponent team ${opponentId} not found in registry`);
-    }
+    const opponentTeam = liveOpponent(opponentId);
 
     const matchSeed = derive_match_seed(divSeed, i);
     const home = isUserHome ? effectiveUserTeam : opponentTeam;

@@ -14,12 +14,17 @@ import init, {
   run_season,
 } from "../wasm/gandula_wasm.js";
 import { applyUserTactics, resimulateFromRound } from "./resimulate";
-import { divideIntoDivisions, pickStarterTeam } from "./divisions";
+import { divideIntoDivisions, pickStarterTeam, avgStrength } from "./divisions";
+import { advanceCareer } from "./career";
+import { computePromotionRelegation } from "./promotion";
+import { userTeam } from "./roster";
+import { evolveTeam } from "./regen";
 import { ALL_TEAMS, teamById } from "../teams";
 import {
   FIRST_YEAR,
   STARTING_MONEY,
   findUserDivisionIdxInSeason,
+  totalRoundsOf,
   type Career,
   type UserTactics,
 } from "../persistence";
@@ -212,6 +217,82 @@ describe("resimulateFromRound", () => {
     const override = overrideFor(career.controlledTeamId);
     const result = resimulateFromRound(career, 0, override);
     expect(result.currentSeason.userTactics).toEqual(override);
+  });
+
+  it("reproduces the user's matches against the EVOLVED opponent (year > FIRST_YEAR)", () => {
+    // Advance into seasons where opponents have evolved (aged/retired/youth),
+    // then re-simulate from round 0 with the tactics the season actually used.
+    // With the registry opponent the results would diverge; with the evolved
+    // opponent they reproduce byte-for-byte.
+    const advanceSeasons = (career: Career, n: number): Career => {
+      let c = career;
+      for (let i = 0; i < n; i++) {
+        const pr = computePromotionRelegation(c.currentSeason, c.controlledTeamId);
+        const { nextSeason, agedUserRoster } = advanceCareer(c, pr);
+        c = {
+          ...c,
+          userRoster: agedUserRoster,
+          currentSeason: {
+            ...nextSeason,
+            divisions: nextSeason.divisions.map((d) => ({
+              ...d,
+              currentRoundIdx: totalRoundsOf(d),
+            })),
+          },
+        };
+      }
+      return c;
+    };
+
+    // currentRoundIdx 18 ≥ both tiers' round counts ⇒ season 0 is finished.
+    const career = advanceSeasons(makeCareer(1998n, 18), 3);
+    expect(career.currentSeason.year).toBe(FIRST_YEAR + 3);
+
+    const userDivIdx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const userDiv = career.currentSeason.divisions[userDivIdx];
+
+    // Tactics equal to what buildNextSeason used: registry-default formation +
+    // tactics, with the reconciled XI/bench from the effective team.
+    const eff = userTeam(career);
+    const tactics: UserTactics = {
+      formation: eff.formation,
+      tactics: eff.tactics,
+      starting_xi: eff.starting_xi.slice(),
+      bench: eff.bench?.slice() ?? [],
+    };
+
+    const out = resimulateFromRound(career, 0, tactics);
+    const outDiv = out.currentSeason.divisions[userDivIdx];
+
+    let userMatches = 0;
+    userDiv.record.fixtures.forEach((_, i) => {
+      const m = userDiv.record.matches[i];
+      if (m.home === career.controlledTeamId || m.away === career.controlledTeamId) {
+        userMatches++;
+        expect(outDiv.record.matches[i]).toEqual(m);
+      }
+    });
+    expect(userMatches).toBeGreaterThan(0);
+
+    // Sanity: the evolution is non-trivial here — at least one user opponent's
+    // evolved strength differs from its registry strength, so this genuinely
+    // exercises the registry-vs-evolved path (not a vacuous pass).
+    const elapsed = career.currentSeason.year - FIRST_YEAR;
+    const someDiverges = userDiv.record.matches.some((m) => {
+      const oppId =
+        m.home === career.controlledTeamId
+          ? m.away
+          : m.away === career.controlledTeamId
+            ? m.home
+            : undefined;
+      if (oppId === undefined) return false;
+      const reg = teamById(oppId)!;
+      return avgStrength(evolveTeam(reg, elapsed, career.seed)) !== avgStrength(reg);
+    });
+    expect(someDiverges).toBe(true);
   });
 
   it("recomputes standings consistent with the new matches array", () => {
