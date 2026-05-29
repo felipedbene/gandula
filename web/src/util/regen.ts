@@ -26,6 +26,38 @@ export function evolveTeam(team: Team, seasons: number, careerSeed: bigint): Tea
   return t;
 }
 
+/**
+ * One season of squad churn applied to a live roster: age every player, retire
+ * those who reach RETIREMENT_AGE, and replace each retiree with one
+ * same-position youth so the roster size holds constant. Pure + deterministic
+ * in (roster, careerSeed, teamId, yearOffset) — the same `regenId` namespacing
+ * keeps generated ids collision-free across teams and seasons.
+ *
+ * This is the roster core shared by opponent regen (`evolveOneSeason`, which
+ * also rebuilds XI/bench from the registry) and the user's squad (E.2.c — the
+ * controlled club now retires + regenerates like everyone else, applied once
+ * per `advanceCareer` to the persisted userRoster). The user's XI/bench aren't
+ * rebuilt here: `userTeam` reconciles the starting XI on read, and the user
+ * reconfigures tactics each season anyway.
+ */
+export function evolveRoster(
+  roster: Player[],
+  careerSeed: bigint,
+  teamId: number,
+  yearOffset: number,
+): Player[] {
+  const rng = rngFor(careerSeed, teamId, yearOffset);
+  const aged = ageRoster(roster);
+  const retired = aged.filter((p) => p.age >= RETIREMENT_AGE);
+  const retiredIds = new Set(retired.map((p) => p.id));
+  const survivors = aged.filter((p) => !retiredIds.has(p.id));
+  // One youth per retiree, same position — roster size holds constant.
+  const youth: Player[] = retired.map((r, slot) =>
+    buildYouth(rng, regenId(teamId, yearOffset, slot), r.position),
+  );
+  return [...survivors, ...youth];
+}
+
 function rngFor(careerSeed: bigint, teamId: number, yearOffset: number): () => number {
   const s =
     (careerSeed ^ BigInt(teamId) ^ (BigInt(yearOffset) * 0x9e37n) ^ 0x4ee7n) &
@@ -34,20 +66,17 @@ function rngFor(careerSeed: bigint, teamId: number, yearOffset: number): () => n
 }
 
 function evolveOneSeason(team: Team, careerSeed: bigint, yearOffset: number): Team {
-  const rng = rngFor(careerSeed, team.id, yearOffset);
+  // 1. Age + churn the roster (shared with the user's squad path).
+  const roster = evolveRoster(team.roster, careerSeed, team.id, yearOffset);
 
-  // 1. Age, then split into who stays and who retires.
+  // 2. Bookkeeping the XI/bench backfill needs: who aged out, and the aged
+  //    record of each player (for the retiree's position). Recomputed from the
+  //    same pure ageRoster, so it matches the survivors in `roster` exactly.
   const aged = ageRoster(team.roster);
   const agedById = new Map(aged.map((p) => [p.id, p]));
-  const retired = aged.filter((p) => p.age >= RETIREMENT_AGE);
-  const retiredIds = new Set(retired.map((p) => p.id));
-  const survivors = aged.filter((p) => !retiredIds.has(p.id));
-
-  // 2. One youth per retiree, same position — roster size holds constant.
-  const youth: Player[] = retired.map((r, slot) =>
-    buildYouth(rng, regenId(team.id, yearOffset, slot), r.position),
+  const retiredIds = new Set(
+    aged.filter((p) => p.age >= RETIREMENT_AGE).map((p) => p.id),
   );
-  const roster = [...survivors, ...youth];
 
   // 3. Rebuild XI + bench so they stay valid (no retired ids, 11 in roster).
   const startingXi = backfillXI(team.starting_xi, retiredIds, roster, agedById);

@@ -21,6 +21,9 @@ import {
   salarySliceForRound,
 } from "./finances";
 import { divideIntoDivisions, pickStarterTeam, avgStrength } from "./divisions";
+import { advanceCareer } from "./career";
+import { computePromotionRelegation } from "./promotion";
+import { evolveTeam } from "./regen";
 import { ALL_TEAMS, teamById } from "../teams";
 import {
   FIRST_YEAR,
@@ -133,6 +136,82 @@ describe("computeSeasonFinances — salaries", () => {
 
     const fin = computeSeasonFinances(career, "stayed");
     expect(fin.salaries).toBe(expected);
+  });
+});
+
+/** Drive the season-advance pipeline `n` times, mirroring SeasonView's
+ *  orchestration (apply the P/R bonus, carry the aged roster forward). */
+function advanceSeasons(career: Career, n: number): Career {
+  let c = career;
+  for (let i = 0; i < n; i++) {
+    const pr = computePromotionRelegation(c.currentSeason, c.controlledTeamId);
+    const { history, nextSeason, finances, agedUserRoster } = advanceCareer(c, pr);
+    // advanceCareer hands back a fresh season at round 0; the real game plays
+    // it out before the next advance, so mark it terminal for re-advancing.
+    const finished = {
+      ...nextSeason,
+      divisions: nextSeason.divisions.map((d) => ({
+        ...d,
+        currentRoundIdx: totalRoundsOf(d),
+      })),
+    };
+    c = {
+      ...c,
+      seasons: [...c.seasons, history],
+      currentSeason: finished,
+      manager: { ...c.manager, money: c.manager.money + finances.prBonus },
+      userRoster: agedUserRoster,
+    };
+  }
+  return c;
+}
+
+describe("computeSeasonFinances — ticket revenue tracks the EVOLVED opponent", () => {
+  // Regression: bilheteria scaled with the immutable registry opponent, but
+  // matches are simulated against opponents evolved by evolveTeam each season
+  // (career.ts buildNextSeason). From season 2 on the side on the pitch
+  // diverges from the registry, so revenue must replay the same evolution.
+  it("sums avgStrength of the evolved away team for home games", () => {
+    const N = 3; // far enough that opponent evolution (age/retire/youth) bites
+    const career = advanceSeasons(makeFinishedCareer(1998n), N);
+    const season = career.currentSeason;
+    expect(season.year).toBe(FIRST_YEAR + N);
+
+    const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+    const userDiv = season.divisions[userDivIdx];
+    const elapsed = season.year - FIRST_YEAR;
+
+    let evolvedSum = 0;
+    let registrySum = 0;
+    let homeGames = 0;
+    userDiv.record.matches.forEach((m) => {
+      if (m.home !== career.controlledTeamId) return;
+      homeGames++;
+      const base = teamById(m.away)!;
+      evolvedSum +=
+        avgStrength(evolveTeam(base, elapsed, career.seed)) *
+        TICKET_REVENUE_PER_STRENGTH;
+      registrySum += avgStrength(base) * TICKET_REVENUE_PER_STRENGTH;
+    });
+    expect(homeGames).toBeGreaterThan(0);
+
+    const fin = computeSeasonFinances(career, "stayed");
+    // Correctness: revenue matches the on-pitch (evolved) opponents exactly.
+    expect(fin.ticketRevenue).toBe(evolvedSum);
+    // And the fix actually moves the number — the old registry-based sum differs.
+    expect(evolvedSum).not.toBe(registrySum);
+  });
+
+  it("per-round home tickets still sum to the season ticket revenue (evolved)", () => {
+    const career = advanceSeasons(makeFinishedCareer(1998n), 3);
+    const idx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const total = totalRoundsOf(career.currentSeason.divisions[idx]);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += homeTicketForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").ticketRevenue);
   });
 });
 
