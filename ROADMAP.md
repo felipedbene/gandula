@@ -31,8 +31,14 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
   the fly by elapsed seasons (recompute from registry base, no per-team state).
 - [x] **E.2.b — Youth / regen (opponents)** · _M, web_ — shipped: AI clubs
   retire ≥36 + intake youth + rebuild a valid XI each season (evolveTeam), so
-  the league refreshes instead of decaying. The user refreshes via the market.
-  (A visible youth academy for the user is a possible later add.)
+  the league refreshes instead of decaying.
+- [x] **E.2.c — Retire + regen (your squad)** · _M, web_ — shipped: the user's
+  squad is now symmetric with opponents — 36+ players retire and same-position
+  youth come through (shared `evolveRoster`), holding roster size, instead of
+  only aging toward the floor. `userTeam` reconciles the XI so a retired starter
+  can't break re-sim. The market remains the lever for proactive renewal; this
+  just stops the league silently pulling away over a long career. (A visible
+  youth academy / pipeline for the user is a possible later add.)
 
 ## E.3 — Smarter opponents (self-play rival managers)
 
@@ -60,7 +66,8 @@ Broken into steps — the endgame is learned per-club managers via self-play.
 2. ~~Scout reports~~ ✓ shipped
 3. ~~E.2.a — aging (your squad)~~ ✓ shipped
 4. ~~E.2.a.2 — league-wide aging~~ ✓ shipped
-5. ~~E.2.b — youth / regen (opponents)~~ ✓ shipped — E.2 living world complete
+5. ~~E.2.b — youth / regen (opponents)~~ ✓ shipped
+   ~~E.2.c — retire / regen (your squad)~~ ✓ shipped — E.2 living world complete
 6. ~~E.3.a — ManagerConfig (self-play substrate)~~ ✓ shipped
 7. ~~E.3.b — per-club manager styles~~ ✓ shipped
 8. **E.3.c — self-play search** — tune/learn configs by fitness; the endgame. ← next
