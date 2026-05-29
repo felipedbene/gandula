@@ -1,5 +1,6 @@
 import { teamById } from "../teams";
 import { avgStrength } from "./divisions";
+import { userTeam } from "./roster";
 import {
   findUserDivisionIdxInSeason,
   totalRoundsOf,
@@ -70,9 +71,8 @@ export function salarySliceForRound(career: Career, roundIdx: number): number {
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const total = totalRoundsOf(season.divisions[userDivIdx]);
   if (total <= 0) return 0;
-  const userTeam = teamById(career.controlledTeamId);
-  if (!userTeam) return 0;
-  const s = userTeam.roster.reduce(
+  if (!teamById(career.controlledTeamId)) return 0;
+  const s = userTeam(career).roster.reduce(
     (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
     0,
   );
@@ -119,7 +119,8 @@ function avgAttributes(player: Player): number {
 /**
  * Compute finances for the just-finished season. Pure — derived from the
  * career's `currentSeason.divisions[userDivIdx].record.matches` (filtered
- * to home games), the user's roster from the registry, and the
+ * to home games), the user's effective roster (`userTeam(career)` — the
+ * transfer/aging-aware squad, not the immutable registry), and the
  * pre-computed `userOutcome` (which is `userOutcomeFromPRResult(pr)` at
  * every call site today).
  *
@@ -142,12 +143,10 @@ export function computeSeasonFinances(
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const userDiv = season.divisions[userDivIdx];
 
-  const userTeam = teamById(career.controlledTeamId);
-  if (!userTeam) {
-    throw new Error(
-      `computeSeasonFinances: controlled team ${career.controlledTeamId} not in registry`,
-    );
-  }
+  // userTeam(career) throws when the controlled team isn't in the registry —
+  // the same save-invariant violation the old teamById guard caught — and
+  // returns the effective (transfer/aging-aware) roster otherwise.
+  const team = userTeam(career);
 
   let ticketRevenue = 0;
   userDiv.record.matches.forEach((m) => {
@@ -157,7 +156,7 @@ export function computeSeasonFinances(
     ticketRevenue += avgStrength(opponent) * TICKET_REVENUE_PER_STRENGTH;
   });
 
-  const salaries = userTeam.roster.reduce(
+  const salaries = team.roster.reduce(
     (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
     0,
   );
