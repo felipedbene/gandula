@@ -43,7 +43,7 @@ function makeCareer(): Career {
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -59,7 +59,7 @@ function makeCareer(): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: [],
   };
 }
@@ -79,7 +79,7 @@ function makeCareerWithBye(): Career {
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordC = run_season(nine, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -93,7 +93,7 @@ function makeCareerWithBye(): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: [],
   };
 }

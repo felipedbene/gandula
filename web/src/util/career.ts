@@ -17,7 +17,12 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { buildCopa, cupResultFor } from "./copa";
-import { computeSeasonFinances, nextFanbase, type SeasonFinances } from "./finances";
+import {
+  computeSeasonFinances,
+  nextFanbase,
+  nextMarketingMomentum,
+  type SeasonFinances,
+} from "./finances";
 import { evolveTeam, evolveRoster } from "./regen";
 import { userTeam } from "./roster";
 
@@ -47,6 +52,9 @@ export type AdvanceResult = {
   /** Fanbase for next season after the boundary drift (E.4.b.4). The caller
    *  writes it to `manager.fanbase`. */
   nextFanbase: number;
+  /** Marketing momentum for next season after decay (E.4.b.5). The caller
+   *  writes it to `manager.marketingMomentum`. */
+  nextMarketingMomentum: number;
 };
 
 /**
@@ -125,11 +133,15 @@ export function advanceCareer(
         ? finishedTier + 1
         : finishedTier
   ) as 1 | 2 | 3;
+  // E.4.b.5: the drift target is lifted by marketing momentum (so paid
+  // campaigns persist), and momentum itself decays toward 0 each season.
   const nextFanbaseValue = nextFanbase(
     career.manager.fanbase,
     nextTier,
     history.userPosition,
+    career.manager.marketingMomentum,
   );
+  const nextMomentum = nextMarketingMomentum(career.manager.marketingMomentum);
 
   return {
     history,
@@ -137,6 +149,7 @@ export function advanceCareer(
     finances,
     agedUserRoster,
     nextFanbase: nextFanbaseValue,
+    nextMarketingMomentum: nextMomentum,
   };
 }
 

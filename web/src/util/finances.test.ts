@@ -19,6 +19,8 @@ import {
   SALARY_PER_PLAYER_STRENGTH,
   TV_DEAL_BY_TIER,
   WIN_BONUS,
+  CAMPAIGN_FANBASE,
+  MARKETING_MOMENTUM_PER_CAMPAIGN,
   STADIUM_EXPANSION_STEP,
   STADIUM_MAX_CAPACITY,
   computeSeasonFinances,
@@ -26,8 +28,10 @@ import {
   expansionCost,
   homeTicketForRound,
   isManagerFired,
+  marketingCost,
   matchBonusForRound,
   nextFanbase,
+  nextMarketingMomentum,
   placementPrizeFor,
   roundCashDelta,
   salarySliceForRound,
@@ -74,7 +78,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -90,7 +94,7 @@ function makeFinishedCareer(seed: bigint): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: [],
   };
 }
@@ -609,5 +613,50 @@ describe("E.4.b.4 — stadium & fanbase", () => {
       "stayed",
     ).ticketRevenue;
     expect(maxed).toBeGreaterThan(baseline);
+  });
+});
+
+describe("E.4.b.5 — marketing campaigns", () => {
+  it("marketingCost rises with accumulated momentum", () => {
+    expect(marketingCost(12_000)).toBeGreaterThan(marketingCost(0));
+  });
+
+  it("nextMarketingMomentum decays toward 0 and floors", () => {
+    const once = nextMarketingMomentum(6_000);
+    expect(once).toBeLessThan(6_000);
+    expect(once).toBeGreaterThan(0);
+    // Repeated decay reaches 0.
+    let m = 6_000;
+    for (let i = 0; i < 20; i++) m = nextMarketingMomentum(m);
+    expect(m).toBe(0);
+  });
+
+  it("marketing momentum lifts the next-season fanbase target", () => {
+    // Start near the tier-2 target (30k) so the drift-step cap doesn't bind the
+    // no-momentum case; with momentum the target is far higher, so it drifts up
+    // more. (At position 10 the placement swing is 0.)
+    const without = nextFanbase(29_000, 2, 10, 0);
+    const withMomentum = nextFanbase(29_000, 2, 10, 12_000);
+    expect(withMomentum).toBeGreaterThan(without);
+  });
+
+  it("a campaign's boost persists across a season better than no campaign", () => {
+    // Model the boundary: a club that ran campaigns (high momentum + boosted
+    // fanbase) keeps a higher fanbase next season than an identical club that
+    // didn't, even after the drift.
+    const start = 20_000;
+    const noCampaign = nextFanbase(start, 3, 8, 0);
+    const campaigned = nextFanbase(
+      start + CAMPAIGN_FANBASE,
+      3,
+      8,
+      MARKETING_MOMENTUM_PER_CAMPAIGN,
+    );
+    expect(campaigned).toBeGreaterThan(noCampaign);
+  });
+
+  it("seedStadiumForTier starts marketing momentum at 0", () => {
+    expect(seedStadiumForTier(1).marketingMomentum).toBe(0);
+    expect(seedStadiumForTier(3).marketingMomentum).toBe(0);
   });
 });

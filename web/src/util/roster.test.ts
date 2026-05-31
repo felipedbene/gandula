@@ -12,7 +12,7 @@ const team = ALL_TEAMS.find((t) => t.name === "Amazônia do Norte")!;
 
 function careerWith(userRoster: typeof team.roster): Career {
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: team.id,
@@ -24,7 +24,7 @@ function careerWith(userRoster: typeof team.roster): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster,
   };
 }

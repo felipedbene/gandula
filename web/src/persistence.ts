@@ -102,6 +102,11 @@ export type Manager = {
    *  / sponsorship). Drifts slowly toward a tier+placement target each season;
    *  first-class state so the RL policy can observe and learn to grow it. */
   fanbase: number;
+  /** Marketing momentum (E.4.b.5): a decaying bonus to the fanbase drift target
+   *  that paid campaigns raise, so a campaign's effect persists a few seasons
+   *  rather than snapping back. Halves each season; 0 when no campaign is
+   *  active. */
+  marketingMomentum: number;
 };
 
 /**
@@ -254,7 +259,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 8;
+  schemaVersion: 9;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -300,20 +305,24 @@ async function db(): Promise<IDBPDatabase> {
 
 /**
  * Result of `loadCareer`. Discriminated kinds:
- *   - `loaded`: a current (v8) Career was read directly.
- *   - `migratedV7`: a v7 save (no stadium/fanbase) — the caller seeds
- *     `manager.stadiumCapacity`/`fanbase` from the user's tier and re-saves v8.
+ *   - `loaded`: a current (v9) Career was read directly.
+ *   - `migratedV8`: a v8 save (no marketingMomentum) — the caller seeds it to 0
+ *     and re-saves v9.
+ *   - `migratedV7`: a v7 save (no stadium/fanbase) — the caller seeds the
+ *     stadium fields (+ momentum 0) from the user's tier and re-saves v9.
  *   - `migratedV6`: a v6 save (no Copa AND no stadium) — the caller adds the
- *     Copa, then seeds the stadium fields, re-saving v8 (a v6→v7→v8 cascade).
+ *     Copa, then seeds the stadium fields (+ momentum), re-saving v9.
  *   - `expandedWorld`: a pre-v6 save was found and discarded because the world
  *     expanded to three tiers (E.2). The caller starts a fresh career.
  *   - `none`: empty slot.
  *
- * Both additive migrations (Copa, stadium) run in the caller (SeasonView load
- * effect), so persistence has no runtime dependency on copa / finances.
+ * All additive migrations (Copa, stadium, marketing) run in the caller
+ * (SeasonView load effect), so persistence has no runtime dependency on
+ * copa / finances.
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV8"; career: Career }
   | { kind: "migratedV7"; career: Career }
   | { kind: "migratedV6"; career: Career }
   | { kind: "expandedWorld" }
@@ -321,11 +330,11 @@ export type LoadCareerResult =
 
 /**
  * Read the current career.
- *   - v8 (current): returned as-is.
- *   - v7 (pre-stadium): `migratedV7` — the caller adds stadiumCapacity/fanbase
- *     and re-saves. Additive, career preserved.
+ *   - v9 (current): returned as-is.
+ *   - v8 (pre-marketing): `migratedV8` — the caller adds marketingMomentum 0.
+ *   - v7 (pre-stadium): `migratedV7` — the caller adds the stadium fields.
  *   - v6 (pre-Copa): `migratedV6` — the caller adds the Copa AND the stadium
- *     fields and re-saves v8. Additive.
+ *     fields, re-saving v9.
  *   - v1–v5: discarded — the E.2 three-tier expansion is a hard break
  *     (`expandedWorld`).
  *   - empty slot: `none`.
@@ -336,16 +345,20 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 8) {
+  if (candidate.schemaVersion === 9) {
     return { kind: "loaded", career: value as Career };
   }
+  if (candidate.schemaVersion === 8) {
+    // Lacks manager.marketingMomentum; the caller seeds it to 0.
+    return { kind: "migratedV8", career: value as unknown as Career };
+  }
   if (candidate.schemaVersion === 7) {
-    // Lacks manager.stadiumCapacity/fanbase; the caller seeds them by tier.
+    // Lacks the stadium fields; the caller seeds them by tier (+ momentum 0).
     return { kind: "migratedV7", career: value as unknown as Career };
   }
   if (candidate.schemaVersion === 6) {
     // Lacks both currentSeason.copa AND the stadium fields; the caller fills
-    // the Copa (initCopaForSeason) then seeds the stadium, re-saving v8.
+    // the Copa (initCopaForSeason) then seeds the stadium, re-saving v9.
     return { kind: "migratedV6", career: value as unknown as Career };
   }
   await conn.delete(STORE, SLOT_KEY);

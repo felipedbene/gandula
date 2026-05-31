@@ -4,6 +4,7 @@ import {
   MAX_ROSTER,
   canBuy,
   canExpand,
+  canMarket,
   canSell,
   generateFreeAgents,
   playerPrice,
@@ -12,8 +13,11 @@ import {
   type TransferAction,
 } from "../util/transfer-market";
 import {
+  CAMPAIGN_FANBASE,
+  MARKETING_MOMENTUM_PER_CAMPAIGN,
   STADIUM_EXPANSION_STEP,
   expansionCost,
+  marketingCost,
 } from "../util/finances";
 import { formatMoney } from "../util/money";
 import type { Career, TransferRecord } from "../persistence";
@@ -172,6 +176,34 @@ export default function TransferMarketView({
     ]);
   }
 
+  // E.4.b.5: run a marketing campaign. Adds fanbase now AND raises the decaying
+  // marketingMomentum the seasonal drift target reads, so the boost persists a
+  // few seasons. Reversible; purely a manager-state spend.
+  function runCampaign() {
+    const check = canMarket(working);
+    if (!check.ok) return;
+    const price = marketingCost(working.manager.marketingMomentum);
+    setWorking({
+      ...working,
+      manager: {
+        ...working.manager,
+        money: working.manager.money - price,
+        fanbase: working.manager.fanbase + CAMPAIGN_FANBASE,
+        marketingMomentum:
+          working.manager.marketingMomentum + MARKETING_MOMENTUM_PER_CAMPAIGN,
+      },
+    });
+    setActions([
+      ...actions,
+      {
+        kind: "runCampaign",
+        fanbase: CAMPAIGN_FANBASE,
+        momentum: MARKETING_MOMENTUM_PER_CAMPAIGN,
+        price,
+      },
+    ]);
+  }
+
   function undoLast() {
     if (actions.length === 0) return;
     const last = actions[actions.length - 1];
@@ -183,6 +215,20 @@ export default function TransferMarketView({
           ...working.manager,
           money: working.manager.money + last.price,
           stadiumCapacity: working.manager.stadiumCapacity - last.seats,
+        },
+      });
+      setActions(actions.slice(0, -1));
+      return;
+    }
+
+    if (last.kind === "runCampaign") {
+      setWorking({
+        ...working,
+        manager: {
+          ...working.manager,
+          money: working.manager.money + last.price,
+          fanbase: working.manager.fanbase - last.fanbase,
+          marketingMomentum: working.manager.marketingMomentum - last.momentum,
         },
       });
       setActions(actions.slice(0, -1));
@@ -227,7 +273,7 @@ export default function TransferMarketView({
         {MAX_ROSTER}
       </Text>
 
-      <Panel title="Estádio & torcida">
+      <Panel title="Estádio, torcida & marketing">
         <Stack gap={4}>
           <Group justify="space-between" wrap="nowrap">
             <Text size="sm">Capacidade do estádio</Text>
@@ -257,6 +303,26 @@ export default function TransferMarketView({
                   onClick={expandStadium}
                 >
                   Ampliar +{formatMoney(STADIUM_EXPANSION_STEP)} · $ {formatMoney(cost)}
+                </Button>
+              </Group>
+            );
+          })()}
+          {(() => {
+            const check = canMarket(working);
+            const cost = marketingCost(working.manager.marketingMomentum);
+            return (
+              <Group justify="space-between" wrap="nowrap">
+                <Text c="dimmed" size="xs">
+                  Campanha de marketing aumenta a torcida (e dura algumas temporadas).
+                </Text>
+                <Button
+                  size="xs"
+                  variant="default"
+                  disabled={!check.ok}
+                  title={check.ok ? undefined : check.reason}
+                  onClick={runCampaign}
+                >
+                  Campanha +{formatMoney(CAMPAIGN_FANBASE)} · $ {formatMoney(cost)}
                 </Button>
               </Group>
             );

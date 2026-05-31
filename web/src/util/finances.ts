@@ -96,6 +96,37 @@ export const FANBASE_PLACEMENT_SWING = 15_000;
 export const FANBASE_PLACEMENT_PIVOT = 10; // finish above 10th → grow, below → shrink
 export const FANBASE_MAX_STEP = 4_000; // ~4 seasons to fully grow the base
 
+// ─── E.4.b.5 — marketing campaigns (paid fanbase growth) ─────────────────
+//
+// The demand-side lever: a campaign grows the fanbase NOW and raises a decaying
+// `marketingMomentum` that the seasonal drift target is nudged by — so spend
+// persists a few seasons rather than snapping back to the organic tier target.
+// Pairs with the stadium (supply): capacity caps the gate, fanbase fills it.
+
+/** Fanbase added immediately by one campaign (≈1.5× the organic season step,
+ *  so paying clearly beats waiting). */
+export const CAMPAIGN_FANBASE = 6_000;
+/** Drift-target nudge a campaign adds to marketingMomentum. */
+export const MARKETING_MOMENTUM_PER_CAMPAIGN = 6_000;
+/** Momentum halves each season → a campaign's target-boost fades over ~3–4
+ *  seasons (you must keep spending to sustain a big crowd). */
+export const MARKETING_MOMENTUM_DECAY = 0.5;
+/** Cap on accumulated momentum (and thus the campaign cost ceiling). */
+export const MARKETING_MOMENTUM_MAX = 40_000;
+/** Campaign cost, rising with accumulated momentum so it can't be spammed
+ *  cheaply. Cheaper per use than a stadium expansion, but bounded by the
+ *  momentum cap + decay. */
+export function marketingCost(currentMomentum: number): number {
+  return 800_000 + currentMomentum * 120;
+}
+
+/** Momentum for next season — decays toward 0. Pure. Snaps small residual
+ *  values to 0 so it fully fades (round-half-up would otherwise stick at 1). */
+export function nextMarketingMomentum(currentMomentum: number): number {
+  const decayed = Math.round(currentMomentum * MARKETING_MOMENTUM_DECAY);
+  return decayed <= 1 ? 0 : decayed;
+}
+
 /** Home-gate revenue for one home match: min(demand, capacity) × price. Shared
  *  by the per-round and season-total paths so they stay identical (the
  *  per-round-sums-to-season invariant). */
@@ -111,31 +142,36 @@ function homeGateRevenue(
   return Math.round(attendance * TICKET_PRICE);
 }
 
-/** Seed stadium state for a new career / migrated save from a division tier. */
+/** Seed stadium + marketing state for a new career / migrated save from a
+ *  division tier. Momentum starts at 0 (no campaigns run yet). */
 export function seedStadiumForTier(tier: 1 | 2 | 3): {
   stadiumCapacity: number;
   fanbase: number;
+  marketingMomentum: number;
 } {
   return {
     stadiumCapacity: STARTING_CAPACITY_BY_TIER[tier],
     fanbase: STARTING_FANBASE_BY_TIER[tier],
+    marketingMomentum: 0,
   };
 }
 
 /**
  * Fanbase for next season: drift the current value a capped step toward the
- * target for `tier` (the tier the club will play in next) adjusted by where it
- * finished (`position`, 1-based). Pure; floored at 0.
+ * target for `tier` (the tier the club will play in next), adjusted by where it
+ * finished (`position`, 1-based) and lifted by `marketingMomentum` (E.4.b.5) so
+ * paid campaigns persist against the drift. Pure; floored at 0.
  */
 export function nextFanbase(
   currentFanbase: number,
   tier: 1 | 2 | 3,
   position: number,
+  marketingMomentum = 0,
 ): number {
   const placementAdj =
     FANBASE_PLACEMENT_SWING *
     ((FANBASE_PLACEMENT_PIVOT - position) / FANBASE_PLACEMENT_PIVOT);
-  const target = FANBASE_TARGET_BY_TIER[tier] + placementAdj;
+  const target = FANBASE_TARGET_BY_TIER[tier] + placementAdj + marketingMomentum;
   const delta = Math.max(
     -FANBASE_MAX_STEP,
     Math.min(FANBASE_MAX_STEP, target - currentFanbase),
