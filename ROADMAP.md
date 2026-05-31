@@ -92,11 +92,10 @@ richer SoFIFA market (E.4.c).
     prize, champion 2.5M decaying to 0 by 12th, tier-scaled, at the boundary).
     The flywheel that can break the title ceiling: finish high → more cash → buy
     stronger (E.4.c) → finish higher.
-  - [ ] **E.4.b.3 — More starting money** · _S, core_ — raise `STARTING_MONEY`
-    (currently 1M). Cheapest knob and the fastest A/B, but a _one-time_ bump: it
-    eases early survival / promotion more than the title (it doesn't compound the
-    way b.1/b.2 do). Useful mostly as a difficulty lever (E.4.a) and to fund the
-    first strong buys; the prizes are what move the ceiling.
+  - [x] **E.4.b.3 — More starting money** · _S, core_ — **Shipped.**
+    `STARTING_MONEY` 1M → **2M** — funds a first strong buy without trivializing
+    early survival. A one-time difficulty knob (doesn't compound like the
+    prizes); gandula-rl (E.6) re-measures.
   - [x] **E.4.b.4 — Stadium expansion + fanbase substrate** · _M, core + web_ —
     **Shipped.** The gate is now `min(demand, capacity) × TICKET_PRICE`, with
     `demand = fanbase × tierMult × opponentDraw` (keeps the evolved-opponent
@@ -128,14 +127,14 @@ richer SoFIFA market (E.4.c).
     flywheel input). Derived from tier/fanbase/history → **no schema bump**.
     New `sponsorship` line in `SeasonFinances` + finale panel. Passive (not a
     chosen deal) — re-measure via E.6.
-  - [ ] **E.4.b.7 — Team momentum / form** · _M, core_ — recent form (win
-    streak) acts as a transient multiplier on attendance: winning fills seats →
-    more gate → fund better squad → keep winning. The _short-term, volatile_
-    counterpart to the slow-moving fanbase. **Double-edged — cap it:** an
-    unbounded loop also amplifies skids (losses → emptier stadium → less cash →
-    can't reinforce → keep losing), which would _worsen_ the 91% firing rate.
-    Bound the multiplier (floor + ceiling, decay toward 1.0) and re-measure
-    firing via E.6 — it adds drama but must not turn a slump into a death spiral.
+  - [x] **E.4.b.7 — Team momentum / form** · _M, core_ — **Shipped, tightly
+    bounded.** A form multiplier from the user's last `FORM_WINDOW` (5) results
+    (+0.05/win, −0.05/loss) applied to the **GATE ONLY**, clamped to
+    **[0.9, 1.2]**, decaying toward 1.0. Crucially it does NOT touch the TV /
+    sponsorship floors, so a skid dents matchday income but the floors keep the
+    club solvent — drama without the death spiral the roadmap warns about. Read
+    per-match (the run leading into each round), so the season gate still sums
+    from the per-round gates. gandula-rl (E.6) tunes the bounds.
 
   _Shared mechanic:_ b.4–b.7 are best designed around one **`fanbase`** state
   value — marketing grows it, stadium capacity caps the gate it can convert,
@@ -157,22 +156,18 @@ richer SoFIFA market (E.4.c).
   economy/means), not a training signal. Placement _reward_-shaping was tried in
   gandula-rl (FIO 1) and reverted — it bankrupted the agent. Adding placement
   _revenue_ is a different, legitimate lever.
-- [ ] **E.4.c — Richer market (SoFIFA import)** · _M, core + data_
-  The 4.7% ceiling is also a market-_availability_ wall, not just an economy
-  one: free agents top out at overall ~50–60 ("no superhuman free agents"),
-  while the title contenders' starting XI averages ~67–69 (registry mean 63.6,
-  max 74). **You can't buy anyone good enough to out-build the top clubs.** Lift
-  the wall via [gandula-import-sofifa](https://github.com/felipedbene/gandula-import-sofifa)
-  (maps real FC25/SoFIFA attributes, [1,99]):
-  - seed the **free-agent generator** from the SoFIFA distribution instead of
-    the flat [30,70]+cap-85 roll, so the market carries a realistic tail of
-    rare, expensive elites; and/or
-  - import **stronger registry clubs** so the league bar (and the talent in
-    circulation via poaching) rises too.
-  Pairs with E.4.b — a richer market only matters if a well-run club can afford
-  the strong players. Distinct lever from E.4.b (means vs. money — they're the
-  same wall from two sides). **Measure later** with the gandula-rl FIO A/B
-  (baseline vs. richer-market vs. richer-market+revenue; 1M-step, fixed seed).
+- [x] **E.4.c — Richer market (rare-elite tail)** · _M, core_ — **Shipped (the
+  generator approach).** The free-agent generator now rolls a rare **elite tier**
+  (`ELITE_AGENT_FRACTION` ~12%, attributes in [62,86] capped at
+  `ELITE_ATTR_CAP` 92) on top of the common [30,70]+cap-85 roll — so the market
+  carries the realistic tail of rare, expensive, title-grade players the old
+  flat roll couldn't (free agents previously topped ~50–60 vs contenders' ~67–69
+  XI). Deterministic in (seed, year); elites price up automatically via the
+  avg²-based formula. Pairs with E.4.b — now a well-run, cash-rich club can
+  actually out-build the top clubs. _(Still open: the full
+  [gandula-import-sofifa](https://github.com/felipedbene/gandula-import-sofifa)
+  path — real FC25 attribute distributions + stronger registry clubs — if the
+  synthetic tail proves insufficient under the gandula-rl FIO A/B.)_
 
 ## E.5 — Teach solvency (where players actually lose)
 

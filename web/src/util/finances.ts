@@ -127,19 +127,68 @@ export function nextMarketingMomentum(currentMomentum: number): number {
   return decayed <= 1 ? 0 : decayed;
 }
 
-/** Home-gate revenue for one home match: min(demand, capacity) × price. Shared
- *  by the per-round and season-total paths so they stay identical (the
- *  per-round-sums-to-season invariant). */
+// ─── E.4.b.7 — team momentum / form (bounded attendance multiplier) ──────
+//
+// Recent form nudges the home gate: a win streak fills a few more seats, a skid
+// empties them. DELIBERATELY BOUNDED and applied to the GATE ONLY — never to
+// the TV/sponsorship floors — so a slump can dent matchday income but the
+// floors keep the club solvent (no death spiral, the roadmap's caution). The
+// multiplier decays toward 1.0 from whatever the recent window implies. Numbers
+// illustrative + gandula-rl-tunable (E.6).
+
+/** How many recent matches feed the form window. */
+export const FORM_WINDOW = 5;
+/** Per-result step away from 1.0 (a win +, a loss −, a draw 0), before clamp. */
+export const FORM_STEP = 0.05;
+/** Hard clamp — a small drama bump, not a structural swing. */
+export const FORM_MIN = 0.9;
+export const FORM_MAX = 1.2;
+
+/**
+ * Attendance multiplier from the user's form in the `FORM_WINDOW` matches
+ * strictly BEFORE `beforeRoundIdx` (so the gate for a round reflects the run
+ * leading into it, not the result of the match being played). Each win is
+ * +FORM_STEP, each loss −FORM_STEP, draws neutral; summed onto 1.0 and clamped
+ * to [FORM_MIN, FORM_MAX]. Byes/no-match rounds are skipped. Pure.
+ */
+export function formMultiplier(career: Career, beforeRoundIdx: number): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const { fixtures, matches } = season.divisions[userDivIdx].record;
+  // Collect the user's win/loss/draw deltas in rounds < beforeRoundIdx, in
+  // fixture order (ascending round), then take the most recent FORM_WINDOW.
+  const ordered = fixtures
+    .map((f, i) => ({ round: f.round, m: matches[i] }))
+    .filter((x) => x.round < beforeRoundIdx)
+    .sort((a, b) => a.round - b.round);
+  const results: number[] = [];
+  for (const { m } of ordered) {
+    const isHome = m.home === career.controlledTeamId;
+    const isAway = m.away === career.controlledTeamId;
+    if (!isHome && !isAway) continue;
+    const gf = isHome ? m.result.home_goals : m.result.away_goals;
+    const ga = isHome ? m.result.away_goals : m.result.home_goals;
+    results.push(gf > ga ? 1 : gf < ga ? -1 : 0);
+  }
+  const window = results.slice(-FORM_WINDOW);
+  const raw = 1 + window.reduce((s, d) => s + d * FORM_STEP, 0);
+  return Math.max(FORM_MIN, Math.min(FORM_MAX, raw));
+}
+
+/** Home-gate revenue for one home match: min(demand, capacity) × price × form.
+ *  Shared by the per-round and season-total paths so they stay identical (the
+ *  per-round-sums-to-season invariant). `form` defaults to 1.0. */
 function homeGateRevenue(
   fanbase: number,
   capacity: number,
   tier: 1 | 2 | 3,
   oppStrength: number,
+  form = 1,
 ): number {
   const demand =
     fanbase * DEMAND_FANBASE_COEF * DEMAND_TIER_MULT[tier] * opponentDraw(oppStrength);
   const attendance = Math.min(demand, capacity);
-  return Math.round(attendance * TICKET_PRICE);
+  return Math.round(attendance * TICKET_PRICE * form);
 }
 
 /** Seed stadium + marketing state for a new career / migrated save from a
@@ -440,6 +489,7 @@ export function homeTicketForRound(career: Career, roundIdx: number): number {
         career.manager.stadiumCapacity,
         userDiv.tier,
         opponentStrength(career, m.away),
+        formMultiplier(career, roundIdx),
       );
     }
     if (m.away === career.controlledTeamId) return 0; // away game
@@ -557,15 +607,18 @@ export function computeSeasonFinances(
 
   let ticketRevenue = 0;
   let matchBonuses = 0;
-  userDiv.record.matches.forEach((m) => {
+  userDiv.record.matches.forEach((m, i) => {
     const isHome = m.home === career.controlledTeamId;
     const isAway = m.away === career.controlledTeamId;
     if (isHome) {
+      // Form is read per-match (the run leading into this round), so the
+      // season total equals the sum of per-round gates — the invariant holds.
       ticketRevenue += homeGateRevenue(
         career.manager.fanbase,
         career.manager.stadiumCapacity,
         userDiv.tier,
         opponentStrength(career, m.away),
+        formMultiplier(career, userDiv.record.fixtures[i].round),
       );
     }
     if (isHome || isAway) {

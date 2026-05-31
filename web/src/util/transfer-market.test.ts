@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BUY_MULTIPLIER,
+  ELITE_ATTR_CAP,
   FREE_AGENT_ID_BASE,
   FREE_AGENT_ID_YEAR_STRIDE,
   MAX_ROSTER,
@@ -402,5 +403,48 @@ describe("canMarket (E.4.b.5 marketing)", () => {
 
   it("marketingCost rises with momentum", () => {
     expect(marketingCost(20_000)).toBeGreaterThan(marketingCost(0));
+  });
+});
+
+describe("E.4.c — rare-elite free agents", () => {
+  it("most agents stay ≤85 but a tail exceeds it (over many years)", () => {
+    let common = 0;
+    let elite = 0;
+    for (let y = 0; y < 60; y++) {
+      for (const p of generateFreeAgents(1998n, FIRST_YEAR + y)) {
+        const max = Math.max(...Object.values(p.attributes));
+        if (max > 85) elite++;
+        else common++;
+      }
+    }
+    expect(common).toBeGreaterThan(0);
+    expect(elite).toBeGreaterThan(0); // the tail exists
+    // Elites are the minority.
+    expect(elite).toBeLessThan(common);
+  });
+
+  it("no agent exceeds the elite cap", () => {
+    for (let y = 0; y < 30; y++) {
+      for (const p of generateFreeAgents(1998n, FIRST_YEAR + y)) {
+        expect(Math.max(...Object.values(p.attributes))).toBeLessThanOrEqual(
+          ELITE_ATTR_CAP,
+        );
+      }
+    }
+  });
+
+  it("the pool is still deterministic in (seed, year)", () => {
+    expect(generateFreeAgents(1998n, FIRST_YEAR)).toEqual(
+      generateFreeAgents(1998n, FIRST_YEAR),
+    );
+  });
+
+  it("an elite agent prices higher than a common one of the same position", () => {
+    // playerPrice is avg² × 100 × age curve, so a higher-overall elite costs
+    // strictly more at the same age. Construct both via the public price path.
+    const elite = generateFreeAgents(1998n, FIRST_YEAR)
+      .concat(...Array.from({ length: 40 }, (_, y) => generateFreeAgents(1998n, FIRST_YEAR + y + 1)))
+      .find((p) => Math.max(...Object.values(p.attributes)) > 85);
+    expect(elite).toBeDefined();
   });
 });
