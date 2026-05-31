@@ -11,7 +11,7 @@ import LineupEditor, {
 import { ALL_TEAMS } from "../teams";
 import type { Player, Team } from "../types";
 
-const team = ALL_TEAMS.find((t) => t.name === "Baviera FC")!;
+const team = ALL_TEAMS.find((t) => t.name === "Sociedade Onça SC")!;
 
 function fullState(): LineupState {
   return {
@@ -158,43 +158,78 @@ describe("LineupEditor", () => {
   // them — but only if there's room. These tests exercise both branches.
 
   it("swap from outside with space in bench moves outgoing to bench end", () => {
-    // bench[4] removed: 25716 (MID) is now "outside" the team.
+    const xiSet = new Set(team.starting_xi);
+    const posOf = (id: number) =>
+      team.roster.find((p) => p.id === id)?.position;
+
+    // Find an XI slot whose position has EXACTLY ONE roster player not in the
+    // XI — that lone player is our single "outside" candidate once we keep it
+    // off the bench. Derived dynamically so it's robust to the chosen team.
+    let swapSlotIdx = -1;
+    let outsideId = -1;
+    for (let i = 0; i < team.starting_xi.length; i++) {
+      const pos = posOf(team.starting_xi[i]);
+      const nonXi = team.roster.filter(
+        (p) => p.position === pos && !xiSet.has(p.id),
+      );
+      if (nonXi.length === 1) {
+        swapSlotIdx = i;
+        outsideId = nonXi[0].id;
+        break;
+      }
+    }
+    if (swapSlotIdx < 0) {
+      throw new Error("Test setup: no XI slot with a lone outside candidate");
+    }
+
+    // Bench = the team's bench minus the lone outside candidate, so that
+    // candidate is truly "outside" (in roster, not in XI, not on bench) and
+    // there's still room (< MAX_BENCH) for the outgoing player to land.
+    const bench = (team.bench ?? []).filter((id) => id !== outsideId);
     const state: LineupState = {
       starting_xi: team.starting_xi.slice(),
-      bench: [25712, 25713, 25714, 25715],
+      bench,
     };
     const onChange = vi.fn();
     render(<LineupEditor team={team} state={state} onChange={onChange} />);
 
-    // Slot 3 in Baviera's XI is a MID (25704). MID candidates not in XI:
-    // only 25716 (since 25704/25705/25708/25711 are in XI and 25716 is
-    // the lone roster MID left outside). Pick it.
     const trocarBtns = screen.getAllByRole("button", { name: /trocar/i });
-    fireEvent.click(trocarBtns[3]);
+    fireEvent.click(trocarBtns[swapSlotIdx]);
     const escolherBtns = screen.getAllByRole("button", { name: /escolher/i });
     expect(escolherBtns).toHaveLength(1);
     fireEvent.click(escolherBtns[0]);
 
+    const outgoingId = state.starting_xi[swapSlotIdx];
     const next: LineupState = onChange.mock.calls[0][0];
-    expect(next.starting_xi[3]).toBe(25716);
-    expect(next.bench).toHaveLength(5);
-    // Outgoing (25704) lands at the end of the bench, originals shift up
-    // by zero (we appended).
-    expect(next.bench).toEqual([25712, 25713, 25714, 25715, 25704]);
+    expect(next.starting_xi[swapSlotIdx]).toBe(outsideId);
+    expect(next.bench).toHaveLength(bench.length + 1);
+    // Outgoing lands at the end of the bench (appended from outside path).
+    expect(next.bench).toEqual([...bench, outgoingId]);
   });
 
   it("swap from outside with full bench (7) drops outgoing silently", () => {
-    // Need a team big enough for bench=7 AND at least one outside player
-    // of a position matching some XI slot. Baviera has 16 players (XI=11
-    // + 5 reserves), so we extend its roster with 3 MID dummies — that
-    // gives us bench=7 (5 originals + 99000, 99001) plus 99002 outside.
+    // Need a team big enough for bench=7 AND at least one outside player of a
+    // position matching some XI slot. The team has 16 players (XI=11 + 5
+    // bench), so we extend its roster with 3 dummies of an XI position — that
+    // gives bench=7 (5 originals + 2 dummies) plus 1 dummy left outside.
+    const posOf = (id: number) =>
+      team.roster.find((p) => p.id === id)?.position;
+    // First XI slot whose position is MID (derived dynamically).
+    const swapSlotIdx = team.starting_xi.findIndex(
+      (id) => posOf(id) === "MID",
+    );
+    if (swapSlotIdx < 0) {
+      throw new Error("Test setup: no MID in the XI");
+    }
+    const swapPos = "MID" as const;
+
     const extras: Player[] = [];
     for (let i = 0; i < 3; i++) {
       extras.push({
         id: 99000 + i,
         name: `Extra ${i}`,
         age: 25,
-        position: "MID",
+        position: swapPos,
         attributes: {
           pace: 50,
           technique: 50,
@@ -206,28 +241,47 @@ describe("LineupEditor", () => {
       });
     }
     const bigT: Team = { ...team, roster: [...team.roster, ...extras] };
+    // 7-player bench = the team's actual bench + dummy MIDs to reach 7. The
+    // last dummy (99002) stays outside (in roster, not XI, not bench).
+    const baseBench = (team.bench ?? []).slice();
+    const benchDummies: number[] = [];
+    let d = 0;
+    while (baseBench.length + benchDummies.length < 7 && d < 2) {
+      benchDummies.push(99000 + d);
+      d++;
+    }
+    const bench = [...baseBench, ...benchDummies];
+    expect(bench).toHaveLength(7);
+    const outsideId = 99000 + d; // first dummy not placed on the bench
     const state: LineupState = {
       starting_xi: bigT.starting_xi.slice(),
-      bench: [25712, 25713, 25714, 25715, 25716, 99000, 99001],
+      bench,
     };
     const onChange = vi.fn();
     render(<LineupEditor team={bigT} state={state} onChange={onChange} />);
 
-    // MID slot (XI[3] = 25704). MID candidates not in XI, in roster
-    // order: [25716, 99000, 99001, 99002]. The outside one is 99002 at
-    // the end (last entry of roster).
-    const trocarBtns = screen.getAllByRole("button", { name: /trocar/i });
-    fireEvent.click(trocarBtns[3]);
-    const escolherBtns = screen.getAllByRole("button", { name: /escolher/i });
-    expect(escolherBtns).toHaveLength(4);
-    fireEvent.click(escolherBtns[3]);
+    // MID candidates not in XI = roster MIDs outside the XI + dummies not in
+    // XI. Compute expected count and the outside (off-bench) candidate index.
+    const xiSet = new Set(bigT.starting_xi);
+    const candidates = bigT.roster.filter(
+      (p) => p.position === swapPos && !xiSet.has(p.id),
+    );
+    const candidateIdx = candidates.findIndex((c) => c.id === outsideId);
+    expect(candidateIdx).toBeGreaterThanOrEqual(0);
 
+    const trocarBtns = screen.getAllByRole("button", { name: /trocar/i });
+    fireEvent.click(trocarBtns[swapSlotIdx]);
+    const escolherBtns = screen.getAllByRole("button", { name: /escolher/i });
+    expect(escolherBtns).toHaveLength(candidates.length);
+    fireEvent.click(escolherBtns[candidateIdx]);
+
+    const outgoingId = state.starting_xi[swapSlotIdx];
     const next: LineupState = onChange.mock.calls[0][0];
-    expect(next.starting_xi[3]).toBe(99002);
-    // Bench is at MAX_BENCH (7) and incoming came from outside → outgoing
-    // (25704) is silently dropped. Bench length AND contents unchanged.
+    expect(next.starting_xi[swapSlotIdx]).toBe(outsideId);
+    // Bench is at MAX_BENCH (7) and incoming came from outside → outgoing is
+    // silently dropped. Bench length AND contents unchanged.
     expect(next.bench).toHaveLength(7);
     expect(next.bench).toEqual(state.bench);
-    expect(next.bench).not.toContain(25704);
+    expect(next.bench).not.toContain(outgoingId);
   });
 });

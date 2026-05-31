@@ -1,0 +1,257 @@
+{
+  "id": 9,
+  "name": "Tempestade Júnior",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    901,
+    902,
+    903,
+    904,
+    905,
+    906,
+    907,
+    908,
+    909,
+    910,
+    911
+  ],
+  "bench": [
+    912,
+    913,
+    914,
+    915,
+    916
+  ],
+  "roster": [
+    {
+      "id": 901,
+      "name": "Ferraz Tavares",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 12,
+        "passing": 32,
+        "defending": 20,
+        "finishing": 20,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 902,
+      "name": "Joelson Ortiz",
+      "age": 33,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 87,
+        "passing": 86,
+        "defending": 63,
+        "finishing": 85,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 903,
+      "name": "Joelson Siqueira",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 87,
+        "passing": 81,
+        "defending": 57,
+        "finishing": 84,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 904,
+      "name": "Fábio Negrão",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 82,
+        "passing": 82,
+        "defending": 74,
+        "finishing": 76,
+        "stamina": 87
+      }
+    },
+    {
+      "id": 905,
+      "name": "Edson Iglesias",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 89,
+        "technique": 81,
+        "passing": 76,
+        "defending": 76,
+        "finishing": 76,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 906,
+      "name": "Ivan Brandão",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 55,
+        "passing": 54,
+        "defending": 85,
+        "finishing": 43,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 907,
+      "name": "Reinaldo Wagner",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 55,
+        "passing": 50,
+        "defending": 84,
+        "finishing": 30,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 908,
+      "name": "Léo Pontes",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 64,
+        "technique": 77,
+        "passing": 82,
+        "defending": 74,
+        "finishing": 71,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 909,
+      "name": "Edson Ribeiro",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 78,
+        "passing": 77,
+        "defending": 77,
+        "finishing": 74,
+        "stamina": 88
+      }
+    },
+    {
+      "id": 910,
+      "name": "Pedro Gonçalves",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 75,
+        "passing": 68,
+        "defending": 40,
+        "finishing": 79,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 911,
+      "name": "Washington Esteves",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 76,
+        "passing": 69,
+        "defending": 75,
+        "finishing": 65,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 912,
+      "name": "Zé Roberto Klabin",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 85,
+        "passing": 75,
+        "defending": 52,
+        "finishing": 80,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 913,
+      "name": "Allan Henriques",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 74,
+        "defending": 76,
+        "finishing": 57,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 914,
+      "name": "Romário Bittencourt",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 74,
+        "passing": 63,
+        "defending": 77,
+        "finishing": 55,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 915,
+      "name": "Robson Tabosa",
+      "age": 35,
+      "position": "DEF",
+      "attributes": {
+        "pace": 60,
+        "technique": 68,
+        "passing": 72,
+        "defending": 81,
+        "finishing": 59,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 916,
+      "name": "Júnior Oliveira",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 81,
+        "passing": 68,
+        "defending": 70,
+        "finishing": 67,
+        "stamina": 73
+      }
+    }
+  ]
+}

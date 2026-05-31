@@ -1,0 +1,257 @@
+{
+  "id": 6,
+  "name": "Esporte Serra SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    601,
+    602,
+    603,
+    604,
+    605,
+    606,
+    607,
+    608,
+    609,
+    610,
+    611
+  ],
+  "bench": [
+    612,
+    613,
+    614,
+    615,
+    616
+  ],
+  "roster": [
+    {
+      "id": 601,
+      "name": "Gabriel Macedo",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 64,
+        "technique": 80,
+        "passing": 80,
+        "defending": 53,
+        "finishing": 93,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 602,
+      "name": "Davi Wagner",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 94,
+        "passing": 75,
+        "defending": 66,
+        "finishing": 79,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 603,
+      "name": "Fábio Toledo",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 82,
+        "passing": 87,
+        "defending": 81,
+        "finishing": 74,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 604,
+      "name": "Sebastião Uchimura",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 72,
+        "passing": 54,
+        "defending": 84,
+        "finishing": 44,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 605,
+      "name": "Roque Saldanha",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 87,
+        "passing": 82,
+        "defending": 51,
+        "finishing": 78,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 606,
+      "name": "Júnior Mascarenhas",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 95,
+        "technique": 85,
+        "passing": 72,
+        "defending": 73,
+        "finishing": 65,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 607,
+      "name": "Matheus Siqueira",
+      "age": 38,
+      "position": "GK",
+      "attributes": {
+        "pace": 45,
+        "technique": 30,
+        "passing": 39,
+        "defending": 19,
+        "finishing": 28,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 608,
+      "name": "Felipe Hollanda",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 75,
+        "passing": 71,
+        "defending": 80,
+        "finishing": 66,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 609,
+      "name": "Otávio Damasceno",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 68,
+        "technique": 74,
+        "passing": 60,
+        "defending": 28,
+        "finishing": 64,
+        "stamina": 57
+      }
+    },
+    {
+      "id": 610,
+      "name": "Romário Drummond",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 87,
+        "passing": 79,
+        "defending": 40,
+        "finishing": 79,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 611,
+      "name": "Daniel Drummond",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 88,
+        "passing": 78,
+        "defending": 32,
+        "finishing": 75,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 612,
+      "name": "Ferraz Tabosa",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 57,
+        "passing": 48,
+        "defending": 84,
+        "finishing": 36,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 613,
+      "name": "João Furtado",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 52,
+        "technique": 75,
+        "passing": 66,
+        "defending": 84,
+        "finishing": 66,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 614,
+      "name": "Anderson Werneck",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 82,
+        "passing": 77,
+        "defending": 81,
+        "finishing": 77,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 615,
+      "name": "Quincas Lopes",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 85,
+        "passing": 75,
+        "defending": 42,
+        "finishing": 81,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 616,
+      "name": "Matheus Pereira",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 65,
+        "technique": 87,
+        "passing": 83,
+        "defending": 71,
+        "finishing": 75,
+        "stamina": 65
+      }
+    }
+  ]
+}

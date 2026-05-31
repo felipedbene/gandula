@@ -1,0 +1,257 @@
+{
+  "id": 35,
+  "name": "Esporte Real SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3501,
+    3502,
+    3503,
+    3504,
+    3505,
+    3506,
+    3507,
+    3508,
+    3509,
+    3510,
+    3511
+  ],
+  "bench": [
+    3512,
+    3513,
+    3514,
+    3515,
+    3516
+  ],
+  "roster": [
+    {
+      "id": 3501,
+      "name": "Zico Soares",
+      "age": 32,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 83,
+        "passing": 75,
+        "defending": 50,
+        "finishing": 83,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3502,
+      "name": "Anderson Rangel",
+      "age": 35,
+      "position": "MID",
+      "attributes": {
+        "pace": 52,
+        "technique": 77,
+        "passing": 88,
+        "defending": 73,
+        "finishing": 80,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 3503,
+      "name": "Fábio Yamada",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 81,
+        "passing": 81,
+        "defending": 64,
+        "finishing": 74,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3504,
+      "name": "Quincas Pacheco",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 84,
+        "passing": 75,
+        "defending": 58,
+        "finishing": 78,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 3505,
+      "name": "Maicon Ribeiro",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 75,
+        "passing": 65,
+        "defending": 74,
+        "finishing": 56,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 3506,
+      "name": "João Pereira",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 69,
+        "passing": 66,
+        "defending": 79,
+        "finishing": 47,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3507,
+      "name": "Sílvio Ortiz",
+      "age": 26,
+      "position": "GK",
+      "attributes": {
+        "pace": 42,
+        "technique": 15,
+        "passing": 25,
+        "defending": 13,
+        "finishing": 19,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 3508,
+      "name": "Allan Albuquerque",
+      "age": 39,
+      "position": "DEF",
+      "attributes": {
+        "pace": 34,
+        "technique": 59,
+        "passing": 58,
+        "defending": 78,
+        "finishing": 40,
+        "stamina": 58
+      }
+    },
+    {
+      "id": 3509,
+      "name": "Davi Damasceno",
+      "age": 22,
+      "position": "FWD",
+      "attributes": {
+        "pace": 80,
+        "technique": 72,
+        "passing": 56,
+        "defending": 27,
+        "finishing": 71,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3510,
+      "name": "Breno Pontes",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 87,
+        "technique": 82,
+        "passing": 75,
+        "defending": 38,
+        "finishing": 77,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 3511,
+      "name": "Geraldo Iglesias",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 81,
+        "passing": 73,
+        "defending": 39,
+        "finishing": 70,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 3512,
+      "name": "Osvaldo Zaccaro",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 76,
+        "passing": 65,
+        "defending": 76,
+        "finishing": 66,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3513,
+      "name": "Éder Teixeira",
+      "age": 23,
+      "position": "GK",
+      "attributes": {
+        "pace": 30,
+        "technique": 10,
+        "passing": 24,
+        "defending": 11,
+        "finishing": 16,
+        "stamina": 36
+      }
+    },
+    {
+      "id": 3514,
+      "name": "Túlio Rebouças",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 65,
+        "passing": 52,
+        "defending": 76,
+        "finishing": 37,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 3515,
+      "name": "Gabriel Falcão",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 75,
+        "passing": 68,
+        "defending": 72,
+        "finishing": 62,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3516,
+      "name": "Edson Wagner",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 68,
+        "passing": 66,
+        "defending": 71,
+        "finishing": 58,
+        "stamina": 71
+      }
+    }
+  ]
+}

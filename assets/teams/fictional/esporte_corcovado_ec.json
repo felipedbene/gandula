@@ -1,0 +1,257 @@
+{
+  "id": 19,
+  "name": "Esporte Corcovado EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1901,
+    1902,
+    1903,
+    1904,
+    1905,
+    1906,
+    1907,
+    1908,
+    1909,
+    1910,
+    1911
+  ],
+  "bench": [
+    1912,
+    1913,
+    1914,
+    1915,
+    1916
+  ],
+  "roster": [
+    {
+      "id": 1901,
+      "name": "Renan Bittencourt",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 89,
+        "passing": 68,
+        "defending": 37,
+        "finishing": 80,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 1902,
+      "name": "Sandro Lemos",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 32,
+        "technique": 14,
+        "passing": 27,
+        "defending": 15,
+        "finishing": 17,
+        "stamina": 36
+      }
+    },
+    {
+      "id": 1903,
+      "name": "Osvaldo Pereira",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 80,
+        "passing": 71,
+        "defending": 76,
+        "finishing": 68,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 1904,
+      "name": "Éder Klabin",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 85,
+        "passing": 78,
+        "defending": 58,
+        "finishing": 76,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1905,
+      "name": "Wallace Furtado",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 66,
+        "passing": 54,
+        "defending": 81,
+        "finishing": 34,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1906,
+      "name": "Mauro Gonçalves",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 63,
+        "technique": 75,
+        "passing": 71,
+        "defending": 81,
+        "finishing": 73,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 1907,
+      "name": "Cristiano Uchimura",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 79,
+        "passing": 73,
+        "defending": 76,
+        "finishing": 70,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1908,
+      "name": "Robson Vasconcelos",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 70,
+        "passing": 62,
+        "defending": 40,
+        "finishing": 79,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 1909,
+      "name": "Antônio Bittencourt",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 67,
+        "passing": 63,
+        "defending": 79,
+        "finishing": 62,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1910,
+      "name": "Léo Furtado",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 83,
+        "passing": 73,
+        "defending": 67,
+        "finishing": 76,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1911,
+      "name": "Éder Esteban",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 34,
+        "passing": 53,
+        "defending": 80,
+        "finishing": 40,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1912,
+      "name": "Cléber Albuquerque",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 65,
+        "passing": 64,
+        "defending": 80,
+        "finishing": 55,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1913,
+      "name": "Breno Werneck",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 65,
+        "technique": 74,
+        "passing": 66,
+        "defending": 39,
+        "finishing": 78,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 1914,
+      "name": "Éder Kowalski",
+      "age": 34,
+      "position": "DEF",
+      "attributes": {
+        "pace": 60,
+        "technique": 56,
+        "passing": 56,
+        "defending": 80,
+        "finishing": 51,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1915,
+      "name": "Wesley Alencar",
+      "age": 36,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 83,
+        "passing": 77,
+        "defending": 73,
+        "finishing": 73,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 1916,
+      "name": "Emerson Quaresma",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 69,
+        "technique": 54,
+        "passing": 42,
+        "defending": 78,
+        "finishing": 39,
+        "stamina": 66
+      }
+    }
+  ]
+}

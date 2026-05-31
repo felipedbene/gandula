@@ -1,0 +1,257 @@
+{
+  "id": 13,
+  "name": "Sociedade Onça SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1301,
+    1302,
+    1303,
+    1304,
+    1305,
+    1306,
+    1307,
+    1308,
+    1309,
+    1310,
+    1311
+  ],
+  "bench": [
+    1312,
+    1313,
+    1314,
+    1315,
+    1316
+  ],
+  "roster": [
+    {
+      "id": 1301,
+      "name": "Nando Justino",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 88,
+        "passing": 71,
+        "defending": 43,
+        "finishing": 84,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1302,
+      "name": "Bruno Henriques",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 85,
+        "passing": 80,
+        "defending": 77,
+        "finishing": 74,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 1303,
+      "name": "Mário Furtado",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 78,
+        "passing": 80,
+        "defending": 80,
+        "finishing": 74,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 1304,
+      "name": "Hélio Linhares",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 90,
+        "technique": 85,
+        "passing": 77,
+        "defending": 50,
+        "finishing": 77,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1305,
+      "name": "Túlio Pereira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 83,
+        "passing": 70,
+        "defending": 81,
+        "finishing": 70,
+        "stamina": 90
+      }
+    },
+    {
+      "id": 1306,
+      "name": "Daniel Lopes",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 58,
+        "technique": 63,
+        "passing": 55,
+        "defending": 82,
+        "finishing": 39,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 1307,
+      "name": "Ivan Resende",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 15,
+        "passing": 30,
+        "defending": 16,
+        "finishing": 22,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 1308,
+      "name": "Genílson Lacerda",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 50,
+        "technique": 76,
+        "passing": 74,
+        "defending": 83,
+        "finishing": 70,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1309,
+      "name": "Washington Hollanda",
+      "age": 34,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 76,
+        "passing": 85,
+        "defending": 80,
+        "finishing": 68,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1310,
+      "name": "Douglas Xavier",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 82,
+        "passing": 74,
+        "defending": 43,
+        "finishing": 74,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 1311,
+      "name": "Maicon Vasconcelos",
+      "age": 20,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 79,
+        "passing": 78,
+        "defending": 72,
+        "finishing": 62,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 1312,
+      "name": "Naldo Hollanda",
+      "age": 32,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 77,
+        "passing": 64,
+        "defending": 45,
+        "finishing": 81,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 1313,
+      "name": "Talles Negrão",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 81,
+        "passing": 75,
+        "defending": 58,
+        "finishing": 70,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 1314,
+      "name": "Quincas Henriques",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 42,
+        "technique": 69,
+        "passing": 62,
+        "defending": 79,
+        "finishing": 41,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1315,
+      "name": "Luan Oliveira",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 83,
+        "technique": 80,
+        "passing": 68,
+        "defending": 72,
+        "finishing": 51,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1316,
+      "name": "Renan Siqueira",
+      "age": 35,
+      "position": "GK",
+      "attributes": {
+        "pace": 39,
+        "technique": 19,
+        "passing": 34,
+        "defending": 17,
+        "finishing": 22,
+        "stamina": 43
+      }
+    }
+  ]
+}

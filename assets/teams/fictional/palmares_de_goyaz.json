@@ -1,0 +1,257 @@
+{
+  "id": 46,
+  "name": "Palmares de Goyaz",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4601,
+    4602,
+    4603,
+    4604,
+    4605,
+    4606,
+    4607,
+    4608,
+    4609,
+    4610,
+    4611
+  ],
+  "bench": [
+    4612,
+    4613,
+    4614,
+    4615,
+    4616
+  ],
+  "roster": [
+    {
+      "id": 4601,
+      "name": "Osvaldo Lopes",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 11,
+        "passing": 18,
+        "defending": 10,
+        "finishing": 16,
+        "stamina": 50
+      }
+    },
+    {
+      "id": 4602,
+      "name": "Naldo Werneck",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 77,
+        "passing": 73,
+        "defending": 76,
+        "finishing": 62,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4603,
+      "name": "Cauã Teixeira",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 75,
+        "passing": 79,
+        "defending": 72,
+        "finishing": 72,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 4604,
+      "name": "Pedro Wagner",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 83,
+        "technique": 77,
+        "passing": 68,
+        "defending": 39,
+        "finishing": 72,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 4605,
+      "name": "Thiago Drummond",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 92,
+        "technique": 80,
+        "passing": 66,
+        "defending": 71,
+        "finishing": 54,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4606,
+      "name": "Davi Ipojuca",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 73,
+        "defending": 51,
+        "finishing": 74,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 4607,
+      "name": "Felipe Lacerda",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 73,
+        "passing": 62,
+        "defending": 51,
+        "finishing": 75,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4608,
+      "name": "Ximenes Zaluar",
+      "age": 20,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 40,
+        "passing": 51,
+        "defending": 77,
+        "finishing": 43,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 4609,
+      "name": "Quincas Galvão",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 74,
+        "passing": 58,
+        "defending": 34,
+        "finishing": 74,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4610,
+      "name": "Thiago Werneck",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 36,
+        "technique": 18,
+        "passing": 24,
+        "defending": 18,
+        "finishing": 24,
+        "stamina": 45
+      }
+    },
+    {
+      "id": 4611,
+      "name": "Ivan Teixeira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 57,
+        "passing": 46,
+        "defending": 77,
+        "finishing": 40,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4612,
+      "name": "Bebeto Justino",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 66,
+        "technique": 66,
+        "passing": 53,
+        "defending": 75,
+        "finishing": 46,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4613,
+      "name": "Cauã Werneck",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 74,
+        "passing": 67,
+        "defending": 66,
+        "finishing": 66,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4614,
+      "name": "Ubirajara Bittencourt",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 77,
+        "passing": 76,
+        "defending": 64,
+        "finishing": 67,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 4615,
+      "name": "Pedro Lemos",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 72,
+        "passing": 68,
+        "defending": 71,
+        "finishing": 66,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4616,
+      "name": "Sebastião Coutinho",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 69,
+        "passing": 62,
+        "defending": 71,
+        "finishing": 60,
+        "stamina": 76
+      }
+    }
+  ]
+}

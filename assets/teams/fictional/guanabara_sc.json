@@ -1,0 +1,257 @@
+{
+  "id": 37,
+  "name": "Guanabara SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3701,
+    3702,
+    3703,
+    3704,
+    3705,
+    3706,
+    3707,
+    3708,
+    3709,
+    3710,
+    3711
+  ],
+  "bench": [
+    3712,
+    3713,
+    3714,
+    3715,
+    3716
+  ],
+  "roster": [
+    {
+      "id": 3701,
+      "name": "Rafael Nogueira",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 75,
+        "passing": 64,
+        "defending": 78,
+        "finishing": 59,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3702,
+      "name": "Marquinhos Saldanha",
+      "age": 34,
+      "position": "FWD",
+      "attributes": {
+        "pace": 48,
+        "technique": 70,
+        "passing": 70,
+        "defending": 60,
+        "finishing": 80,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3703,
+      "name": "João Veloso",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 75,
+        "passing": 82,
+        "defending": 64,
+        "finishing": 70,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3704,
+      "name": "Zacarias Coutinho",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 81,
+        "technique": 81,
+        "passing": 74,
+        "defending": 65,
+        "finishing": 69,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3705,
+      "name": "Pedro Junqueira",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 84,
+        "passing": 70,
+        "defending": 49,
+        "finishing": 76,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3706,
+      "name": "Joelson Gonçalves",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 36,
+        "technique": 19,
+        "passing": 25,
+        "defending": 18,
+        "finishing": 23,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 3707,
+      "name": "Daniel Uchôa",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 74,
+        "passing": 70,
+        "defending": 78,
+        "finishing": 51,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3708,
+      "name": "Adílson Andrade",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 90,
+        "technique": 84,
+        "passing": 70,
+        "defending": 71,
+        "finishing": 57,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3709,
+      "name": "Carlos Galvão",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 79,
+        "passing": 75,
+        "defending": 69,
+        "finishing": 68,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3710,
+      "name": "Douglas Toledo",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 81,
+        "passing": 70,
+        "defending": 49,
+        "finishing": 71,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3711,
+      "name": "Naldo Linhares",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 83,
+        "passing": 69,
+        "defending": 35,
+        "finishing": 70,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 3712,
+      "name": "Sílvio Vasconcelos",
+      "age": 35,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 79,
+        "passing": 79,
+        "defending": 70,
+        "finishing": 78,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3713,
+      "name": "Osvaldo Lacerda",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 72,
+        "passing": 58,
+        "defending": 48,
+        "finishing": 75,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3714,
+      "name": "Ubirajara Wanderley",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 77,
+        "passing": 71,
+        "defending": 71,
+        "finishing": 66,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 3715,
+      "name": "Marquinhos Tavares",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 73,
+        "passing": 68,
+        "defending": 66,
+        "finishing": 72,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3716,
+      "name": "Sebastião Zaccaro",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 63,
+        "passing": 58,
+        "defending": 76,
+        "finishing": 63,
+        "stamina": 78
+      }
+    }
+  ]
+}

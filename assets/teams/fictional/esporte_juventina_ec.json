@@ -1,0 +1,257 @@
+{
+  "id": 2,
+  "name": "Esporte Juventina EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    210,
+    211
+  ],
+  "bench": [
+    212,
+    213,
+    214,
+    215,
+    216
+  ],
+  "roster": [
+    {
+      "id": 201,
+      "name": "Washington Bittencourt",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 84,
+        "passing": 82,
+        "defending": 85,
+        "finishing": 77,
+        "stamina": 88
+      }
+    },
+    {
+      "id": 202,
+      "name": "Marquinhos Yamada",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 87,
+        "technique": 79,
+        "passing": 69,
+        "defending": 48,
+        "finishing": 91,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 203,
+      "name": "Mário Resende",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 85,
+        "passing": 92,
+        "defending": 62,
+        "finishing": 86,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 204,
+      "name": "Júnior Nogueira",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 64,
+        "technique": 30,
+        "passing": 47,
+        "defending": 19,
+        "finishing": 34,
+        "stamina": 53
+      }
+    },
+    {
+      "id": 205,
+      "name": "Washington Pereira",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 89,
+        "passing": 82,
+        "defending": 54,
+        "finishing": 77,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 206,
+      "name": "Sebastião Esteves",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 60,
+        "technique": 64,
+        "passing": 63,
+        "defending": 86,
+        "finishing": 41,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 207,
+      "name": "Túlio Jardim",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 88,
+        "passing": 81,
+        "defending": 68,
+        "finishing": 76,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 208,
+      "name": "Ferraz Esteves",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 79,
+        "passing": 72,
+        "defending": 83,
+        "finishing": 69,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 209,
+      "name": "Naldo Rebouças",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 77,
+        "passing": 67,
+        "defending": 84,
+        "finishing": 56,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 210,
+      "name": "Robson Marinho",
+      "age": 34,
+      "position": "MID",
+      "attributes": {
+        "pace": 56,
+        "technique": 86,
+        "passing": 82,
+        "defending": 70,
+        "finishing": 80,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 211,
+      "name": "Válber Esteban",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 89,
+        "technique": 87,
+        "passing": 75,
+        "defending": 37,
+        "finishing": 83,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 212,
+      "name": "Gabriel Klabin",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 76,
+        "passing": 66,
+        "defending": 83,
+        "finishing": 47,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 213,
+      "name": "Aristides Lemos",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 73,
+        "passing": 68,
+        "defending": 83,
+        "finishing": 54,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 214,
+      "name": "Zacarias Rangel",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 87,
+        "passing": 79,
+        "defending": 68,
+        "finishing": 71,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 215,
+      "name": "Rodrigo Juruá",
+      "age": 20,
+      "position": "FWD",
+      "attributes": {
+        "pace": 88,
+        "technique": 87,
+        "passing": 75,
+        "defending": 32,
+        "finishing": 69,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 216,
+      "name": "Bebeto Wagner",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 87,
+        "passing": 80,
+        "defending": 51,
+        "finishing": 73,
+        "stamina": 74
+      }
+    }
+  ]
+}

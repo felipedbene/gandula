@@ -1,0 +1,257 @@
+{
+  "id": 54,
+  "name": "Clube Estrela AC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5401,
+    5402,
+    5403,
+    5404,
+    5405,
+    5406,
+    5407,
+    5408,
+    5409,
+    5410,
+    5411
+  ],
+  "bench": [
+    5412,
+    5413,
+    5414,
+    5415,
+    5416
+  ],
+  "roster": [
+    {
+      "id": 5401,
+      "name": "Marcelo Iglesias",
+      "age": 33,
+      "position": "FWD",
+      "attributes": {
+        "pace": 62,
+        "technique": 79,
+        "passing": 55,
+        "defending": 40,
+        "finishing": 80,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 5402,
+      "name": "Talles Tavares",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 35,
+        "passing": 55,
+        "defending": 80,
+        "finishing": 38,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 5403,
+      "name": "Matheus Wanderley",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 15,
+        "passing": 24,
+        "defending": 15,
+        "finishing": 24,
+        "stamina": 47
+      }
+    },
+    {
+      "id": 5404,
+      "name": "Matheus Andrade",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 78,
+        "passing": 79,
+        "defending": 58,
+        "finishing": 71,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 5405,
+      "name": "Nando Juruá",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 64,
+        "technique": 82,
+        "passing": 70,
+        "defending": 72,
+        "finishing": 63,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 5406,
+      "name": "Edson Esteban",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 31,
+        "passing": 44,
+        "defending": 78,
+        "finishing": 38,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 5407,
+      "name": "Rodrigo Tabosa",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 78,
+        "passing": 79,
+        "defending": 45,
+        "finishing": 72,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 5408,
+      "name": "Ferraz Xavier",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 68,
+        "passing": 65,
+        "defending": 71,
+        "finishing": 47,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 5409,
+      "name": "Maicon Wagner",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 70,
+        "technique": 74,
+        "passing": 58,
+        "defending": 32,
+        "finishing": 70,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 5410,
+      "name": "Zacarias Tavares",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 44,
+        "technique": 64,
+        "passing": 64,
+        "defending": 75,
+        "finishing": 60,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5411,
+      "name": "Wallace Galvão",
+      "age": 33,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 22,
+        "passing": 34,
+        "defending": 17,
+        "finishing": 22,
+        "stamina": 41
+      }
+    },
+    {
+      "id": 5412,
+      "name": "Marquinhos Lemos",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 80,
+        "passing": 70,
+        "defending": 64,
+        "finishing": 72,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5413,
+      "name": "Zacarias Hollanda",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 84,
+        "passing": 69,
+        "defending": 32,
+        "finishing": 71,
+        "stamina": 55
+      }
+    },
+    {
+      "id": 5414,
+      "name": "Mário Oliveira",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 69,
+        "passing": 66,
+        "defending": 72,
+        "finishing": 69,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 5415,
+      "name": "Everton Albuquerque",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 70,
+        "passing": 70,
+        "defending": 70,
+        "finishing": 66,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 5416,
+      "name": "Washington Ortiz",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 60,
+        "passing": 56,
+        "defending": 72,
+        "finishing": 40,
+        "stamina": 73
+      }
+    }
+  ]
+}

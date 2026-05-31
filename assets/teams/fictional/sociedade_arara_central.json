@@ -1,0 +1,257 @@
+{
+  "id": 30,
+  "name": "Sociedade Arara Central",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3001,
+    3002,
+    3003,
+    3004,
+    3005,
+    3006,
+    3007,
+    3008,
+    3009,
+    3010,
+    3011
+  ],
+  "bench": [
+    3012,
+    3013,
+    3014,
+    3015,
+    3016
+  ],
+  "roster": [
+    {
+      "id": 3001,
+      "name": "Genílson Falcão",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 81,
+        "passing": 74,
+        "defending": 49,
+        "finishing": 78,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3002,
+      "name": "Ubirajara Furtado",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 79,
+        "passing": 65,
+        "defending": 77,
+        "finishing": 53,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3003,
+      "name": "Éder Ipojuca",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 90,
+        "technique": 88,
+        "passing": 68,
+        "defending": 57,
+        "finishing": 75,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3004,
+      "name": "Júnior Cardoso",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 58,
+        "technique": 74,
+        "passing": 70,
+        "defending": 46,
+        "finishing": 82,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 3005,
+      "name": "Quincas Justino",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 86,
+        "passing": 77,
+        "defending": 68,
+        "finishing": 76,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3006,
+      "name": "Washington Klabin",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 69,
+        "passing": 58,
+        "defending": 79,
+        "finishing": 47,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 3007,
+      "name": "Ximenes Esteves",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 55,
+        "technique": 15,
+        "passing": 36,
+        "defending": 16,
+        "finishing": 24,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 3008,
+      "name": "Quincas Pacheco",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 79,
+        "passing": 76,
+        "defending": 72,
+        "finishing": 64,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 3009,
+      "name": "Luan Uchôa",
+      "age": 34,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 75,
+        "passing": 70,
+        "defending": 57,
+        "finishing": 74,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3010,
+      "name": "Júnior Uchimura",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 50,
+        "technique": 71,
+        "passing": 68,
+        "defending": 81,
+        "finishing": 73,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 3011,
+      "name": "Paulinho Siqueira",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 49,
+        "technique": 72,
+        "passing": 67,
+        "defending": 77,
+        "finishing": 60,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3012,
+      "name": "Anderson Kowalski",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 72,
+        "passing": 62,
+        "defending": 79,
+        "finishing": 59,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 3013,
+      "name": "Quincas Linhares",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 44,
+        "technique": 72,
+        "passing": 87,
+        "defending": 64,
+        "finishing": 71,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3014,
+      "name": "Élton Teixeira",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 78,
+        "passing": 78,
+        "defending": 67,
+        "finishing": 74,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 3015,
+      "name": "Nando Pontes",
+      "age": 39,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 14,
+        "passing": 31,
+        "defending": 13,
+        "finishing": 23,
+        "stamina": 40
+      }
+    },
+    {
+      "id": 3016,
+      "name": "Reinaldo Negrão",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 60,
+        "passing": 49,
+        "defending": 78,
+        "finishing": 50,
+        "stamina": 72
+      }
+    }
+  ]
+}

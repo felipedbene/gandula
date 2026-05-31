@@ -1,0 +1,257 @@
+{
+  "id": 57,
+  "name": "Sociedade Vendaval United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5701,
+    5702,
+    5703,
+    5704,
+    5705,
+    5706,
+    5707,
+    5708,
+    5709,
+    5710,
+    5711
+  ],
+  "bench": [
+    5712,
+    5713,
+    5714,
+    5715,
+    5716
+  ],
+  "roster": [
+    {
+      "id": 5701,
+      "name": "Zé Roberto Queiroz",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 84,
+        "passing": 77,
+        "defending": 47,
+        "finishing": 80,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 5702,
+      "name": "Edson Veloso",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 87,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 54,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5703,
+      "name": "Igor Lopes",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 73,
+        "passing": 69,
+        "defending": 75,
+        "finishing": 67,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 5704,
+      "name": "Lucas Bezerra",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 69,
+        "passing": 57,
+        "defending": 36,
+        "finishing": 75,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 5705,
+      "name": "Felipe Negrão",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 52,
+        "technique": 17,
+        "passing": 32,
+        "defending": 16,
+        "finishing": 22,
+        "stamina": 46
+      }
+    },
+    {
+      "id": 5706,
+      "name": "Paulinho Macedo",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 60,
+        "passing": 48,
+        "defending": 76,
+        "finishing": 43,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 5707,
+      "name": "Otávio Siqueira",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 77,
+        "passing": 63,
+        "defending": 72,
+        "finishing": 55,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5708,
+      "name": "Rodrigo Uchimura",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 77,
+        "passing": 70,
+        "defending": 73,
+        "finishing": 59,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5709,
+      "name": "Léo Yamada",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 77,
+        "passing": 66,
+        "defending": 41,
+        "finishing": 76,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5710,
+      "name": "Maicon Macedo",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 42,
+        "technique": 16,
+        "passing": 27,
+        "defending": 19,
+        "finishing": 24,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 5711,
+      "name": "Otávio Furtado",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 50,
+        "technique": 47,
+        "passing": 49,
+        "defending": 77,
+        "finishing": 33,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5712,
+      "name": "Edson Xavier",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 75,
+        "passing": 66,
+        "defending": 74,
+        "finishing": 65,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 5713,
+      "name": "Wesley Ribeiro",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 64,
+        "passing": 60,
+        "defending": 75,
+        "finishing": 48,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5714,
+      "name": "Otávio Oliveira",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 77,
+        "passing": 70,
+        "defending": 68,
+        "finishing": 63,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5715,
+      "name": "Ferraz Zaluar",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 78,
+        "passing": 71,
+        "defending": 42,
+        "finishing": 74,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 5716,
+      "name": "Rafael Drummond",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 51,
+        "technique": 74,
+        "passing": 62,
+        "defending": 50,
+        "finishing": 70,
+        "stamina": 61
+      }
+    }
+  ]
+}

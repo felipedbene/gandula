@@ -1,11 +1,18 @@
 import type { Team } from "../types";
 
-/** Top-tier division: 8 teams. With N even the engine produces
- *  (8 - 1) * 2 = 14 rounds and no byes. */
-export const TIER_A_SIZE = 8;
-/** Bottom-tier division: 9 teams. N odd ⇒ engine inserts a virtual BYE,
- *  schedule has 9 * 2 = 18 rounds, every team gets 2 byes (one per turno). */
-export const TIER_B_SIZE = 9;
+// Three tiers of 20 — Série A / B / C, 60 teams total. 20 is even, so the
+// engine's circle-method schedule produces (20 - 1) * 2 = 38 rounds with NO
+// byes in any tier (the old 9-team Série B had byes; that's gone).
+/** Top-tier division: 20 teams. */
+export const TIER_A_SIZE = 20;
+/** Middle-tier division: 20 teams. Both promotes (to A) and is promoted-into
+ *  (from C), and both relegates (to C) and is relegated-into (from A). */
+export const TIER_B_SIZE = 20;
+/** Bottom-tier division: 20 teams. New careers start here (weakest club). */
+export const TIER_C_SIZE = 20;
+
+/** Total teams across all tiers — the size divideIntoDivisions expects. */
+export const WORLD_SIZE = TIER_A_SIZE + TIER_B_SIZE + TIER_C_SIZE;
 
 /**
  * Average overall of a team's starting XI: per-player overall is the mean
@@ -31,22 +38,21 @@ export function avgStrength(team: Team): number {
 }
 
 /**
- * Split TIER_A_SIZE + TIER_B_SIZE teams into Série A (strongest) and
- * Série B (the rest), ranked by avgStrength.
+ * Split WORLD_SIZE teams into three strength-ranked tiers — Série A
+ * (strongest 20), Série B (next 20), Série C (weakest 20) — returned as
+ * `[tierA, tierB, tierC]` (index 0 = strongest, == Division.tier − 1).
  *
- * Deterministic: same teams + same starting_xi ⇒ same partition every
- * call. Tiebreak on equal avgStrength is lower team_id wins (goes to
- * Série A) so the partition is stable across rebuilds even if fictional
- * roster generation seeds change.
+ * The array shape (rather than named tierA/tierB/tierC) keeps later phases —
+ * cup competitions, more tiers — additive: callers index by tier.
+ *
+ * Deterministic: same teams + same starting_xi ⇒ same partition every call.
+ * Tiebreak on equal avgStrength is lower team_id wins (sorts higher) so the
+ * partition is stable across rebuilds even if fictional roster seeds change.
  */
-export function divideIntoDivisions(teams: Team[]): {
-  tierA: Team[];
-  tierB: Team[];
-} {
-  const expected = TIER_A_SIZE + TIER_B_SIZE;
-  if (teams.length !== expected) {
+export function divideIntoDivisions(teams: Team[]): Team[][] {
+  if (teams.length !== WORLD_SIZE) {
     throw new Error(
-      `divideIntoDivisions expects ${expected} teams, got ${teams.length}`,
+      `divideIntoDivisions expects ${WORLD_SIZE} teams, got ${teams.length}`,
     );
   }
   const sorted = teams.slice().sort((a, b) => {
@@ -55,23 +61,24 @@ export function divideIntoDivisions(teams: Team[]): {
     if (sa !== sb) return sb - sa; // strength desc — strongest first
     return a.id - b.id; // tiebreak: lower id first
   });
-  return {
-    tierA: sorted.slice(0, TIER_A_SIZE),
-    tierB: sorted.slice(TIER_A_SIZE),
-  };
+  return [
+    sorted.slice(0, TIER_A_SIZE),
+    sorted.slice(TIER_A_SIZE, TIER_A_SIZE + TIER_B_SIZE),
+    sorted.slice(TIER_A_SIZE + TIER_B_SIZE),
+  ];
 }
 
 /**
  * Pick the team the player will manage at the start of a new career:
- * the weakest team in Série B by avgStrength. Tiebreak on highest
- * team_id (opposite of divideIntoDivisions') so the starter is always
+ * the weakest team in the bottom tier (Série C) by avgStrength. Tiebreak on
+ * highest team_id (opposite of divideIntoDivisions') so the starter is always
  * the deterministic "last" entry of the strength-ascending tail.
  */
-export function pickStarterTeam(tierB: Team[]): Team {
-  if (tierB.length === 0) {
-    throw new Error("pickStarterTeam: empty tierB");
+export function pickStarterTeam(bottomTier: Team[]): Team {
+  if (bottomTier.length === 0) {
+    throw new Error("pickStarterTeam: empty bottom tier");
   }
-  return tierB.slice().sort((a, b) => {
+  return bottomTier.slice().sort((a, b) => {
     const sa = avgStrength(a);
     const sb = avgStrength(b);
     if (sa !== sb) return sa - sb; // strength asc — weakest first
@@ -81,15 +88,16 @@ export function pickStarterTeam(tierB: Team[]): Team {
 
 /**
  * Pick the team the player manages at the start of a new career: any team
- * in Série B, chosen at random. Intentionally non-deterministic (Math.random)
- * so every new career hands you a different club instead of always the
- * weakest. The season simulation stays fully seed-deterministic — only which
- * Série B team you control varies — and the choice is persisted on the Career
- * (controlledTeamId), so a reloaded career is stable.
+ * in the bottom tier (Série C), chosen at random. Intentionally
+ * non-deterministic (Math.random) so every new career hands you a different
+ * club instead of always the weakest. The season simulation stays fully
+ * seed-deterministic — only which Série C team you control varies — and the
+ * choice is persisted on the Career (controlledTeamId), so a reloaded career
+ * is stable.
  */
-export function pickRandomStarter(tierB: Team[]): Team {
-  if (tierB.length === 0) {
-    throw new Error("pickRandomStarter: empty tierB");
+export function pickRandomStarter(bottomTier: Team[]): Team {
+  if (bottomTier.length === 0) {
+    throw new Error("pickRandomStarter: empty bottom tier");
   }
-  return tierB[Math.floor(Math.random() * tierB.length)];
+  return bottomTier[Math.floor(Math.random() * bottomTier.length)];
 }

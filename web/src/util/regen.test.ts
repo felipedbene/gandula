@@ -8,7 +8,7 @@ import { REGEN_ID_BASE } from "./transfer-market";
 import { ALL_TEAMS } from "../teams";
 import type { Team } from "../types";
 
-const team = ALL_TEAMS.find((t) => t.name === "Baviera FC")!;
+const team = ALL_TEAMS.find((t) => t.name === "Sociedade Onça SC")!;
 
 /** Assert the engine's team invariants (core/src/domain/team.rs validate). */
 function expectValid(t: Team) {
@@ -67,11 +67,13 @@ describe("evolveRoster (E.2.c — shared user/opponent squad churn)", () => {
   });
 
   it("retires players who reach RETIREMENT_AGE and replaces them with same-position youth", () => {
-    // Age the first starter to one year shy of retirement so this season tips
-    // them over (age+1 ≥ RETIREMENT_AGE).
+    // Build a controlled roster where ONLY the victim is near retirement: age
+    // the first starter to one year shy of retirement (so this season tips
+    // them over, age+1 ≥ RETIREMENT_AGE) and make everyone else comfortably
+    // young so exactly one youth is regenerated regardless of the chosen team.
     const victim = team.roster[0];
     const roster = team.roster.map((p) =>
-      p.id === victim.id ? { ...p, age: RETIREMENT_AGE - 1 } : p,
+      p.id === victim.id ? { ...p, age: RETIREMENT_AGE - 1 } : { ...p, age: 25 },
     );
     const out = evolveRoster(roster, 1998n, team.id, 1);
 

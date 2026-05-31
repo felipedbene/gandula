@@ -1,0 +1,257 @@
+{
+  "id": 12,
+  "name": "Esporte Curió de Goyaz",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1201,
+    1202,
+    1203,
+    1204,
+    1205,
+    1206,
+    1207,
+    1208,
+    1209,
+    1210,
+    1211
+  ],
+  "bench": [
+    1212,
+    1213,
+    1214,
+    1215,
+    1216
+  ],
+  "roster": [
+    {
+      "id": 1201,
+      "name": "Ivan Henriques",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 70,
+        "technique": 83,
+        "passing": 73,
+        "defending": 45,
+        "finishing": 86,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1202,
+      "name": "Léo Teixeira",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 45,
+        "technique": 24,
+        "passing": 28,
+        "defending": 14,
+        "finishing": 17,
+        "stamina": 43
+      }
+    },
+    {
+      "id": 1203,
+      "name": "Nando Pereira",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 74,
+        "passing": 68,
+        "defending": 85,
+        "finishing": 57,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1204,
+      "name": "Davi Zaluar",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 84,
+        "passing": 82,
+        "defending": 50,
+        "finishing": 76,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1205,
+      "name": "Léo Macedo",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 79,
+        "passing": 80,
+        "defending": 73,
+        "finishing": 82,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1206,
+      "name": "Luan Werneck",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 74,
+        "passing": 71,
+        "defending": 82,
+        "finishing": 77,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 1207,
+      "name": "Gustavo Justino",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 67,
+        "technique": 64,
+        "passing": 58,
+        "defending": 82,
+        "finishing": 48,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 1208,
+      "name": "Gustavo Rebouças",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 82,
+        "passing": 68,
+        "defending": 80,
+        "finishing": 70,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 1209,
+      "name": "Allan Cardoso",
+      "age": 22,
+      "position": "FWD",
+      "attributes": {
+        "pace": 87,
+        "technique": 80,
+        "passing": 65,
+        "defending": 42,
+        "finishing": 77,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1210,
+      "name": "Felipe Werneck",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 68,
+        "passing": 59,
+        "defending": 81,
+        "finishing": 52,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 1211,
+      "name": "Everton Resende",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 96,
+        "technique": 83,
+        "passing": 68,
+        "defending": 42,
+        "finishing": 74,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1212,
+      "name": "Sandro Siqueira",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 45,
+        "technique": 78,
+        "passing": 84,
+        "defending": 69,
+        "finishing": 75,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1213,
+      "name": "Davi Mascarenhas",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 78,
+        "passing": 68,
+        "defending": 80,
+        "finishing": 69,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1214,
+      "name": "Carlos Tavares",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 76,
+        "passing": 67,
+        "defending": 75,
+        "finishing": 60,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 1215,
+      "name": "Válter Coutinho",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 81,
+        "technique": 83,
+        "passing": 72,
+        "defending": 67,
+        "finishing": 60,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 1216,
+      "name": "Júnior Pereira",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 93,
+        "technique": 88,
+        "passing": 63,
+        "defending": 29,
+        "finishing": 69,
+        "stamina": 66
+      }
+    }
+  ]
+}

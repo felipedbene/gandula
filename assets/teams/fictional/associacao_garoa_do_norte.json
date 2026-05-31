@@ -1,0 +1,257 @@
+{
+  "id": 44,
+  "name": "Associação Garoa do Norte",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4401,
+    4402,
+    4403,
+    4404,
+    4405,
+    4406,
+    4407,
+    4408,
+    4409,
+    4410,
+    4411
+  ],
+  "bench": [
+    4412,
+    4413,
+    4414,
+    4415,
+    4416
+  ],
+  "roster": [
+    {
+      "id": 4401,
+      "name": "Anderson Mascarenhas",
+      "age": 23,
+      "position": "GK",
+      "attributes": {
+        "pace": 49,
+        "technique": 14,
+        "passing": 22,
+        "defending": 11,
+        "finishing": 17,
+        "stamina": 43
+      }
+    },
+    {
+      "id": 4402,
+      "name": "Ferraz Iglesias",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 80,
+        "passing": 67,
+        "defending": 37,
+        "finishing": 82,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 4403,
+      "name": "Matheus Cavalcanti",
+      "age": 34,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 75,
+        "passing": 70,
+        "defending": 79,
+        "finishing": 64,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 4404,
+      "name": "Breno Werneck",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 85,
+        "technique": 87,
+        "passing": 76,
+        "defending": 25,
+        "finishing": 69,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 4405,
+      "name": "Washington Werneck",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 66,
+        "technique": 50,
+        "passing": 46,
+        "defending": 78,
+        "finishing": 34,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4406,
+      "name": "Sandro Sampaio",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 68,
+        "passing": 58,
+        "defending": 79,
+        "finishing": 48,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4407,
+      "name": "Robson Negrão",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 86,
+        "technique": 76,
+        "passing": 67,
+        "defending": 68,
+        "finishing": 62,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4408,
+      "name": "Roque Wagner",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 52,
+        "technique": 80,
+        "passing": 75,
+        "defending": 68,
+        "finishing": 74,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4409,
+      "name": "Igor Xavier",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 69,
+        "passing": 56,
+        "defending": 36,
+        "finishing": 73,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4410,
+      "name": "Aristides Lacerda",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 80,
+        "passing": 71,
+        "defending": 56,
+        "finishing": 64,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4411,
+      "name": "Emerson Falcão",
+      "age": 34,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 75,
+        "passing": 68,
+        "defending": 73,
+        "finishing": 63,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4412,
+      "name": "Davi Zaccaro",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 78,
+        "passing": 67,
+        "defending": 69,
+        "finishing": 59,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 4413,
+      "name": "Pedro Hollanda",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 82,
+        "passing": 65,
+        "defending": 44,
+        "finishing": 60,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 4414,
+      "name": "Genílson Siqueira",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 77,
+        "passing": 73,
+        "defending": 71,
+        "finishing": 70,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4415,
+      "name": "Wallace Zaccaro",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 42,
+        "technique": 74,
+        "passing": 74,
+        "defending": 69,
+        "finishing": 66,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 4416,
+      "name": "Paulinho Lopes",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 74,
+        "passing": 65,
+        "defending": 71,
+        "finishing": 61,
+        "stamina": 81
+      }
+    }
+  ]
+}

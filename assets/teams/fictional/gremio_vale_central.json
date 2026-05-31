@@ -1,0 +1,257 @@
+{
+  "id": 1,
+  "name": "Grêmio Vale Central",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111
+  ],
+  "bench": [
+    112,
+    113,
+    114,
+    115,
+    116
+  ],
+  "roster": [
+    {
+      "id": 101,
+      "name": "Anderson Bezerra",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 89,
+        "passing": 80,
+        "defending": 78,
+        "finishing": 84,
+        "stamina": 89
+      }
+    },
+    {
+      "id": 102,
+      "name": "Thiago Resende",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 97,
+        "technique": 93,
+        "passing": 78,
+        "defending": 40,
+        "finishing": 87,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 103,
+      "name": "Pedro Pontes",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 95,
+        "technique": 93,
+        "passing": 78,
+        "defending": 30,
+        "finishing": 81,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 104,
+      "name": "Fábio Siqueira",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 47,
+        "technique": 13,
+        "passing": 28,
+        "defending": 16,
+        "finishing": 23,
+        "stamina": 45
+      }
+    },
+    {
+      "id": 105,
+      "name": "Sandro Wagner",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 83,
+        "passing": 81,
+        "defending": 78,
+        "finishing": 80,
+        "stamina": 88
+      }
+    },
+    {
+      "id": 106,
+      "name": "Naldo Jardim",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 81,
+        "technique": 69,
+        "passing": 67,
+        "defending": 86,
+        "finishing": 53,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 107,
+      "name": "Davi Tavares",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 78,
+        "passing": 74,
+        "defending": 81,
+        "finishing": 58,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 108,
+      "name": "Ivan Jardim",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 70,
+        "passing": 64,
+        "defending": 85,
+        "finishing": 52,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 109,
+      "name": "Éder Werneck",
+      "age": 39,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 84,
+        "passing": 86,
+        "defending": 69,
+        "finishing": 78,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 110,
+      "name": "Davi Rebouças",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 89,
+        "technique": 90,
+        "passing": 79,
+        "defending": 35,
+        "finishing": 78,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 111,
+      "name": "Válter Mascarenhas",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 77,
+        "passing": 82,
+        "defending": 83,
+        "finishing": 74,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 112,
+      "name": "Otávio Rangel",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 78,
+        "passing": 74,
+        "defending": 80,
+        "finishing": 66,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 113,
+      "name": "Nando Zaccaro",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 84,
+        "passing": 77,
+        "defending": 77,
+        "finishing": 67,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 114,
+      "name": "Matheus Kowalski",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 75,
+        "passing": 70,
+        "defending": 78,
+        "finishing": 62,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 115,
+      "name": "Robson Rebouças",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 85,
+        "technique": 84,
+        "passing": 75,
+        "defending": 29,
+        "finishing": 71,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 116,
+      "name": "Túlio Resende",
+      "age": 25,
+      "position": "GK",
+      "attributes": {
+        "pace": 37,
+        "technique": 11,
+        "passing": 26,
+        "defending": 15,
+        "finishing": 19,
+        "stamina": 39
+      }
+    }
+  ]
+}

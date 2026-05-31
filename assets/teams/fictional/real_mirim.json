@@ -1,0 +1,257 @@
+{
+  "id": 56,
+  "name": "Real Mirim",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5601,
+    5602,
+    5603,
+    5604,
+    5605,
+    5606,
+    5607,
+    5608,
+    5609,
+    5610,
+    5611
+  ],
+  "bench": [
+    5612,
+    5613,
+    5614,
+    5615,
+    5616
+  ],
+  "roster": [
+    {
+      "id": 5601,
+      "name": "Cristiano Lopes",
+      "age": 33,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 79,
+        "passing": 61,
+        "defending": 39,
+        "finishing": 80,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 5602,
+      "name": "Antônio Junqueira",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 82,
+        "passing": 74,
+        "defending": 56,
+        "finishing": 74,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5603,
+      "name": "Éder Werneck",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 76,
+        "passing": 80,
+        "defending": 75,
+        "finishing": 70,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5604,
+      "name": "Zé Roberto Bezerra",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 68,
+        "passing": 72,
+        "defending": 80,
+        "finishing": 61,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5605,
+      "name": "Mário Ribeiro",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 43,
+        "technique": 15,
+        "passing": 36,
+        "defending": 16,
+        "finishing": 26,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 5606,
+      "name": "Antônio Rangel",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 78,
+        "passing": 71,
+        "defending": 72,
+        "finishing": 61,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5607,
+      "name": "Rafael Nogueira",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 81,
+        "passing": 68,
+        "defending": 64,
+        "finishing": 68,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 5608,
+      "name": "Roque Hollanda",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 80,
+        "passing": 67,
+        "defending": 35,
+        "finishing": 73,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 5609,
+      "name": "Mauro Cardoso",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 32,
+        "technique": 49,
+        "passing": 49,
+        "defending": 78,
+        "finishing": 40,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 5610,
+      "name": "Quincas Vasconcelos",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 78,
+        "passing": 74,
+        "defending": 66,
+        "finishing": 69,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 5611,
+      "name": "Ubirajara Klabin",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 74,
+        "passing": 62,
+        "defending": 45,
+        "finishing": 75,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 5612,
+      "name": "Kléber Esteves",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 60,
+        "passing": 56,
+        "defending": 76,
+        "finishing": 52,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5613,
+      "name": "Kléber Kowalski",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 76,
+        "passing": 63,
+        "defending": 74,
+        "finishing": 64,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 5614,
+      "name": "Davi Guimarães",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 63,
+        "technique": 68,
+        "passing": 62,
+        "defending": 75,
+        "finishing": 44,
+        "stamina": 56
+      }
+    },
+    {
+      "id": 5615,
+      "name": "Válter Macedo",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 71,
+        "technique": 73,
+        "passing": 73,
+        "defending": 69,
+        "finishing": 68,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 5616,
+      "name": "Joelson Gonçalves",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 57,
+        "technique": 74,
+        "passing": 66,
+        "defending": 70,
+        "finishing": 60,
+        "stamina": 70
+      }
+    }
+  ]
+}

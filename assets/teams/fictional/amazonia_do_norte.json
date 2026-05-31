@@ -1,0 +1,257 @@
+{
+  "id": 29,
+  "name": "Amazônia do Norte",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2901,
+    2902,
+    2903,
+    2904,
+    2905,
+    2906,
+    2907,
+    2908,
+    2909,
+    2910,
+    2911
+  ],
+  "bench": [
+    2912,
+    2913,
+    2914,
+    2915,
+    2916
+  ],
+  "roster": [
+    {
+      "id": 2901,
+      "name": "Igor Uchôa",
+      "age": 29,
+      "position": "GK",
+      "attributes": {
+        "pace": 45,
+        "technique": 19,
+        "passing": 25,
+        "defending": 16,
+        "finishing": 22,
+        "stamina": 50
+      }
+    },
+    {
+      "id": 2902,
+      "name": "Antônio Galvão",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 86,
+        "technique": 86,
+        "passing": 77,
+        "defending": 41,
+        "finishing": 74,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 2903,
+      "name": "Daniel Nogueira",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 77,
+        "passing": 74,
+        "defending": 78,
+        "finishing": 63,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 2904,
+      "name": "Cauã Veloso",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 83,
+        "passing": 80,
+        "defending": 44,
+        "finishing": 83,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2905,
+      "name": "Rodrigo Hollanda",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 71,
+        "technique": 83,
+        "passing": 81,
+        "defending": 65,
+        "finishing": 78,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2906,
+      "name": "Edson Rangel",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 60,
+        "passing": 61,
+        "defending": 82,
+        "finishing": 51,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2907,
+      "name": "Marquinhos Mascarenhas",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 76,
+        "passing": 68,
+        "defending": 74,
+        "finishing": 56,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2908,
+      "name": "Cléber Falcão",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 71,
+        "passing": 72,
+        "defending": 78,
+        "finishing": 60,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 2909,
+      "name": "Rodrigo Hollanda",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 92,
+        "technique": 78,
+        "passing": 66,
+        "defending": 39,
+        "finishing": 73,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2910,
+      "name": "Juvenal Andrade",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 78,
+        "passing": 79,
+        "defending": 68,
+        "finishing": 74,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2911,
+      "name": "Sílvio Pontes",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 48,
+        "passing": 57,
+        "defending": 78,
+        "finishing": 40,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2912,
+      "name": "Fábio Toledo",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 77,
+        "passing": 67,
+        "defending": 31,
+        "finishing": 70,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2913,
+      "name": "Romário Furtado",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 78,
+        "passing": 76,
+        "defending": 63,
+        "finishing": 74,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2914,
+      "name": "Mário Kowalski",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 78,
+        "passing": 66,
+        "defending": 71,
+        "finishing": 53,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2915,
+      "name": "Aristides Wagner",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 75,
+        "passing": 66,
+        "defending": 71,
+        "finishing": 58,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2916,
+      "name": "Paulinho Rebouças",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 63,
+        "passing": 63,
+        "defending": 73,
+        "finishing": 49,
+        "stamina": 75
+      }
+    }
+  ]
+}

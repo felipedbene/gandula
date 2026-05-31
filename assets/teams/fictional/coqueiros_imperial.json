@@ -1,0 +1,257 @@
+{
+  "id": 18,
+  "name": "Coqueiros Imperial",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1801,
+    1802,
+    1803,
+    1804,
+    1805,
+    1806,
+    1807,
+    1808,
+    1809,
+    1810,
+    1811
+  ],
+  "bench": [
+    1812,
+    1813,
+    1814,
+    1815,
+    1816
+  ],
+  "roster": [
+    {
+      "id": 1801,
+      "name": "Túlio Pereira",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 82,
+        "passing": 87,
+        "defending": 65,
+        "finishing": 86,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 1802,
+      "name": "Robson Negrão",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 61,
+        "technique": 65,
+        "passing": 59,
+        "defending": 83,
+        "finishing": 56,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1803,
+      "name": "Douglas Wagner",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 76,
+        "passing": 75,
+        "defending": 83,
+        "finishing": 60,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1804,
+      "name": "Robson Kowalski",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 61,
+        "technique": 26,
+        "passing": 41,
+        "defending": 16,
+        "finishing": 24,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 1805,
+      "name": "Reinaldo Quaresma",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 83,
+        "passing": 71,
+        "defending": 78,
+        "finishing": 63,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 1806,
+      "name": "Wladimir Zaccaro",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 38,
+        "technique": 68,
+        "passing": 75,
+        "defending": 79,
+        "finishing": 74,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 1807,
+      "name": "Luan Justino",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 78,
+        "passing": 70,
+        "defending": 76,
+        "finishing": 62,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1808,
+      "name": "Yuri Ribeiro",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 85,
+        "passing": 70,
+        "defending": 44,
+        "finishing": 76,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 1809,
+      "name": "Paulinho Guimarães",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 85,
+        "technique": 76,
+        "passing": 55,
+        "defending": 36,
+        "finishing": 74,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 1810,
+      "name": "Gustavo Cardoso",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 85,
+        "technique": 79,
+        "passing": 72,
+        "defending": 76,
+        "finishing": 62,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 1811,
+      "name": "Léo Lacerda",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 37,
+        "technique": 68,
+        "passing": 66,
+        "defending": 79,
+        "finishing": 60,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1812,
+      "name": "Nélson Andrade",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 77,
+        "passing": 78,
+        "defending": 79,
+        "finishing": 60,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1813,
+      "name": "Naldo Werneck",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 85,
+        "technique": 83,
+        "passing": 73,
+        "defending": 44,
+        "finishing": 70,
+        "stamina": 60
+      }
+    },
+    {
+      "id": 1814,
+      "name": "Aristides Marinho",
+      "age": 19,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 58,
+        "passing": 52,
+        "defending": 79,
+        "finishing": 40,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 1815,
+      "name": "Zé Roberto Lacerda",
+      "age": 19,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 82,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 66,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1816,
+      "name": "Luan Iglesias",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 79,
+        "passing": 80,
+        "defending": 59,
+        "finishing": 75,
+        "stamina": 66
+      }
+    }
+  ]
+}

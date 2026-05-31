@@ -1,0 +1,257 @@
+{
+  "id": 55,
+  "name": "Sociedade Caatinga do Norte",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5501,
+    5502,
+    5503,
+    5504,
+    5505,
+    5506,
+    5507,
+    5508,
+    5509,
+    5510,
+    5511
+  ],
+  "bench": [
+    5512,
+    5513,
+    5514,
+    5515,
+    5516
+  ],
+  "roster": [
+    {
+      "id": 5501,
+      "name": "Felipe Negrão",
+      "age": 30,
+      "position": "GK",
+      "attributes": {
+        "pace": 52,
+        "technique": 15,
+        "passing": 40,
+        "defending": 19,
+        "finishing": 31,
+        "stamina": 52
+      }
+    },
+    {
+      "id": 5502,
+      "name": "João Drummond",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 45,
+        "technique": 55,
+        "passing": 61,
+        "defending": 81,
+        "finishing": 46,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5503,
+      "name": "Washington Teixeira",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 86,
+        "passing": 67,
+        "defending": 41,
+        "finishing": 75,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 5504,
+      "name": "Fábio Vasconcelos",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 55,
+        "passing": 44,
+        "defending": 79,
+        "finishing": 36,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5505,
+      "name": "Romário Zaccaro",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 80,
+        "passing": 78,
+        "defending": 55,
+        "finishing": 71,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5506,
+      "name": "Júnior Linhares",
+      "age": 35,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 68,
+        "passing": 65,
+        "defending": 78,
+        "finishing": 56,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5507,
+      "name": "Emerson Macedo",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 54,
+        "passing": 58,
+        "defending": 75,
+        "finishing": 52,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5508,
+      "name": "Thiago Queiroz",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 73,
+        "passing": 56,
+        "defending": 30,
+        "finishing": 75,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 5509,
+      "name": "Yuri Hollanda",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 71,
+        "passing": 61,
+        "defending": 42,
+        "finishing": 72,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5510,
+      "name": "Léo Klabin",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 83,
+        "passing": 68,
+        "defending": 69,
+        "finishing": 57,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5511,
+      "name": "Geraldo Cardoso",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 59,
+        "passing": 60,
+        "defending": 75,
+        "finishing": 50,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5512,
+      "name": "Éder Ribeiro",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 69,
+        "passing": 76,
+        "defending": 69,
+        "finishing": 64,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 5513,
+      "name": "Matheus Lacerda",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 76,
+        "passing": 69,
+        "defending": 47,
+        "finishing": 69,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5514,
+      "name": "Gabriel Ortiz",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 80,
+        "passing": 67,
+        "defending": 43,
+        "finishing": 66,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 5515,
+      "name": "Nando Zaluar",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 76,
+        "passing": 68,
+        "defending": 75,
+        "finishing": 75,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 5516,
+      "name": "Aristides Nogueira",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 41,
+        "technique": 57,
+        "passing": 57,
+        "defending": 74,
+        "finishing": 45,
+        "stamina": 63
+      }
+    }
+  ]
+}

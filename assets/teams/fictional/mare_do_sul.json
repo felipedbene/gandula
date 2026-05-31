@@ -1,0 +1,257 @@
+{
+  "id": 15,
+  "name": "Maré do Sul",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1501,
+    1502,
+    1503,
+    1504,
+    1505,
+    1506,
+    1507,
+    1508,
+    1509,
+    1510,
+    1511
+  ],
+  "bench": [
+    1512,
+    1513,
+    1514,
+    1515,
+    1516
+  ],
+  "roster": [
+    {
+      "id": 1501,
+      "name": "Thiago Macedo",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 62,
+        "passing": 50,
+        "defending": 86,
+        "finishing": 49,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 1502,
+      "name": "Ivan Pontes",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 79,
+        "passing": 72,
+        "defending": 35,
+        "finishing": 83,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 1503,
+      "name": "Ivan Albuquerque",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 63,
+        "technique": 76,
+        "passing": 77,
+        "defending": 78,
+        "finishing": 69,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 1504,
+      "name": "Zacarias Henriques",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 76,
+        "passing": 81,
+        "defending": 74,
+        "finishing": 79,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 1505,
+      "name": "Thiago Bittencourt",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 79,
+        "passing": 85,
+        "defending": 73,
+        "finishing": 78,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1506,
+      "name": "Antônio Damasceno",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 30,
+        "passing": 35,
+        "defending": 14,
+        "finishing": 20,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 1507,
+      "name": "Zico Esteves",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 90,
+        "technique": 80,
+        "passing": 69,
+        "defending": 43,
+        "finishing": 78,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 1508,
+      "name": "Washington Zaluar",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 62,
+        "passing": 48,
+        "defending": 80,
+        "finishing": 46,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 1509,
+      "name": "João Zaccaro",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 64,
+        "passing": 63,
+        "defending": 80,
+        "finishing": 55,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1510,
+      "name": "Diego Lemos",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 55,
+        "technique": 76,
+        "passing": 73,
+        "defending": 44,
+        "finishing": 82,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 1511,
+      "name": "Anderson Alencar",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 80,
+        "passing": 73,
+        "defending": 78,
+        "finishing": 69,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 1512,
+      "name": "Douglas Quaresma",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 83,
+        "passing": 68,
+        "defending": 48,
+        "finishing": 76,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 1513,
+      "name": "Zé Roberto Galvão",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 19,
+        "passing": 24,
+        "defending": 16,
+        "finishing": 22,
+        "stamina": 38
+      }
+    },
+    {
+      "id": 1514,
+      "name": "Gabriel Galvão",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 79,
+        "passing": 74,
+        "defending": 74,
+        "finishing": 68,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1515,
+      "name": "Éder Ipojuca",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 85,
+        "passing": 71,
+        "defending": 36,
+        "finishing": 68,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 1516,
+      "name": "Vinícius Lemos",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 78,
+        "passing": 75,
+        "defending": 80,
+        "finishing": 72,
+        "stamina": 83
+      }
+    }
+  ]
+}

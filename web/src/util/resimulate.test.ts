@@ -39,21 +39,22 @@ beforeAll(async () => {
 });
 
 /**
- * Build a v3 Career with both divisions fully simulated. The user is
- * always assigned to Série B's weakest team (via pickStarterTeam) so
- * `findUserDivisionIdxInSeason(career.currentSeason, ...) === 1` is a
- * stable assumption across tests. `currentRoundIdx` is applied to BOTH
+ * Build a v3 Career with all divisions fully simulated. The user is
+ * always assigned to Série C's weakest team (via pickStarterTeam) so
+ * `findUserDivisionIdxInSeason(career.currentSeason, ...) === 2` is a
+ * stable assumption across tests. `currentRoundIdx` is applied to ALL
  * divisions for simplicity — tests that only care about user-division
- * behavior can ignore Série A's counter.
+ * behavior can ignore the other tiers' counters.
  */
 function makeCareer(seed: bigint, currentRoundIdx: number): Career {
-  const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-  const starter = pickStarterTeam(tierB);
+  const [tierA, tierB, tierC] = divideIntoDivisions(ALL_TEAMS);
+  const starter = pickStarterTeam(tierC);
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -64,6 +65,7 @@ function makeCareer(seed: bigint, currentRoundIdx: number): Career {
       divisions: [
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx },
+        { tier: 3, name: "Série C", record: recordC, currentRoundIdx },
       ],
       transfers: [],
     },
@@ -175,20 +177,21 @@ describe("resimulateFromRound", () => {
     });
   });
 
-  it("leaves the other division entirely untouched", () => {
+  it("leaves the other divisions entirely untouched", () => {
     const career = makeCareer(1998n, 0);
     const userDivIdx = findUserDivisionIdxInSeason(
       career.currentSeason,
       career.controlledTeamId,
     );
-    const otherDivIdx = 1 - userDivIdx;
-    const otherDiv = career.currentSeason.divisions[otherDivIdx];
     const override = overrideFor(career.controlledTeamId);
     const result = resimulateFromRound(career, 0, override);
-    const newOtherDiv = result.currentSeason.divisions[otherDivIdx];
-    expect(newOtherDiv.record.matches).toEqual(otherDiv.record.matches);
-    expect(newOtherDiv.record.standings).toEqual(otherDiv.record.standings);
-    expect(newOtherDiv.record.fixtures).toEqual(otherDiv.record.fixtures);
+    career.currentSeason.divisions.forEach((otherDiv, otherDivIdx) => {
+      if (otherDivIdx === userDivIdx) return;
+      const newOtherDiv = result.currentSeason.divisions[otherDivIdx];
+      expect(newOtherDiv.record.matches).toEqual(otherDiv.record.matches);
+      expect(newOtherDiv.record.standings).toEqual(otherDiv.record.standings);
+      expect(newOtherDiv.record.fixtures).toEqual(otherDiv.record.fixtures);
+    });
   });
 
   it("is deterministic — same input produces identical engine output", () => {
@@ -244,8 +247,8 @@ describe("resimulateFromRound", () => {
       return c;
     };
 
-    // currentRoundIdx 18 ≥ both tiers' round counts ⇒ season 0 is finished.
-    const career = advanceSeasons(makeCareer(1998n, 18), 3);
+    // currentRoundIdx 38 ≥ all tiers' round counts ⇒ season 0 is finished.
+    const career = advanceSeasons(makeCareer(1998n, 38), 3);
     expect(career.currentSeason.year).toBe(FIRST_YEAR + 3);
 
     const userDivIdx = findUserDivisionIdxInSeason(

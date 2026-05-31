@@ -1,0 +1,257 @@
+{
+  "id": 32,
+  "name": "Estrela EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3201,
+    3202,
+    3203,
+    3204,
+    3205,
+    3206,
+    3207,
+    3208,
+    3209,
+    3210,
+    3211
+  ],
+  "bench": [
+    3212,
+    3213,
+    3214,
+    3215,
+    3216
+  ],
+  "roster": [
+    {
+      "id": 3201,
+      "name": "Wladimir Escobar",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 79,
+        "passing": 76,
+        "defending": 79,
+        "finishing": 78,
+        "stamina": 89
+      }
+    },
+    {
+      "id": 3202,
+      "name": "Kléber Uchôa",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 83,
+        "technique": 84,
+        "passing": 77,
+        "defending": 40,
+        "finishing": 80,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 3203,
+      "name": "Túlio Soares",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 83,
+        "passing": 80,
+        "defending": 75,
+        "finishing": 72,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 3204,
+      "name": "Antônio Ipojuca",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 54,
+        "technique": 14,
+        "passing": 34,
+        "defending": 16,
+        "finishing": 24,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 3205,
+      "name": "Reinaldo Ortiz",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 64,
+        "passing": 56,
+        "defending": 80,
+        "finishing": 47,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3206,
+      "name": "Antônio Saldanha",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 81,
+        "passing": 76,
+        "defending": 46,
+        "finishing": 79,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3207,
+      "name": "Romário Tabosa",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 77,
+        "passing": 74,
+        "defending": 71,
+        "finishing": 63,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3208,
+      "name": "Daniel Tavares",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 65,
+        "passing": 56,
+        "defending": 76,
+        "finishing": 54,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 3209,
+      "name": "Everton Bittencourt",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 70,
+        "technique": 73,
+        "passing": 64,
+        "defending": 44,
+        "finishing": 76,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3210,
+      "name": "Zé Roberto Coutinho",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 50,
+        "technique": 75,
+        "passing": 75,
+        "defending": 75,
+        "finishing": 70,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3211,
+      "name": "Luan Wanderley",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 78,
+        "passing": 70,
+        "defending": 71,
+        "finishing": 67,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3212,
+      "name": "Yuri Guimarães",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 74,
+        "passing": 70,
+        "defending": 77,
+        "finishing": 67,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 3213,
+      "name": "Allan Marinho",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 82,
+        "passing": 72,
+        "defending": 58,
+        "finishing": 66,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 3214,
+      "name": "Marquinhos Ipojuca",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 80,
+        "passing": 66,
+        "defending": 55,
+        "finishing": 70,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3215,
+      "name": "Zacarias Ortiz",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 69,
+        "passing": 69,
+        "defending": 70,
+        "finishing": 57,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 3216,
+      "name": "Geraldo Justino",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 69,
+        "passing": 53,
+        "defending": 75,
+        "finishing": 33,
+        "stamina": 66
+      }
+    }
+  ]
+}

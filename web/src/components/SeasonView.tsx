@@ -23,7 +23,11 @@ import {
   topAssister,
   topScorer,
 } from "../util/season-stats";
-import { divideIntoDivisions, pickRandomStarter } from "../util/divisions";
+import {
+  divideIntoDivisions,
+  pickRandomStarter,
+  WORLD_SIZE,
+} from "../util/divisions";
 import {
   computePromotionRelegation,
   userOutcomeFromPRResult,
@@ -110,17 +114,12 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   const [error, setError] = useState<string | null>(null);
 
   // Autoload once on mount. Discriminated LoadCareerResult lets us surface
-  // distinct status messages per scenario (loaded / migratedV2 / discardedV1
-  // / none) — silent transitions would confuse the user.
+  // distinct status messages per scenario (loaded / expandedWorld / none) —
+  // silent transitions would confuse the user.
   useEffect(() => {
     loadCareer()
       .then((result) => {
-        if (
-          result.kind === "loaded" ||
-          result.kind === "migratedV2" ||
-          result.kind === "migratedV3" ||
-          result.kind === "migratedV4"
-        ) {
+        if (result.kind === "loaded") {
           const career = result.career;
           const userDivIdx = findUserDivisionIdxInSeason(
             career.currentSeason,
@@ -130,21 +129,16 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           const teamName =
             teamById(career.controlledTeamId)?.name ??
             `Time ${career.controlledTeamId}`;
-          const prefix =
-            result.kind === "migratedV2"
-              ? "save v2 migrado"
-              : result.kind === "migratedV3"
-                ? "save v3 migrado"
-                : result.kind === "migratedV4"
-                  ? "save v4 migrado"
-                  : "save carregado";
           onStatus(
-            `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
+            `save carregado · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
           setPhase(initialPhaseFor(career));
-        } else if (result.kind === "discardedV1") {
-          onStatus("save antigo (v1) descartado · iniciando carreira nova");
-          setPhase({ tag: "form" });
+        } else if (result.kind === "expandedWorld") {
+          // Pre-v6 (2-tier) save discarded by the E.2 expansion — start a
+          // fresh 3-tier career immediately so the user never sees an empty
+          // slate. run() emits its own status message.
+          onStatus("mundo expandido para 3 divisões · iniciando carreira nova");
+          run();
         } else {
           setPhase({ tag: "form" });
         }
@@ -159,24 +153,25 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   }, []);
 
   /**
-   * NOVA CARREIRA. Builds two divisions in parallel (Série A + Série B)
-   * from ALL_TEAMS, partitioned by `divideIntoDivisions`. Per-division
-   * match-seed namespace via `seasonSeed XOR BigInt(tier)` so the two
-   * leagues never collide on fixture index in the engine's match_seed
-   * derivation. Same XOR is used on re-simulation (see `util/resimulate.ts`)
-   * and on next-season generation (see `util/career.ts`), keeping
-   * determinism end-to-end.
+   * NOVA CARREIRA. Builds three divisions in parallel (Série A / B / C, 20
+   * teams each) from ALL_TEAMS, partitioned by `divideIntoDivisions`. The
+   * user takes a random Série C club (bottom tier) — the climb starts at the
+   * bottom of the pyramid. Per-division match-seed namespace via
+   * `seasonSeed XOR BigInt(tier)` so the three leagues never collide on
+   * fixture index in the engine's match_seed derivation. Same XOR is used on
+   * re-simulation (see `util/resimulate.ts`) and on next-season generation
+   * (see `util/career.ts`), keeping determinism end-to-end.
    */
   function run() {
     setError(null);
     try {
-      if (ALL_TEAMS.length !== 17) {
+      if (ALL_TEAMS.length !== WORLD_SIZE) {
         throw new Error(
-          `Esperado 17 times, encontrado ${ALL_TEAMS.length}. Verifique assets/teams/.`,
+          `Esperado ${WORLD_SIZE} times, encontrado ${ALL_TEAMS.length}. Verifique assets/teams/.`,
         );
       }
-      const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-      const starterTeam = pickRandomStarter(tierB);
+      const [tierA, tierB, tierC] = divideIntoDivisions(ALL_TEAMS);
+      const starterTeam = pickRandomStarter(tierC);
       const seed = randomSeed();
       const careerSeed = BigInt(seed);
       const seasonSeed = careerSeed ^ BigInt(FIRST_YEAR);
@@ -184,10 +179,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       const start = performance.now();
       const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
       const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+      const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 5,
+        schemaVersion: 6,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -198,6 +194,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           divisions: [
             { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
             { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+            { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
           ],
           transfers: [],
         },
@@ -208,7 +205,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       saveCareer(newCareer)
         .then(() => {
           onStatus(
-            `nova carreira · ${starterTeam.name} (Série B) · ano ${FIRST_YEAR} · 2 ligas simuladas em ${ms}ms · seed ${seed} · $ ${formatMoney(STARTING_MONEY)}`,
+            `nova carreira · ${starterTeam.name} (Série C) · ano ${FIRST_YEAR} · 3 ligas simuladas em ${ms}ms · seed ${seed} · $ ${formatMoney(STARTING_MONEY)}`,
           );
           setPhase({ tag: "running", career: newCareer });
         })
@@ -613,8 +610,8 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 
 // ─── Phase: form ────────────────────────────────────────────────────────────
 // The team checkboxes are gone (the Brasileirão Imaginário plays with all
-// 17 teams fixed) and the user no longer picks a team (assigned to the
-// weakest Série B team via pickStarterTeam).
+// 60 teams fixed) and the user no longer picks a team (assigned to a random
+// Série C club — the bottom of the pyramid — via pickRandomStarter).
 function NewSeasonForm({
   onSubmit,
   onSupport,
@@ -632,8 +629,9 @@ function NewSeasonForm({
       >
         <Stack gap="md">
           <Text c="dimmed" size="sm">
-            17 times divididos em Série A (8) + Série B (9). Você assume um time
-            aleatório da Série B.
+            60 times divididos em Série A (20) + Série B (20) + Série C (20).
+            Você assume um time aleatório da Série C e começa a escalada do
+            fundo da pirâmide.
           </Text>
           <Group justify="center" gap="sm">
             <Button type="submit">Iniciar carreira</Button>
@@ -845,6 +843,8 @@ function SeasonFinale({
   );
   const tierASize =
     season.divisions.find((d) => d.tier === 1)?.record.standings.length ?? 0;
+  const tierBSize =
+    season.divisions.find((d) => d.tier === 2)?.record.standings.length ?? 0;
 
   const hasHistory = career.seasons.length >= 1;
 
@@ -952,64 +952,42 @@ function SeasonFinale({
         <Stack gap="xs">
           {prResult.userPromoted && (
             <Text ta="center" fw={700} c="phosphor.4">
-              *** SEU TIME SUBIU PARA A SÉRIE A! ***
+              *** SEU TIME SUBIU DE DIVISÃO! ***
             </Text>
           )}
           {prResult.userRelegated && (
             <Text ta="center" fw={700} c="red.5">
-              *** SEU TIME FOI REBAIXADO PARA A SÉRIE B ***
+              *** SEU TIME FOI REBAIXADO ***
             </Text>
           )}
 
-          <div>
-            <Text size="sm" c="dimmed" mb={4}>
-              ▲ Sobem para a Série A:
-            </Text>
-            <Stack gap={1}>
-              {prResult.promoted.map((s, i) => {
-                const name = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
-                const isUser = s.team_id === career.controlledTeamId;
-                return (
-                  <Text
-                    key={s.team_id}
-                    size="sm"
-                    c={isUser ? "phosphor.3" : undefined}
-                    fw={isUser ? 700 : undefined}
-                  >
-                    {i + 1}º {name} ({points(s)} pts)
-                  </Text>
-                );
-              })}
-            </Stack>
-          </div>
-
-          <div>
-            <Text size="sm" c="dimmed" mb={4}>
-              ▼ Descem para a Série B:
-            </Text>
-            <Stack gap={1}>
-              {prResult.relegated.map((s, i) => {
-                const name = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
-                const isUser = s.team_id === career.controlledTeamId;
-                // Position in Série A's standings: with 8 teams and 2
-                // relegated, relegated[0] is 7º, relegated[1] is 8º. Derived
-                // from tier A's standings length so the same code works if
-                // RELEGATION_SLOTS ever changes.
-                const positionInTierA =
-                  tierASize - prResult.relegated.length + i + 1;
-                return (
-                  <Text
-                    key={s.team_id}
-                    size="sm"
-                    c={isUser ? "phosphor.3" : undefined}
-                    fw={isUser ? 700 : undefined}
-                  >
-                    {positionInTierA}º {name} ({points(s)} pts)
-                  </Text>
-                );
-              })}
-            </Stack>
-          </div>
+          {/* Promotions: numbered from the top of the SOURCE tier (1º, 2º…). */}
+          <MovementGroup
+            label="▲ Sobem da Série B para a Série A:"
+            teams={prResult.promotedBtoA}
+            startPosition={1}
+            controlledTeamId={career.controlledTeamId}
+          />
+          <MovementGroup
+            label="▲ Sobem da Série C para a Série B:"
+            teams={prResult.promotedCtoB}
+            startPosition={1}
+            controlledTeamId={career.controlledTeamId}
+          />
+          {/* Relegations: numbered from the BOTTOM of the source tier, so the
+              first relegated team's position is (sourceSize − count + 1). */}
+          <MovementGroup
+            label="▼ Descem da Série A para a Série B:"
+            teams={prResult.relegatedAtoB}
+            startPosition={tierASize - prResult.relegatedAtoB.length + 1}
+            controlledTeamId={career.controlledTeamId}
+          />
+          <MovementGroup
+            label="▼ Descem da Série B para a Série C:"
+            teams={prResult.relegatedBtoC}
+            startPosition={tierBSize - prResult.relegatedBtoC.length + 1}
+            controlledTeamId={career.controlledTeamId}
+          />
         </Stack>
       </Panel>
 
@@ -1052,6 +1030,48 @@ function FinanceRow({
         {value}
       </Text>
     </Group>
+  );
+}
+
+// One promotion/relegation movement group (e.g. "▲ Sobem da Série B para a
+// Série A"). `startPosition` is the 1-based finishing position of the first
+// team in the list within its SOURCE tier — 1 for promotions (top of the
+// table), or sourceSize−count+1 for relegations (bottom of the table). Hidden
+// when empty so legacy/degenerate seasons don't render blank groups.
+function MovementGroup({
+  label,
+  teams,
+  startPosition,
+  controlledTeamId,
+}: {
+  label: string;
+  teams: TeamStats[];
+  startPosition: number;
+  controlledTeamId: number;
+}) {
+  if (teams.length === 0) return null;
+  return (
+    <div>
+      <Text size="sm" c="dimmed" mb={4}>
+        {label}
+      </Text>
+      <Stack gap={1}>
+        {teams.map((s, i) => {
+          const name = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
+          const isUser = s.team_id === controlledTeamId;
+          return (
+            <Text
+              key={s.team_id}
+              size="sm"
+              c={isUser ? "phosphor.3" : undefined}
+              fw={isUser ? 700 : undefined}
+            >
+              {startPosition + i}º {name} ({points(s)} pts)
+            </Text>
+          );
+        })}
+      </Stack>
+    </div>
   );
 }
 
@@ -1144,9 +1164,9 @@ function HistoryView({
 function HistoryCard({ entry }: { entry: SeasonHistory }) {
   const outcomeText =
     entry.userOutcome === "promoted"
-      ? "▲ Subiu para a Série A"
+      ? `▲ Subiu da ${entry.userDivision.name}`
       : entry.userOutcome === "relegated"
-        ? "▼ Desceu para a Série B"
+        ? `▼ Desceu da ${entry.userDivision.name}`
         : `→ Permaneceu na ${entry.userDivision.name}`;
   const outcomeColor =
     entry.userOutcome === "promoted"

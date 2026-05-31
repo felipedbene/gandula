@@ -1,0 +1,257 @@
+{
+  "id": 45,
+  "name": "Clube Caatinga do Norte",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4501,
+    4502,
+    4503,
+    4504,
+    4505,
+    4506,
+    4507,
+    4508,
+    4509,
+    4510,
+    4511
+  ],
+  "bench": [
+    4512,
+    4513,
+    4514,
+    4515,
+    4516
+  ],
+  "roster": [
+    {
+      "id": 4501,
+      "name": "Romário Coutinho",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 36,
+        "technique": 18,
+        "passing": 36,
+        "defending": 16,
+        "finishing": 22,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 4502,
+      "name": "Davi Werneck",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 75,
+        "passing": 75,
+        "defending": 77,
+        "finishing": 77,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 4503,
+      "name": "Maicon Escobar",
+      "age": 33,
+      "position": "FWD",
+      "attributes": {
+        "pace": 69,
+        "technique": 80,
+        "passing": 74,
+        "defending": 47,
+        "finishing": 82,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4504,
+      "name": "Zico Vasconcelos",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 90,
+        "passing": 78,
+        "defending": 21,
+        "finishing": 70,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 4505,
+      "name": "Kléber Saldanha",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 82,
+        "passing": 79,
+        "defending": 50,
+        "finishing": 75,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 4506,
+      "name": "Zé Roberto Lopes",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 73,
+        "passing": 66,
+        "defending": 77,
+        "finishing": 56,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 4507,
+      "name": "Adílson Coutinho",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 81,
+        "technique": 80,
+        "passing": 72,
+        "defending": 42,
+        "finishing": 80,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4508,
+      "name": "Matheus Furtado",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 75,
+        "passing": 69,
+        "defending": 70,
+        "finishing": 67,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4509,
+      "name": "Naldo Veloso",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 74,
+        "passing": 68,
+        "defending": 77,
+        "finishing": 60,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 4510,
+      "name": "Cristiano Rangel",
+      "age": 36,
+      "position": "MID",
+      "attributes": {
+        "pace": 35,
+        "technique": 76,
+        "passing": 72,
+        "defending": 75,
+        "finishing": 68,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4511,
+      "name": "Paulinho Uchôa",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 75,
+        "passing": 76,
+        "defending": 72,
+        "finishing": 75,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4512,
+      "name": "Paulinho Macedo",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 69,
+        "technique": 65,
+        "passing": 56,
+        "defending": 77,
+        "finishing": 48,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4513,
+      "name": "Cléber Uchimura",
+      "age": 19,
+      "position": "MID",
+      "attributes": {
+        "pace": 87,
+        "technique": 83,
+        "passing": 64,
+        "defending": 38,
+        "finishing": 63,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 4514,
+      "name": "Allan Pontes",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 80,
+        "passing": 68,
+        "defending": 25,
+        "finishing": 66,
+        "stamina": 60
+      }
+    },
+    {
+      "id": 4515,
+      "name": "Talles Quaresma",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 59,
+        "passing": 48,
+        "defending": 74,
+        "finishing": 42,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4516,
+      "name": "Geraldo Brandão",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 74,
+        "passing": 67,
+        "defending": 66,
+        "finishing": 58,
+        "stamina": 68
+      }
+    }
+  ]
+}

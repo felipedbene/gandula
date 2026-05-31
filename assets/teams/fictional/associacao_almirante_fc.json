@@ -1,0 +1,257 @@
+{
+  "id": 8,
+  "name": "Associação Almirante FC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    801,
+    802,
+    803,
+    804,
+    805,
+    806,
+    807,
+    808,
+    809,
+    810,
+    811
+  ],
+  "bench": [
+    812,
+    813,
+    814,
+    815,
+    816
+  ],
+  "roster": [
+    {
+      "id": 801,
+      "name": "Léo Wanderley",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 90,
+        "passing": 86,
+        "defending": 48,
+        "finishing": 80,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 802,
+      "name": "Roque Negrão",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 60,
+        "passing": 51,
+        "defending": 86,
+        "finishing": 41,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 803,
+      "name": "Gabriel Wanderley",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 50,
+        "technique": 73,
+        "passing": 83,
+        "defending": 77,
+        "finishing": 73,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 804,
+      "name": "Osvaldo Sampaio",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 84,
+        "passing": 88,
+        "defending": 74,
+        "finishing": 72,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 805,
+      "name": "Wallace Guimarães",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 81,
+        "passing": 69,
+        "defending": 41,
+        "finishing": 80,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 806,
+      "name": "Élton Nogueira",
+      "age": 35,
+      "position": "GK",
+      "attributes": {
+        "pace": 41,
+        "technique": 10,
+        "passing": 26,
+        "defending": 12,
+        "finishing": 19,
+        "stamina": 41
+      }
+    },
+    {
+      "id": 807,
+      "name": "Wladimir Uchôa",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 83,
+        "technique": 70,
+        "passing": 59,
+        "defending": 83,
+        "finishing": 41,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 808,
+      "name": "Carlos Tabosa",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 66,
+        "passing": 60,
+        "defending": 83,
+        "finishing": 51,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 809,
+      "name": "Nélson Lemos",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 84,
+        "passing": 64,
+        "defending": 41,
+        "finishing": 81,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 810,
+      "name": "Talles Soares",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 94,
+        "technique": 85,
+        "passing": 70,
+        "defending": 73,
+        "finishing": 60,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 811,
+      "name": "Zé Roberto Pereira",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 82,
+        "passing": 75,
+        "defending": 80,
+        "finishing": 74,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 812,
+      "name": "Vinícius Pontes",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 84,
+        "passing": 84,
+        "defending": 72,
+        "finishing": 73,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 813,
+      "name": "Geraldo Esteban",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 74,
+        "passing": 76,
+        "defending": 82,
+        "finishing": 74,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 814,
+      "name": "Túlio Justino",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 67,
+        "passing": 69,
+        "defending": 80,
+        "finishing": 51,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 815,
+      "name": "Carlos Falcão",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 80,
+        "passing": 72,
+        "defending": 40,
+        "finishing": 78,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 816,
+      "name": "Adílson Coutinho",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 71,
+        "passing": 63,
+        "defending": 79,
+        "finishing": 50,
+        "stamina": 79
+      }
+    }
+  ]
+}

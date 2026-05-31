@@ -1,0 +1,257 @@
+{
+  "id": 36,
+  "name": "Grêmio Garoa Mirim",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3601,
+    3602,
+    3603,
+    3604,
+    3605,
+    3606,
+    3607,
+    3608,
+    3609,
+    3610,
+    3611
+  ],
+  "bench": [
+    3612,
+    3613,
+    3614,
+    3615,
+    3616
+  ],
+  "roster": [
+    {
+      "id": 3601,
+      "name": "Bruno Cardoso",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 86,
+        "passing": 83,
+        "defending": 57,
+        "finishing": 76,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 3602,
+      "name": "Quincas Zaluar",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 84,
+        "passing": 82,
+        "defending": 67,
+        "finishing": 77,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3603,
+      "name": "Gabriel Pontes",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 82,
+        "passing": 74,
+        "defending": 74,
+        "finishing": 66,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 3604,
+      "name": "Wallace Cavalcanti",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 65,
+        "passing": 54,
+        "defending": 80,
+        "finishing": 44,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3605,
+      "name": "Wesley Iglesias",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 79,
+        "passing": 73,
+        "defending": 45,
+        "finishing": 76,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 3606,
+      "name": "Ferraz Galvão",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 69,
+        "passing": 67,
+        "defending": 79,
+        "finishing": 59,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3607,
+      "name": "Daniel Alencar",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 76,
+        "passing": 62,
+        "defending": 49,
+        "finishing": 77,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 3608,
+      "name": "Davi Pontes",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 73,
+        "passing": 60,
+        "defending": 71,
+        "finishing": 55,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3609,
+      "name": "Ximenes Brandão",
+      "age": 37,
+      "position": "GK",
+      "attributes": {
+        "pace": 43,
+        "technique": 15,
+        "passing": 21,
+        "defending": 18,
+        "finishing": 26,
+        "stamina": 46
+      }
+    },
+    {
+      "id": 3610,
+      "name": "Cristiano Cardoso",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 76,
+        "passing": 72,
+        "defending": 78,
+        "finishing": 67,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3611,
+      "name": "Caio Drummond",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 61,
+        "technique": 74,
+        "passing": 70,
+        "defending": 74,
+        "finishing": 63,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3612,
+      "name": "Ferraz Negrão",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 82,
+        "passing": 74,
+        "defending": 42,
+        "finishing": 72,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3613,
+      "name": "Davi Zaccaro",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 76,
+        "passing": 76,
+        "defending": 67,
+        "finishing": 70,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 3614,
+      "name": "Washington Toledo",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 89,
+        "technique": 81,
+        "passing": 66,
+        "defending": 31,
+        "finishing": 67,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 3615,
+      "name": "Quincas Xavier",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 76,
+        "passing": 64,
+        "defending": 71,
+        "finishing": 53,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 3616,
+      "name": "Renan Vasconcelos",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 75,
+        "passing": 73,
+        "defending": 70,
+        "finishing": 72,
+        "stamina": 78
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 28,
+  "name": "Sociedade Capivara do Norte",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2801,
+    2802,
+    2803,
+    2804,
+    2805,
+    2806,
+    2807,
+    2808,
+    2809,
+    2810,
+    2811
+  ],
+  "bench": [
+    2812,
+    2813,
+    2814,
+    2815,
+    2816
+  ],
+  "roster": [
+    {
+      "id": 2801,
+      "name": "Aristides Esteves",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 58,
+        "technique": 60,
+        "passing": 55,
+        "defending": 81,
+        "finishing": 41,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2802,
+      "name": "Wallace Justino",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 68,
+        "passing": 63,
+        "defending": 80,
+        "finishing": 49,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 2803,
+      "name": "Aristides Bezerra",
+      "age": 33,
+      "position": "FWD",
+      "attributes": {
+        "pace": 54,
+        "technique": 72,
+        "passing": 66,
+        "defending": 44,
+        "finishing": 82,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2804,
+      "name": "Marquinhos Linhares",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 36,
+        "technique": 19,
+        "passing": 35,
+        "defending": 15,
+        "finishing": 25,
+        "stamina": 38
+      }
+    },
+    {
+      "id": 2805,
+      "name": "Wesley Henriques",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 83,
+        "passing": 79,
+        "defending": 59,
+        "finishing": 76,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2806,
+      "name": "Maicon Pacheco",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 92,
+        "technique": 82,
+        "passing": 73,
+        "defending": 41,
+        "finishing": 69,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2807,
+      "name": "Zico Iglesias",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 89,
+        "technique": 76,
+        "passing": 65,
+        "defending": 77,
+        "finishing": 60,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 2808,
+      "name": "Bebeto Lacerda",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 81,
+        "passing": 75,
+        "defending": 75,
+        "finishing": 68,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2809,
+      "name": "Ivan Lemos",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 72,
+        "passing": 56,
+        "defending": 37,
+        "finishing": 73,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2810,
+      "name": "Gabriel Ortiz",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 74,
+        "passing": 68,
+        "defending": 74,
+        "finishing": 62,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 2811,
+      "name": "Sebastião Junqueira",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 74,
+        "passing": 68,
+        "defending": 75,
+        "finishing": 50,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2812,
+      "name": "Zacarias Nogueira",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 82,
+        "passing": 74,
+        "defending": 49,
+        "finishing": 70,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 2813,
+      "name": "Adílson Werneck",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 83,
+        "technique": 76,
+        "passing": 66,
+        "defending": 47,
+        "finishing": 70,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2814,
+      "name": "Aristides Resende",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 74,
+        "passing": 69,
+        "defending": 76,
+        "finishing": 66,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 2815,
+      "name": "Rafael Iglesias",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 76,
+        "passing": 69,
+        "defending": 73,
+        "finishing": 61,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2816,
+      "name": "Wladimir Rebouças",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 57,
+        "technique": 67,
+        "passing": 64,
+        "defending": 76,
+        "finishing": 60,
+        "stamina": 82
+      }
+    }
+  ]
+}

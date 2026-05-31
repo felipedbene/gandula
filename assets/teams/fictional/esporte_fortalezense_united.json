@@ -1,0 +1,257 @@
+{
+  "id": 39,
+  "name": "Esporte Fortalezense United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3901,
+    3902,
+    3903,
+    3904,
+    3905,
+    3906,
+    3907,
+    3908,
+    3909,
+    3910,
+    3911
+  ],
+  "bench": [
+    3912,
+    3913,
+    3914,
+    3915,
+    3916
+  ],
+  "roster": [
+    {
+      "id": 3901,
+      "name": "Cauã Furtado",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 87,
+        "technique": 76,
+        "passing": 69,
+        "defending": 75,
+        "finishing": 60,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 3902,
+      "name": "Gustavo Iglesias",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 78,
+        "passing": 62,
+        "defending": 40,
+        "finishing": 77,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 3903,
+      "name": "Wladimir Pereira",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 81,
+        "passing": 71,
+        "defending": 38,
+        "finishing": 74,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3904,
+      "name": "Otávio Falcão",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 77,
+        "passing": 74,
+        "defending": 72,
+        "finishing": 62,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3905,
+      "name": "Talles Damasceno",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 90,
+        "technique": 82,
+        "passing": 74,
+        "defending": 39,
+        "finishing": 77,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3906,
+      "name": "Yuri Rangel",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 55,
+        "passing": 55,
+        "defending": 78,
+        "finishing": 37,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3907,
+      "name": "Paulinho Pereira",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 58,
+        "technique": 73,
+        "passing": 62,
+        "defending": 78,
+        "finishing": 45,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3908,
+      "name": "Nélson Esteban",
+      "age": 30,
+      "position": "GK",
+      "attributes": {
+        "pace": 40,
+        "technique": 20,
+        "passing": 38,
+        "defending": 18,
+        "finishing": 21,
+        "stamina": 39
+      }
+    },
+    {
+      "id": 3909,
+      "name": "Rodrigo Andrade",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 68,
+        "technique": 78,
+        "passing": 68,
+        "defending": 44,
+        "finishing": 78,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3910,
+      "name": "Wallace Iglesias",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 68,
+        "passing": 62,
+        "defending": 76,
+        "finishing": 50,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3911,
+      "name": "Davi Veloso",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 77,
+        "passing": 75,
+        "defending": 70,
+        "finishing": 68,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 3912,
+      "name": "Cauã Yamada",
+      "age": 19,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 70,
+        "passing": 61,
+        "defending": 79,
+        "finishing": 53,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 3913,
+      "name": "Igor Galvão",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 72,
+        "defending": 58,
+        "finishing": 72,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3914,
+      "name": "Ximenes Pacheco",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 85,
+        "technique": 80,
+        "passing": 67,
+        "defending": 54,
+        "finishing": 67,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 3915,
+      "name": "Zé Roberto Iglesias",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 78,
+        "passing": 72,
+        "defending": 48,
+        "finishing": 68,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 3916,
+      "name": "Reinaldo Zaccaro",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 78,
+        "passing": 65,
+        "defending": 54,
+        "finishing": 69,
+        "stamina": 60
+      }
+    }
+  ]
+}

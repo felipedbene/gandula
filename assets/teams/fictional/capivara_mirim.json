@@ -1,0 +1,257 @@
+{
+  "id": 23,
+  "name": "Capivara Mirim",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2301,
+    2302,
+    2303,
+    2304,
+    2305,
+    2306,
+    2307,
+    2308,
+    2309,
+    2310,
+    2311
+  ],
+  "bench": [
+    2312,
+    2313,
+    2314,
+    2315,
+    2316
+  ],
+  "roster": [
+    {
+      "id": 2301,
+      "name": "Ubirajara Hollanda",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 90,
+        "technique": 80,
+        "passing": 69,
+        "defending": 39,
+        "finishing": 83,
+        "stamina": 92
+      }
+    },
+    {
+      "id": 2302,
+      "name": "Edson Ribeiro",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 84,
+        "passing": 82,
+        "defending": 61,
+        "finishing": 82,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2303,
+      "name": "Felipe Furtado",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 76,
+        "passing": 74,
+        "defending": 77,
+        "finishing": 72,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 2304,
+      "name": "Adílson Quaresma",
+      "age": 30,
+      "position": "GK",
+      "attributes": {
+        "pace": 30,
+        "technique": 18,
+        "passing": 28,
+        "defending": 19,
+        "finishing": 27,
+        "stamina": 39
+      }
+    },
+    {
+      "id": 2305,
+      "name": "Roque Quaresma",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 84,
+        "passing": 78,
+        "defending": 42,
+        "finishing": 77,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 2306,
+      "name": "Nélson Wagner",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 80,
+        "passing": 73,
+        "defending": 71,
+        "finishing": 68,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2307,
+      "name": "Fábio Esteban",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 69,
+        "passing": 62,
+        "defending": 82,
+        "finishing": 46,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2308,
+      "name": "João Lopes",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 71,
+        "passing": 44,
+        "defending": 78,
+        "finishing": 28,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2309,
+      "name": "Reinaldo Toledo",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 92,
+        "technique": 78,
+        "passing": 59,
+        "defending": 76,
+        "finishing": 57,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2310,
+      "name": "Pedro Oliveira",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 80,
+        "passing": 77,
+        "defending": 67,
+        "finishing": 80,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2311,
+      "name": "Talles Macedo",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 80,
+        "passing": 76,
+        "defending": 65,
+        "finishing": 69,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 2312,
+      "name": "Antônio Ipojuca",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 74,
+        "passing": 72,
+        "defending": 76,
+        "finishing": 53,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2313,
+      "name": "Ximenes Tavares",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 76,
+        "passing": 65,
+        "defending": 76,
+        "finishing": 55,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2314,
+      "name": "Cristiano Resende",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 82,
+        "passing": 64,
+        "defending": 62,
+        "finishing": 70,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 2315,
+      "name": "Júnior Hollanda",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 77,
+        "passing": 57,
+        "defending": 76,
+        "finishing": 50,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2316,
+      "name": "Felipe Iglesias",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 31,
+        "technique": 18,
+        "passing": 24,
+        "defending": 10,
+        "finishing": 15,
+        "stamina": 37
+      }
+    }
+  ]
+}

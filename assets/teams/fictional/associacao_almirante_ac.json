@@ -1,0 +1,257 @@
+{
+  "id": 27,
+  "name": "Associação Almirante AC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2701,
+    2702,
+    2703,
+    2704,
+    2705,
+    2706,
+    2707,
+    2708,
+    2709,
+    2710,
+    2711
+  ],
+  "bench": [
+    2712,
+    2713,
+    2714,
+    2715,
+    2716
+  ],
+  "roster": [
+    {
+      "id": 2701,
+      "name": "Felipe Wanderley",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 88,
+        "passing": 74,
+        "defending": 58,
+        "finishing": 76,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2702,
+      "name": "Edson Drummond",
+      "age": 30,
+      "position": "GK",
+      "attributes": {
+        "pace": 42,
+        "technique": 16,
+        "passing": 38,
+        "defending": 22,
+        "finishing": 25,
+        "stamina": 38
+      }
+    },
+    {
+      "id": 2703,
+      "name": "Roque Esteves",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 68,
+        "passing": 47,
+        "defending": 84,
+        "finishing": 39,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2704,
+      "name": "Sílvio Werneck",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 78,
+        "passing": 77,
+        "defending": 76,
+        "finishing": 71,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2705,
+      "name": "Élton Bezerra",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 79,
+        "passing": 62,
+        "defending": 46,
+        "finishing": 80,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2706,
+      "name": "Pedro Albuquerque",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 80,
+        "passing": 67,
+        "defending": 49,
+        "finishing": 78,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2707,
+      "name": "Válber Siqueira",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 86,
+        "technique": 75,
+        "passing": 65,
+        "defending": 76,
+        "finishing": 68,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2708,
+      "name": "Pedro Tabosa",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 92,
+        "technique": 81,
+        "passing": 72,
+        "defending": 67,
+        "finishing": 61,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2709,
+      "name": "Cristiano Tavares",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 79,
+        "passing": 76,
+        "defending": 75,
+        "finishing": 66,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 2710,
+      "name": "Mauro Lemos",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 76,
+        "passing": 71,
+        "defending": 79,
+        "finishing": 72,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 2711,
+      "name": "Rafael Rangel",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 85,
+        "technique": 74,
+        "passing": 63,
+        "defending": 79,
+        "finishing": 50,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 2712,
+      "name": "Pedro Pontes",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 56,
+        "passing": 54,
+        "defending": 77,
+        "finishing": 40,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2713,
+      "name": "Maicon Saldanha",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 83,
+        "passing": 72,
+        "defending": 68,
+        "finishing": 64,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2714,
+      "name": "Diego Drummond",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 63,
+        "technique": 68,
+        "passing": 63,
+        "defending": 77,
+        "finishing": 50,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2715,
+      "name": "Ferraz Tabosa",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 79,
+        "passing": 64,
+        "defending": 40,
+        "finishing": 68,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 2716,
+      "name": "Bebeto Kowalski",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 44,
+        "technique": 72,
+        "passing": 76,
+        "defending": 72,
+        "finishing": 66,
+        "stamina": 74
+      }
+    }
+  ]
+}

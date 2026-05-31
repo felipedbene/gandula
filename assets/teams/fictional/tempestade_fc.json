@@ -1,0 +1,257 @@
+{
+  "id": 49,
+  "name": "Tempestade FC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4901,
+    4902,
+    4903,
+    4904,
+    4905,
+    4906,
+    4907,
+    4908,
+    4909,
+    4910,
+    4911
+  ],
+  "bench": [
+    4912,
+    4913,
+    4914,
+    4915,
+    4916
+  ],
+  "roster": [
+    {
+      "id": 4901,
+      "name": "Allan Lacerda",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 74,
+        "passing": 66,
+        "defending": 74,
+        "finishing": 66,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 4902,
+      "name": "Emerson Zaccaro",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 77,
+        "technique": 80,
+        "passing": 78,
+        "defending": 74,
+        "finishing": 71,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4903,
+      "name": "Naldo Negrão",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 22,
+        "passing": 29,
+        "defending": 17,
+        "finishing": 26,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 4904,
+      "name": "Marcelo Wanderley",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 80,
+        "passing": 72,
+        "defending": 47,
+        "finishing": 75,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4905,
+      "name": "Élton Juruá",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 55,
+        "technique": 53,
+        "passing": 50,
+        "defending": 78,
+        "finishing": 51,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 4906,
+      "name": "Gabriel Klabin",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 75,
+        "passing": 73,
+        "defending": 71,
+        "finishing": 67,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4907,
+      "name": "Antônio Zaccaro",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 77,
+        "technique": 71,
+        "passing": 68,
+        "defending": 44,
+        "finishing": 77,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4908,
+      "name": "Kléber Ipojuca",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 79,
+        "passing": 78,
+        "defending": 60,
+        "finishing": 78,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 4909,
+      "name": "Diego Juruá",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 81,
+        "passing": 75,
+        "defending": 69,
+        "finishing": 71,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 4910,
+      "name": "Romário Saldanha",
+      "age": 38,
+      "position": "GK",
+      "attributes": {
+        "pace": 44,
+        "technique": 21,
+        "passing": 28,
+        "defending": 17,
+        "finishing": 22,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 4911,
+      "name": "Rafael Lacerda",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 86,
+        "technique": 79,
+        "passing": 71,
+        "defending": 69,
+        "finishing": 62,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 4912,
+      "name": "Gabriel Siqueira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 70,
+        "passing": 65,
+        "defending": 77,
+        "finishing": 60,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4913,
+      "name": "Romário Rebouças",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 70,
+        "passing": 64,
+        "defending": 77,
+        "finishing": 59,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 4914,
+      "name": "Vinícius Uchôa",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 84,
+        "passing": 76,
+        "defending": 36,
+        "finishing": 76,
+        "stamina": 52
+      }
+    },
+    {
+      "id": 4915,
+      "name": "Mauro Brandão",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 81,
+        "technique": 80,
+        "passing": 68,
+        "defending": 49,
+        "finishing": 73,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 4916,
+      "name": "Nando Furtado",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 77,
+        "passing": 70,
+        "defending": 70,
+        "finishing": 72,
+        "stamina": 73
+      }
+    }
+  ]
+}
