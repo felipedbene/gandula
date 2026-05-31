@@ -3,6 +3,7 @@ import { userTeam } from "../util/roster";
 import {
   MAX_ROSTER,
   canBuy,
+  canExpand,
   canSell,
   generateFreeAgents,
   playerPrice,
@@ -10,6 +11,10 @@ import {
   type ScoutReport,
   type TransferAction,
 } from "../util/transfer-market";
+import {
+  STADIUM_EXPANSION_STEP,
+  expansionCost,
+} from "../util/finances";
 import { formatMoney } from "../util/money";
 import type { Career, TransferRecord } from "../persistence";
 import type { Player } from "../types";
@@ -146,9 +151,44 @@ export default function TransferMarketView({
     setActions([...actions, { kind: "sell", player, price }]);
   }
 
+  // E.4.b.4: pay to add a fixed block of seats. Debits money, raises capacity;
+  // reversible like buy/sell. Not a TransferRecord (no player) — purely a
+  // manager-state spend, so it doesn't appear in the season's transfer history.
+  function expandStadium() {
+    const check = canExpand(working);
+    if (!check.ok) return;
+    const price = expansionCost(working.manager.stadiumCapacity);
+    setWorking({
+      ...working,
+      manager: {
+        ...working.manager,
+        money: working.manager.money - price,
+        stadiumCapacity: working.manager.stadiumCapacity + STADIUM_EXPANSION_STEP,
+      },
+    });
+    setActions([
+      ...actions,
+      { kind: "expandStadium", seats: STADIUM_EXPANSION_STEP, price },
+    ]);
+  }
+
   function undoLast() {
     if (actions.length === 0) return;
     const last = actions[actions.length - 1];
+
+    if (last.kind === "expandStadium") {
+      setWorking({
+        ...working,
+        manager: {
+          ...working.manager,
+          money: working.manager.money + last.price,
+          stadiumCapacity: working.manager.stadiumCapacity - last.seats,
+        },
+      });
+      setActions(actions.slice(0, -1));
+      return;
+    }
+
     const baseRoster = currentRosterCopy();
     const newRoster =
       last.kind === "buy"
@@ -186,6 +226,43 @@ export default function TransferMarketView({
         {formatMoney(working.manager.money)} · ROSTER {team.roster.length}/
         {MAX_ROSTER}
       </Text>
+
+      <Panel title="Estádio & torcida">
+        <Stack gap={4}>
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="sm">Capacidade do estádio</Text>
+            <Text size="sm" ff="monospace">
+              {formatMoney(working.manager.stadiumCapacity)} lugares
+            </Text>
+          </Group>
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="sm">Torcida</Text>
+            <Text size="sm" ff="monospace">
+              {formatMoney(working.manager.fanbase)} torcedores
+            </Text>
+          </Group>
+          {(() => {
+            const check = canExpand(working);
+            const cost = expansionCost(working.manager.stadiumCapacity);
+            return (
+              <Group justify="space-between" wrap="nowrap" mt={4}>
+                <Text c="dimmed" size="xs">
+                  Ampliar aumenta a bilheteria de todos os jogos em casa.
+                </Text>
+                <Button
+                  size="xs"
+                  variant="default"
+                  disabled={!check.ok}
+                  title={check.ok ? undefined : check.reason}
+                  onClick={expandStadium}
+                >
+                  Ampliar +{formatMoney(STADIUM_EXPANSION_STEP)} · $ {formatMoney(cost)}
+                </Button>
+              </Group>
+            );
+          })()}
+        </Stack>
+      </Panel>
 
       <Panel title={`Jogadores disponíveis (${availableAgents.length})`}>
         <Stack gap={2}>

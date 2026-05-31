@@ -47,6 +47,7 @@ import {
   cupPrizeForAdvance,
   isManagerFired,
   roundCashDelta,
+  seedStadiumForTier,
 } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
@@ -131,19 +132,33 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   useEffect(() => {
     loadCareer()
       .then(async (result) => {
-        if (result.kind === "loaded" || result.kind === "migratedV6") {
+        if (
+          result.kind === "loaded" ||
+          result.kind === "migratedV6" ||
+          result.kind === "migratedV7"
+        ) {
           let career = result.career;
-          // v6 → v7: add the Copa for the current season (deterministic from
-          // the season seed, fast-forwarded past already-played cup rounds),
-          // then persist the upgraded career. Additive — progress preserved.
-          if (result.kind === "migratedV6") {
+          const migrated =
+            result.kind === "migratedV6" || result.kind === "migratedV7";
+          if (migrated) {
+            // Additive cascade v6→v7→v8 — progress preserved. v6 lacks the Copa
+            // (deterministic from the season seed, fast-forwarded past played
+            // cup rounds); v6 and v7 both lack the stadium/fanbase fields
+            // (seeded from the user's current tier). Re-save as v8.
+            const userTierForSeed = career.currentSeason.divisions[
+              findUserDivisionIdxInSeason(
+                career.currentSeason,
+                career.controlledTeamId,
+              )
+            ].tier;
             career = {
               ...career,
-              schemaVersion: 7,
-              currentSeason: {
-                ...career.currentSeason,
-                copa: initCopaForSeason(career),
-              },
+              schemaVersion: 8,
+              currentSeason:
+                result.kind === "migratedV6"
+                  ? { ...career.currentSeason, copa: initCopaForSeason(career) }
+                  : career.currentSeason,
+              manager: { ...career.manager, ...seedStadiumForTier(userTierForSeed) },
             };
             await saveCareer(career);
           }
@@ -156,7 +171,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             teamById(career.controlledTeamId)?.name ??
             `Time ${career.controlledTeamId}`;
           const prefix =
-            result.kind === "migratedV6" ? "save v6 migrado (Copa)" : "save carregado";
+            result.kind === "migratedV6"
+              ? "save v6 migrado (Copa + estádio)"
+              : result.kind === "migratedV7"
+                ? "save v7 migrado (estádio)"
+                : "save carregado";
           onStatus(
             `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
@@ -211,7 +230,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 7,
+        schemaVersion: 8,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -231,7 +250,8 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           // sides (career.ts buildNextSeason).
           copa: freshCopa(),
         },
-        manager: { money: STARTING_MONEY },
+        // User starts in Série C (tier 3): smallest stadium + fanbase.
+        manager: { money: STARTING_MONEY, ...seedStadiumForTier(3) },
         userRoster: [],
       };
 
@@ -550,10 +570,8 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       }
 
       const start = performance.now();
-      const { history, nextSeason, finances, agedUserRoster } = advanceCareer(
-        career,
-        pr,
-      );
+      const { history, nextSeason, finances, agedUserRoster, nextFanbase } =
+        advanceCareer(career, pr);
       const ms = Math.round(performance.now() - start);
       const newCareer: Career = {
         ...career,
@@ -564,6 +582,8 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         manager: {
           ...career.manager,
           money: career.manager.money + finances.prBonus + finances.placementPrize,
+          // Stadium capacity carries forward via the spread; fanbase drifts.
+          fanbase: nextFanbase,
         },
       };
       await saveCareer(newCareer);

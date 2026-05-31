@@ -97,16 +97,19 @@ richer SoFIFA market (E.4.c).
     eases early survival / promotion more than the title (it doesn't compound the
     way b.1/b.2 do). Useful mostly as a difficulty lever (E.4.a) and to fund the
     first strong buys; the prizes are what move the ceiling.
-  - [ ] **E.4.b.4 — Stadium expansion** · _M, core + web_ — let the controlled
-    club spend cash to grow stadium capacity, which raises every future home
-    gate. Today the gate (`opponentStrength × 1000`) has _no capacity term_; add
-    a `stadiumCapacity` to the career state and make the gate
-    `min(demand, capacity) × price`, with demand rising in Série A / vs. strong
-    opponents. Unlike b.1–b.3 this is a _player-controlled, compounding
-    investment_ (capex now → more revenue every season) and creates a real
-    build-vs-buy tension: spend on the stadium or the squad. Schema bump +
-    a new spend action in the market/UI; the most design-rich of the revenue
-    levers.
+  - [x] **E.4.b.4 — Stadium expansion + fanbase substrate** · _M, core + web_ —
+    **Shipped.** The gate is now `min(demand, capacity) × TICKET_PRICE`, with
+    `demand = fanbase × tierMult × opponentDraw` (keeps the evolved-opponent
+    term). Added **both** `stadiumCapacity` and `fanbase` to `Manager` (schema
+    **v7→v8**, additive in-place migration seeding from the current tier — no
+    wipe; v6→v7→v8 cascade in the load effect). A **spend action in the transfer
+    market** pays a rising cost (`1.5M + cap×80`) for +5k seats up to an 80k cap,
+    with undo — the build-vs-buy tension sits next to buying players. **fanbase
+    drifts** each season toward a tier+placement target (capped step), so success
+    compounds the crowd. Built the substrate per the shared-mechanic note so
+    b.5–b.7 are additive; fanbase is first-class state for a future RL
+    observation. Numbers illustrative (TICKET_PRICE=1.5 keeps a baseline A gate
+    ~65k); re-measure via E.6.
   - [ ] **E.4.b.5 — Marketing campaigns** · _M, core + web_ — a spend action
     that grows the **fanbase** (a new career-state value), which feeds demand
     for the gate (E.4.b.4) and sponsorship (E.4.b.6). The _demand_-side lever:

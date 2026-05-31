@@ -35,9 +35,9 @@ async function writeRaw(value: unknown): Promise<void> {
   await conn.put(STORE, value, SLOT_KEY);
 }
 
-function makeV7Career(opts: { seed: bigint; controlledTeamId: number }): Career {
+function makeV8Career(opts: { seed: bigint; controlledTeamId: number }): Career {
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     savedAt: "2026-01-01T00:00:00Z",
     seed: opts.seed,
     controlledTeamId: opts.controlledTeamId,
@@ -49,7 +49,7 @@ function makeV7Career(opts: { seed: bigint; controlledTeamId: number }): Career 
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
     userRoster: [],
   };
 }
@@ -64,8 +64,8 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v7 Career is present", async () => {
-    await saveCareer(makeV7Career({ seed: 1998n, controlledTeamId: 60 }));
+  it("returns kind:'loaded' when a v8 Career is present", async () => {
+    await saveCareer(makeV8Career({ seed: 1998n, controlledTeamId: 60 }));
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
@@ -100,6 +100,35 @@ describe("loadCareer", () => {
     });
     const result = await loadCareer();
     expect(result.kind).toBe("migratedV6");
+  });
+
+  // A v7 save (3-tier world WITH copa, but pre-stadium: manager has no
+  // stadiumCapacity/fanbase) migrates forward. loadCareer returns
+  // kind:'migratedV7' and the caller seeds the stadium fields by tier and
+  // re-saves as v8.
+  it("returns kind:'migratedV7' for a v7 save (copa, no stadium fields)", async () => {
+    await writeRaw({
+      schemaVersion: 7,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 1998n,
+      controlledTeamId: 60,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 1998n ^ BigInt(FIRST_YEAR),
+        divisions: [
+          { tier: 1, name: "Série A", record: {}, currentRoundIdx: 0 },
+          { tier: 2, name: "Série B", record: {}, currentRoundIdx: 0 },
+          { tier: 3, name: "Série C", record: {}, currentRoundIdx: 0 },
+        ],
+        transfers: [],
+        copa: { rounds: [], currentCupRoundIdx: 0 },
+      },
+      manager: { money: STARTING_MONEY },
+      userRoster: [],
+    });
+    const result = await loadCareer();
+    expect(result.kind).toBe("migratedV7");
   });
 
   // Every pre-v6 schema (v2 2-tier saves, v3/v4/v5 careers, and v1-like

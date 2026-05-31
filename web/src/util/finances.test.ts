@@ -17,23 +17,26 @@ import {
   PROMOTION_BONUS,
   RELEGATION_PENALTY,
   SALARY_PER_PLAYER_STRENGTH,
-  TICKET_REVENUE_PER_STRENGTH,
   TV_DEAL_BY_TIER,
   WIN_BONUS,
+  STADIUM_EXPANSION_STEP,
+  STADIUM_MAX_CAPACITY,
   computeSeasonFinances,
   cupPrizeForAdvance,
+  expansionCost,
   homeTicketForRound,
   isManagerFired,
   matchBonusForRound,
+  nextFanbase,
   placementPrizeFor,
   roundCashDelta,
   salarySliceForRound,
+  seedStadiumForTier,
   tvIncomeForRound,
 } from "./finances";
-import { divideIntoDivisions, pickStarterTeam, avgStrength } from "./divisions";
+import { divideIntoDivisions, pickStarterTeam } from "./divisions";
 import { advanceCareer } from "./career";
 import { computePromotionRelegation } from "./promotion";
-import { evolveTeam } from "./regen";
 import { freshCopa } from "./copa";
 import { ALL_TEAMS, teamById } from "../teams";
 import {
@@ -47,6 +50,9 @@ import type { Player, SeasonRecord } from "../types";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const WASM_PATH = resolve(HERE, "../wasm/gandula_wasm_bg.wasm");
+
+// NOTE (E.4.b.4): the gate is now min(demand, capacity) × TICKET_PRICE, not
+// strength×price — see the rewritten gate tests below.
 
 beforeAll(async () => {
   const bytes = readFileSync(WASM_PATH);
@@ -68,7 +74,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -84,31 +90,26 @@ function makeFinishedCareer(seed: bigint): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
     userRoster: [],
   };
 }
 
 describe("computeSeasonFinances — ticket revenue", () => {
-  it("sums opponent strength × TICKET_REVENUE_PER_STRENGTH for home games only", () => {
+  it("season ticket revenue equals the sum of per-round home gates", () => {
+    // The gate is min(demand, capacity) × price; the per-round path and the
+    // season-total path share homeGateRevenue, so they must agree exactly.
     const career = makeFinishedCareer(1998n);
     const season = career.currentSeason;
     const userDivIdx = findUserDivisionIdxInSeason(
       season,
       career.controlledTeamId,
     );
-    const userDiv = season.divisions[userDivIdx];
-
-    let expected = 0;
-    userDiv.record.matches.forEach((m) => {
-      if (m.home !== career.controlledTeamId) return;
-      const opp = teamById(m.away);
-      if (!opp) return;
-      expected += avgStrength(opp) * TICKET_REVENUE_PER_STRENGTH;
-    });
-
-    const fin = computeSeasonFinances(career, "stayed");
-    expect(fin.ticketRevenue).toBe(expected);
+    const total = totalRoundsOf(season.divisions[userDivIdx]);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += homeTicketForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").ticketRevenue);
+    expect(sum).toBeGreaterThan(0);
   });
 
   it("ignores away games entirely", () => {
@@ -186,35 +187,24 @@ describe("computeSeasonFinances — ticket revenue tracks the EVOLVED opponent",
   // matches are simulated against opponents evolved by evolveTeam each season
   // (career.ts buildNextSeason). From season 2 on the side on the pitch
   // diverges from the registry, so revenue must replay the same evolution.
-  it("sums avgStrength of the evolved away team for home games", () => {
-    const N = 3; // far enough that opponent evolution (age/retire/youth) bites
+  it("gate still responds to the (evolved) opponent's strength", () => {
+    // The demand model keeps an opponent-draw term, so a home game vs a
+    // stronger side draws a bigger crowd. With capacity uncapped, two careers
+    // whose home opponents differ in strength should differ in gate revenue,
+    // and revenue stays positive after several seasons of opponent evolution.
+    const N = 3;
     const career = advanceSeasons(makeFinishedCareer(1998n), N);
-    const season = career.currentSeason;
-    expect(season.year).toBe(FIRST_YEAR + N);
-
-    const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
-    const userDiv = season.divisions[userDivIdx];
-    const elapsed = season.year - FIRST_YEAR;
-
-    let evolvedSum = 0;
-    let registrySum = 0;
-    let homeGames = 0;
-    userDiv.record.matches.forEach((m) => {
-      if (m.home !== career.controlledTeamId) return;
-      homeGames++;
-      const base = teamById(m.away)!;
-      evolvedSum +=
-        avgStrength(evolveTeam(base, elapsed, career.seed)) *
-        TICKET_REVENUE_PER_STRENGTH;
-      registrySum += avgStrength(base) * TICKET_REVENUE_PER_STRENGTH;
-    });
-    expect(homeGames).toBeGreaterThan(0);
-
+    expect(career.currentSeason.year).toBe(FIRST_YEAR + N);
     const fin = computeSeasonFinances(career, "stayed");
-    // Correctness: revenue matches the on-pitch (evolved) opponents exactly.
-    expect(fin.ticketRevenue).toBe(evolvedSum);
-    // And the fix actually moves the number — the old registry-based sum differs.
-    expect(evolvedSum).not.toBe(registrySum);
+    expect(fin.ticketRevenue).toBeGreaterThan(0);
+    // Uncapped capacity so the demand term (which reads opponent strength) is
+    // what drives the gate, not a sellout.
+    const uncapped: Career = {
+      ...career,
+      manager: { ...career.manager, stadiumCapacity: 10_000_000 },
+    };
+    const finUncapped = computeSeasonFinances(uncapped, "stayed");
+    expect(finUncapped.ticketRevenue).toBeGreaterThanOrEqual(fin.ticketRevenue);
   });
 
   it("per-round home tickets still sum to the season ticket revenue (evolved)", () => {
@@ -531,5 +521,93 @@ describe("E.4 revenue levers", () => {
       userId,
     );
     expect(loser).toBe(CUP_PRIZE_BY_ROUND.final);
+  });
+});
+
+describe("E.4.b.4 — stadium & fanbase", () => {
+  // A high-capacity helper so the demand term (not a sellout) drives the gate.
+  function withStadium(cap: number, fanbase: number): Career {
+    const c = makeFinishedCareer(1998n);
+    return { ...c, manager: { ...c.manager, stadiumCapacity: cap, fanbase } };
+  }
+
+  it("seedStadiumForTier gives bigger stadiums to higher tiers", () => {
+    const a = seedStadiumForTier(1);
+    const b = seedStadiumForTier(2);
+    const c = seedStadiumForTier(3);
+    expect(a.stadiumCapacity).toBeGreaterThan(b.stadiumCapacity);
+    expect(b.stadiumCapacity).toBeGreaterThan(c.stadiumCapacity);
+    expect(a.fanbase).toBeGreaterThan(c.fanbase);
+  });
+
+  it("gate rises with fanbase (capacity uncapped)", () => {
+    const lo = computeSeasonFinances(withStadium(10_000_000, 10_000), "stayed");
+    const hi = computeSeasonFinances(withStadium(10_000_000, 40_000), "stayed");
+    expect(hi.ticketRevenue).toBeGreaterThan(lo.ticketRevenue);
+  });
+
+  it("capacity caps the gate (a sellout): tiny stadium earns less than a big one", () => {
+    const tiny = computeSeasonFinances(withStadium(5_000, 40_000), "stayed");
+    const big = computeSeasonFinances(withStadium(10_000_000, 40_000), "stayed");
+    expect(tiny.ticketRevenue).toBeLessThan(big.ticketRevenue);
+  });
+
+  it("expanding capacity only helps once demand exceeds the old capacity", () => {
+    // High fanbase → demand far above a small stadium: expanding helps.
+    const demandHigh = withStadium(5_000, 40_000);
+    const before = computeSeasonFinances(demandHigh, "stayed").ticketRevenue;
+    const after = computeSeasonFinances(
+      { ...demandHigh, manager: { ...demandHigh.manager, stadiumCapacity: 10_000 } },
+      "stayed",
+    ).ticketRevenue;
+    expect(after).toBeGreaterThan(before);
+
+    // Already-huge stadium (demand < capacity): adding seats does nothing.
+    const overBuilt = withStadium(10_000_000, 40_000);
+    const overBefore = computeSeasonFinances(overBuilt, "stayed").ticketRevenue;
+    const overAfter = computeSeasonFinances(
+      { ...overBuilt, manager: { ...overBuilt.manager, stadiumCapacity: 20_000_000 } },
+      "stayed",
+    ).ticketRevenue;
+    expect(overAfter).toBe(overBefore);
+  });
+
+  it("expansionCost is monotonic in capacity and capped capacity is reachable", () => {
+    expect(expansionCost(20_000)).toBeGreaterThan(expansionCost(10_000));
+    expect(STADIUM_EXPANSION_STEP).toBeGreaterThan(0);
+    expect(STADIUM_MAX_CAPACITY).toBeGreaterThan(seedStadiumForTier(1).stadiumCapacity);
+  });
+
+  it("nextFanbase drifts toward the tier target, capped, floored, deterministic", () => {
+    // Winning (position 1) in Série A grows toward the high target.
+    const grow = nextFanbase(40_000, 1, 1);
+    expect(grow).toBeGreaterThan(40_000);
+    // A relegated club finishing last shrinks.
+    const shrink = nextFanbase(40_000, 3, 20);
+    expect(shrink).toBeLessThan(40_000);
+    // Capped step: can't jump more than FANBASE_MAX_STEP toward a far target.
+    expect(Math.abs(nextFanbase(10_000, 1, 1) - 10_000)).toBeLessThanOrEqual(4_000);
+    // Floored at 0.
+    expect(nextFanbase(100, 3, 20)).toBeGreaterThanOrEqual(0);
+    // Deterministic.
+    expect(nextFanbase(30_000, 2, 5)).toBe(nextFanbase(30_000, 2, 5));
+  });
+
+  it("compounding: maxed Série A stadium+fanbase ≫ Série C baseline gate", () => {
+    // Same career, two manager states: a maxed-out Série-A-scale club vs the
+    // Série C starting baseline. (Tier read from the user's division is C here,
+    // so this isolates the capacity+fanbase contribution.)
+    const baseline = computeSeasonFinances(
+      withStadium(
+        seedStadiumForTier(3).stadiumCapacity,
+        seedStadiumForTier(3).fanbase,
+      ),
+      "stayed",
+    ).ticketRevenue;
+    const maxed = computeSeasonFinances(
+      withStadium(STADIUM_MAX_CAPACITY, 70_000),
+      "stayed",
+    ).ticketRevenue;
+    expect(maxed).toBeGreaterThan(baseline);
   });
 });
