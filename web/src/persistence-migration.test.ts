@@ -1,8 +1,9 @@
-// Tests for the v3 (Career) persistence layer + v2 → v3 migration. Pure
-// unit tests for `migrateV2toV3` plus integration tests for `loadCareer`
-// that exercise the real IDB code path via `fake-indexeddb` (in-memory
-// IndexedDB polyfill, registered globally via the `auto` side-effect
-// import below).
+// Tests for the v6 persistence layer. The E.2 three-tier expansion is a hard
+// break: every pre-v6 save is discarded on load (no migration cascade — see
+// loadCareer in persistence.ts), so these tests confirm the wipe behavior and
+// the v6 fast path. Integration tests exercise the real IDB code path via
+// `fake-indexeddb` (in-memory IndexedDB polyfill, registered globally via the
+// `auto` side-effect import below).
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { openDB } from "idb";
@@ -11,74 +12,12 @@ import {
   STARTING_MONEY,
   clearCareer,
   loadCareer,
-  migrateV2toV3,
   saveCareer,
   type Career,
-  type SavedSeason,
 } from "./persistence";
-import type { Fixture, Match, SeasonRecord, TeamStats } from "./types";
-
-// ─── Fixture builders ────────────────────────────────────────────────────
-
-function ts(team_id: number): TeamStats {
-  return {
-    team_id,
-    played: 0,
-    won: 0,
-    drawn: 0,
-    lost: 0,
-    goals_for: 0,
-    goals_against: 0,
-  };
-}
-
-function makeSeasonRecord(
-  standings: TeamStats[],
-  totalRounds: number,
-): SeasonRecord {
-  const fixtures: Fixture[] = Array.from({ length: totalRounds }, (_, i) => ({
-    round: i,
-    home_idx: 0,
-    away_idx: 1,
-  }));
-  const matches: Match[] = fixtures.map(() => ({
-    home: standings[0]?.team_id ?? 0,
-    away: standings[1]?.team_id ?? 0,
-    seed: 0n,
-    result: { home_goals: 0, away_goals: 0 },
-    events: [],
-  }));
-  return { league_name: "test", fixtures, matches, standings };
-}
-
-function makeV2Save(opts: {
-  seed: bigint;
-  controlledTeamId: number;
-}): SavedSeason {
-  return {
-    schemaVersion: 2,
-    savedAt: "2026-01-01T00:00:00Z",
-    seed: opts.seed,
-    controlledTeamId: opts.controlledTeamId,
-    divisions: [
-      {
-        tier: 1,
-        name: "Série A",
-        record: makeSeasonRecord([ts(101), ts(102)], 14),
-        currentRoundIdx: 7,
-      },
-      {
-        tier: 2,
-        name: "Série B",
-        record: makeSeasonRecord([ts(opts.controlledTeamId), ts(202)], 18),
-        currentRoundIdx: 5,
-      },
-    ],
-  };
-}
 
 // Same IDB coords as persistence.ts. We hit the DB directly here to seed
-// pre-v3 payloads so loadCareer can exercise the migration / discard paths.
+// pre-v6 payloads so loadCareer can exercise the discard path.
 const DB_NAME = "gandula";
 const DB_VERSION = 1;
 const STORE = "season";
@@ -95,40 +34,23 @@ async function writeRaw(value: unknown): Promise<void> {
   await conn.put(STORE, value, SLOT_KEY);
 }
 
-// ─── Pure migration tests ────────────────────────────────────────────────
-
-describe("migrateV2toV3", () => {
-  it("wraps v2 into Career with seasons=[] and currentSeason", () => {
-    const v2 = makeV2Save({ seed: 1998n, controlledTeamId: 201 });
-    const v3 = migrateV2toV3(v2);
-    expect(v3.schemaVersion).toBe(3);
-    expect(v3.seasons).toEqual([]);
-    expect(v3.controlledTeamId).toBe(201);
-    expect(v3.currentSeason.year).toBe(FIRST_YEAR);
-    expect(v3.currentSeason.divisions).toBe(v2.divisions);
-    expect(v3.currentSeason.userTactics).toBe(v2.userTactics);
-  });
-
-  it("preserves the v2 seed at career level", () => {
-    const v2 = makeV2Save({ seed: 42n, controlledTeamId: 201 });
-    const v3 = migrateV2toV3(v2);
-    expect(v3.seed).toBe(42n);
-  });
-
-  it("derives season seed via career.seed XOR BigInt(year)", () => {
-    const v2 = makeV2Save({ seed: 1998n, controlledTeamId: 201 });
-    const v3 = migrateV2toV3(v2);
-    expect(v3.currentSeason.seed).toBe(1998n ^ BigInt(FIRST_YEAR));
-  });
-
-  it("preserves savedAt timestamp", () => {
-    const v2 = makeV2Save({ seed: 1n, controlledTeamId: 201 });
-    const v3 = migrateV2toV3(v2);
-    expect(v3.savedAt).toBe(v2.savedAt);
-  });
-});
-
-// ─── Integration tests against fake-indexeddb ────────────────────────────
+function makeV6Career(opts: { seed: bigint; controlledTeamId: number }): Career {
+  return {
+    schemaVersion: 6,
+    savedAt: "2026-01-01T00:00:00Z",
+    seed: opts.seed,
+    controlledTeamId: opts.controlledTeamId,
+    seasons: [],
+    currentSeason: {
+      year: FIRST_YEAR,
+      seed: opts.seed ^ BigInt(FIRST_YEAR),
+      divisions: [],
+      transfers: [],
+    },
+    manager: { money: STARTING_MONEY },
+    userRoster: [],
+  };
+}
 
 describe("loadCareer", () => {
   beforeEach(async () => {
@@ -140,171 +62,31 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v5 Career is present", async () => {
-    const career: Career = {
-      schemaVersion: 5,
-      savedAt: "2026-01-01T00:00:00Z",
-      seed: 1998n,
-      controlledTeamId: 201,
-      seasons: [],
-      currentSeason: {
-        year: FIRST_YEAR,
-        seed: 1998n ^ BigInt(FIRST_YEAR),
-        divisions: [],
-        transfers: [],
-      },
-      manager: { money: STARTING_MONEY },
-      userRoster: [],
-    };
-    await saveCareer(career);
+  it("returns kind:'loaded' when a v6 Career is present", async () => {
+    await saveCareer(makeV6Career({ seed: 1998n, controlledTeamId: 60 }));
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
-      expect(result.career.controlledTeamId).toBe(201);
+      expect(result.career.controlledTeamId).toBe(60);
       expect(result.career.manager.money).toBe(STARTING_MONEY);
       expect(result.career.userRoster).toEqual([]);
     }
   });
 
-  it("cascades a v2 payload through v3 → v4 → v5 in one load", async () => {
-    const v2 = makeV2Save({ seed: 1998n, controlledTeamId: 201 });
-    await writeRaw(v2);
+  // Every pre-v6 schema (v2 2-tier saves, v3/v4/v5 careers, and v1-like
+  // garbage) is discarded uniformly — the world expanded and a 2-tier career
+  // can't be inflated into the 60-team / 3-tier world.
+  it.each([
+    ["v2 (2-tier SavedSeason)", { schemaVersion: 2, divisions: [{ tier: 1 }, { tier: 2 }] }],
+    ["v5 (2-tier Career)", { schemaVersion: 5, controlledTeamId: 201, currentSeason: {} }],
+    ["v1-like (no schemaVersion)", { savedAt: "2025", record: {} }],
+  ])("discards a pre-v6 payload: %s", async (_label, payload) => {
+    await writeRaw({ savedAt: "2025-01-01T00:00:00Z", seed: 1n, ...payload });
 
     const first = await loadCareer();
-    // Kind preserves the original starting point even though the
-    // cascade went v2 → v3 → v4 → v5 internally.
-    expect(first.kind).toBe("migratedV2");
-    if (first.kind === "migratedV2") {
-      expect(first.career.schemaVersion).toBe(5);
-      expect(first.career.controlledTeamId).toBe(201);
-      expect(first.career.currentSeason.year).toBe(FIRST_YEAR);
-      expect(first.career.currentSeason.divisions).toHaveLength(2);
-      expect(first.career.currentSeason.transfers).toEqual([]);
-      expect(first.career.manager.money).toBe(STARTING_MONEY);
-      expect(first.career.userRoster).toEqual([]);
-    }
+    expect(first.kind).toBe("expandedWorld");
 
-    // Second call must read the persisted v5 directly — proves the
-    // cascade write hit the store.
-    const second = await loadCareer();
-    expect(second.kind).toBe("loaded");
-  });
-
-  it("cascades a v3 payload through v4 to v5 in one load", async () => {
-    // Hand-write a v3-shaped payload (no manager, no transfers, no money
-    // fields on history) and confirm loadCareer cascades it all the way.
-    const v3 = {
-      schemaVersion: 3,
-      savedAt: "2026-01-01T00:00:00Z",
-      seed: 42n,
-      controlledTeamId: 201,
-      seasons: [],
-      currentSeason: {
-        year: FIRST_YEAR,
-        seed: 42n ^ BigInt(FIRST_YEAR),
-        divisions: [],
-      },
-    };
-    await writeRaw(v3);
-
-    const first = await loadCareer();
-    expect(first.kind).toBe("migratedV3");
-    if (first.kind === "migratedV3") {
-      expect(first.career.schemaVersion).toBe(5);
-      expect(first.career.controlledTeamId).toBe(201);
-      expect(first.career.manager.money).toBe(STARTING_MONEY);
-      expect(first.career.userRoster).toEqual([]);
-      expect(first.career.currentSeason.transfers).toEqual([]);
-    }
-
-    // Persisted as v5 — second load is the fast path.
-    const second = await loadCareer();
-    expect(second.kind).toBe("loaded");
-  });
-
-  it("migrates a v4 payload in place to v5", async () => {
-    // Hand-write a v4-shaped payload (has manager, lacks userRoster +
-    // transfers) and confirm loadCareer upgrades it to v5.
-    const v4 = {
-      schemaVersion: 4,
-      savedAt: "2026-01-01T00:00:00Z",
-      seed: 99n,
-      controlledTeamId: 201,
-      seasons: [],
-      currentSeason: {
-        year: FIRST_YEAR,
-        seed: 99n ^ BigInt(FIRST_YEAR),
-        divisions: [],
-      },
-      manager: { money: 750_000 }, // distinct so we can assert preservation
-    };
-    await writeRaw(v4);
-
-    const first = await loadCareer();
-    expect(first.kind).toBe("migratedV4");
-    if (first.kind === "migratedV4") {
-      expect(first.career.schemaVersion).toBe(5);
-      expect(first.career.controlledTeamId).toBe(201);
-      // Money preserved (NOT reset to STARTING_MONEY — only userRoster +
-      // transfers are added).
-      expect(first.career.manager.money).toBe(750_000);
-      expect(first.career.userRoster).toEqual([]);
-      expect(first.career.currentSeason.transfers).toEqual([]);
-    }
-
-    const second = await loadCareer();
-    expect(second.kind).toBe("loaded");
-  });
-
-  it("backfills moneyDelta=0 and moneyAfter=STARTING_MONEY on v3 history entries", async () => {
-    // v3 history entries had no money fields; the cascade backfills.
-    const v3 = {
-      schemaVersion: 3,
-      savedAt: "2026-01-01T00:00:00Z",
-      seed: 7n,
-      controlledTeamId: 201,
-      seasons: [
-        {
-          year: 2025,
-          userDivision: { tier: 2, name: "Série B" },
-          userPosition: 3,
-          userPoints: 30,
-          champion: { tier: 2, teamId: 209, teamName: "x" },
-          promoted: [],
-          relegated: [],
-          userOutcome: "stayed",
-        },
-      ],
-      currentSeason: {
-        year: FIRST_YEAR,
-        seed: 7n ^ BigInt(FIRST_YEAR),
-        divisions: [],
-      },
-    };
-    await writeRaw(v3);
-
-    const result = await loadCareer();
-    expect(result.kind).toBe("migratedV3");
-    if (result.kind === "migratedV3") {
-      expect(result.career.seasons).toHaveLength(1);
-      expect(result.career.seasons[0].moneyDelta).toBe(0);
-      expect(result.career.seasons[0].moneyAfter).toBe(STARTING_MONEY);
-    }
-  });
-
-  it("discards a payload with no recognisable schemaVersion", async () => {
-    const v1Like = {
-      savedAt: "2025-01-01T00:00:00Z",
-      seed: 1n,
-      controlledTeamId: 201,
-      record: {},
-      currentRoundIdx: 0,
-    };
-    await writeRaw(v1Like);
-
-    const first = await loadCareer();
-    expect(first.kind).toBe("discardedV1");
-
+    // The slot was cleared, so a second load sees an empty slot.
     const second = await loadCareer();
     expect(second.kind).toBe("none");
   });

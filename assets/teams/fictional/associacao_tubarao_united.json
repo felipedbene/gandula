@@ -1,0 +1,257 @@
+{
+  "id": 25,
+  "name": "Associação Tubarão United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2501,
+    2502,
+    2503,
+    2504,
+    2505,
+    2506,
+    2507,
+    2508,
+    2509,
+    2510,
+    2511
+  ],
+  "bench": [
+    2512,
+    2513,
+    2514,
+    2515,
+    2516
+  ],
+  "roster": [
+    {
+      "id": 2501,
+      "name": "Davi Henriques",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 87,
+        "passing": 85,
+        "defending": 44,
+        "finishing": 86,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 2502,
+      "name": "Diego Iglesias",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 80,
+        "passing": 65,
+        "defending": 39,
+        "finishing": 82,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2503,
+      "name": "Roque Bittencourt",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 59,
+        "passing": 50,
+        "defending": 83,
+        "finishing": 46,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2504,
+      "name": "Gustavo Tabosa",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 80,
+        "passing": 80,
+        "defending": 74,
+        "finishing": 78,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2505,
+      "name": "João Siqueira",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 75,
+        "passing": 75,
+        "defending": 77,
+        "finishing": 74,
+        "stamina": 87
+      }
+    },
+    {
+      "id": 2506,
+      "name": "Paulinho Escobar",
+      "age": 25,
+      "position": "GK",
+      "attributes": {
+        "pace": 58,
+        "technique": 26,
+        "passing": 33,
+        "defending": 18,
+        "finishing": 25,
+        "stamina": 42
+      }
+    },
+    {
+      "id": 2507,
+      "name": "Talles Uchimura",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 69,
+        "passing": 62,
+        "defending": 80,
+        "finishing": 52,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 2508,
+      "name": "Nando Sampaio",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 82,
+        "passing": 80,
+        "defending": 73,
+        "finishing": 69,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2509,
+      "name": "Bebeto Falcão",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 80,
+        "technique": 75,
+        "passing": 62,
+        "defending": 43,
+        "finishing": 71,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 2510,
+      "name": "Bebeto Zaluar",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 83,
+        "passing": 76,
+        "defending": 49,
+        "finishing": 76,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 2511,
+      "name": "Mauro Cavalcanti",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 78,
+        "passing": 82,
+        "defending": 70,
+        "finishing": 69,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2512,
+      "name": "Otávio Veloso",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 81,
+        "passing": 74,
+        "defending": 63,
+        "finishing": 65,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2513,
+      "name": "Anderson Falcão",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 83,
+        "passing": 70,
+        "defending": 73,
+        "finishing": 69,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2514,
+      "name": "Ferraz Oliveira",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 89,
+        "technique": 73,
+        "passing": 63,
+        "defending": 69,
+        "finishing": 49,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 2515,
+      "name": "Roque Siqueira",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 79,
+        "passing": 72,
+        "defending": 42,
+        "finishing": 71,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 2516,
+      "name": "Marquinhos Lemos",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 74,
+        "passing": 67,
+        "defending": 72,
+        "finishing": 59,
+        "stamina": 79
+      }
+    }
+  ]
+}

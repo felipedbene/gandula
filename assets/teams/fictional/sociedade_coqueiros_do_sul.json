@@ -1,0 +1,257 @@
+{
+  "id": 40,
+  "name": "Sociedade Coqueiros do Sul",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4001,
+    4002,
+    4003,
+    4004,
+    4005,
+    4006,
+    4007,
+    4008,
+    4009,
+    4010,
+    4011
+  ],
+  "bench": [
+    4012,
+    4013,
+    4014,
+    4015,
+    4016
+  ],
+  "roster": [
+    {
+      "id": 4001,
+      "name": "Geraldo Macedo",
+      "age": 34,
+      "position": "GK",
+      "attributes": {
+        "pace": 46,
+        "technique": 18,
+        "passing": 29,
+        "defending": 17,
+        "finishing": 21,
+        "stamina": 33
+      }
+    },
+    {
+      "id": 4002,
+      "name": "Davi Esteban",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 80,
+        "passing": 57,
+        "defending": 44,
+        "finishing": 76,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4003,
+      "name": "Emerson Zaluar",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 84,
+        "passing": 69,
+        "defending": 42,
+        "finishing": 77,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4004,
+      "name": "Quincas Vasconcelos",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 75,
+        "passing": 70,
+        "defending": 77,
+        "finishing": 71,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 4005,
+      "name": "Roque Lacerda",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 80,
+        "passing": 77,
+        "defending": 66,
+        "finishing": 75,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4006,
+      "name": "Romário Sampaio",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 46,
+        "technique": 76,
+        "passing": 72,
+        "defending": 73,
+        "finishing": 68,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4007,
+      "name": "Nélson Xavier",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 76,
+        "passing": 72,
+        "defending": 60,
+        "finishing": 73,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4008,
+      "name": "Marcelo Esteban",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 86,
+        "technique": 77,
+        "passing": 69,
+        "defending": 69,
+        "finishing": 59,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4009,
+      "name": "Davi Ribeiro",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 79,
+        "passing": 70,
+        "defending": 69,
+        "finishing": 67,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4010,
+      "name": "Ximenes Zaluar",
+      "age": 34,
+      "position": "GK",
+      "attributes": {
+        "pace": 41,
+        "technique": 15,
+        "passing": 21,
+        "defending": 16,
+        "finishing": 21,
+        "stamina": 40
+      }
+    },
+    {
+      "id": 4011,
+      "name": "Wladimir Veloso",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 77,
+        "passing": 77,
+        "defending": 72,
+        "finishing": 68,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4012,
+      "name": "Sílvio Guimarães",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 77,
+        "passing": 79,
+        "defending": 70,
+        "finishing": 68,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 4013,
+      "name": "Zico Bittencourt",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 76,
+        "passing": 64,
+        "defending": 48,
+        "finishing": 75,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4014,
+      "name": "Carlos Brandão",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 75,
+        "passing": 72,
+        "defending": 71,
+        "finishing": 77,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 4015,
+      "name": "Zacarias Yamada",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 81,
+        "passing": 77,
+        "defending": 68,
+        "finishing": 66,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 4016,
+      "name": "Pedro Pontes",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 74,
+        "passing": 64,
+        "defending": 74,
+        "finishing": 64,
+        "stamina": 75
+      }
+    }
+  ]
+}

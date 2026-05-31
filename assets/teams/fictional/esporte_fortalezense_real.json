@@ -1,0 +1,257 @@
+{
+  "id": 47,
+  "name": "Esporte Fortalezense Real",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4701,
+    4702,
+    4703,
+    4704,
+    4705,
+    4706,
+    4707,
+    4708,
+    4709,
+    4710,
+    4711
+  ],
+  "bench": [
+    4712,
+    4713,
+    4714,
+    4715,
+    4716
+  ],
+  "roster": [
+    {
+      "id": 4701,
+      "name": "Marcelo Andrade",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 92,
+        "technique": 84,
+        "passing": 68,
+        "defending": 50,
+        "finishing": 80,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 4702,
+      "name": "Mauro Bezerra",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 63,
+        "technique": 76,
+        "passing": 80,
+        "defending": 73,
+        "finishing": 77,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4703,
+      "name": "Wesley Gonçalves",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 74,
+        "passing": 65,
+        "defending": 73,
+        "finishing": 58,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 4704,
+      "name": "Zacarias Pacheco",
+      "age": 25,
+      "position": "GK",
+      "attributes": {
+        "pace": 42,
+        "technique": 20,
+        "passing": 36,
+        "defending": 22,
+        "finishing": 24,
+        "stamina": 47
+      }
+    },
+    {
+      "id": 4705,
+      "name": "Quincas Lopes",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 63,
+        "technique": 83,
+        "passing": 80,
+        "defending": 60,
+        "finishing": 74,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4706,
+      "name": "Luan Wagner",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 79,
+        "passing": 73,
+        "defending": 61,
+        "finishing": 68,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 4707,
+      "name": "Rodrigo Queiroz",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 50,
+        "technique": 77,
+        "passing": 70,
+        "defending": 41,
+        "finishing": 78,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4708,
+      "name": "Válter Furtado",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 62,
+        "passing": 52,
+        "defending": 77,
+        "finishing": 47,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 4709,
+      "name": "Válter Tavares",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 54,
+        "passing": 58,
+        "defending": 77,
+        "finishing": 59,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4710,
+      "name": "Naldo Macedo",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 80,
+        "passing": 74,
+        "defending": 41,
+        "finishing": 76,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 4711,
+      "name": "Mauro Guimarães",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 77,
+        "passing": 62,
+        "defending": 43,
+        "finishing": 76,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4712,
+      "name": "Cristiano Pacheco",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 82,
+        "passing": 67,
+        "defending": 47,
+        "finishing": 66,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 4713,
+      "name": "Allan Esteves",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 69,
+        "technique": 75,
+        "passing": 70,
+        "defending": 68,
+        "finishing": 68,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4714,
+      "name": "Robson Ortiz",
+      "age": 22,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 80,
+        "passing": 64,
+        "defending": 42,
+        "finishing": 73,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 4715,
+      "name": "Yuri Henriques",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 79,
+        "passing": 69,
+        "defending": 71,
+        "finishing": 63,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4716,
+      "name": "Thiago Junqueira",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 77,
+        "passing": 65,
+        "defending": 69,
+        "finishing": 57,
+        "stamina": 63
+      }
+    }
+  ]
+}

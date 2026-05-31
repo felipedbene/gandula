@@ -7,11 +7,11 @@ import { userTeam } from "./roster";
 import { ALL_TEAMS } from "../teams";
 import { FIRST_YEAR, STARTING_MONEY, type Career } from "../persistence";
 
-const team = ALL_TEAMS.find((t) => t.name === "Baviera FC")!;
+const team = ALL_TEAMS.find((t) => t.name === "Amazônia do Norte")!;
 
 function careerWith(userRoster: typeof team.roster): Career {
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: team.id,

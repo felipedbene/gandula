@@ -2,10 +2,47 @@
 
 Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 **L** large. Items are grouped by epic; the suggested order is at the bottom.
-**Shipped history is below the active work** — current priority is the economy /
-squad-strength cluster (E.4), informed by [gandula-rl](https://github.com/felipedbene/gandula-rl).
+**Shipped history is below the active work.**
 
-## E.4 — Economy balance & squad strength (active priority)
+## The structural arc (re-sequenced)
+
+The original plan tuned the economy (E.4) on the 17-team / 2-tier world. That
+was reframed: building TV-money tiers around 17 teams and then expanding the
+pyramid means redoing the finance tuning. So the order is **pyramid →
+competitions → finances**, each shipping standalone value:
+
+1. **E.2 — Expand the pyramid** → 3 tiers of 20 (Série A/B/C, 60 teams).
+   **✓ Shipped** (see below). Division is the key everything downstream reads
+   (TV tier, schedule size, prize money), so it's foundational. The richer
+   60-club SoFIFA pool also lifts title-contender XI strength (~73 vs the old
+   ~67–69), which already begins attacking the E.4.c "means wall".
+2. **E.3 — Competition layer** (← next): Copa do Brasil knockout + a calendar.
+   State championships deliberately deferred.
+3. **E.4 — Finances** (after E.3): TV-deal tiers + a ledger, schema v6→v7.
+   Asymmetric income keyed to division; the gandula-rl 4.7%-title analysis
+   below still motivates it.
+
+## E.3 — Competition layer (active priority)
+
+The league spine already exists — each tier is a double round-robin via
+`run_season`. E.3 adds the *other* competitions interleaved on a calendar.
+The engine stays untouched: `play_match`, `run_season`, `derive_match_seed`
+are exported via wasm and divisions/competitions are pure TS on top.
+
+- [ ] **E.3.a — Copa do Brasil knockout** · _M, web_ — a TS-built knockout
+  bracket that calls `play_match` per tie. **Determinism:** seed each tie via
+  `derive_match_seed` keyed on `(season, "copa", round, homeId, awayId)` so the
+  bracket replays identically. Série A clubs entering at a later phase is just a
+  seeding rule in the bracket builder. Emits a `CompetitionResult` carrying
+  prize money — the handoff into E.4.
+- [ ] **E.3.b — Calendar** · _M, web_ — order league rounds and cup ties without
+  collisions (a club plays at most one fixture per slot).
+- [ ] **E.3.c — State championship** · _S, web, DEFERRED_ — the scope trap (real
+  Brazil has ~27 with disjoint team sets). If ever built: a short optional
+  pre-season regional cup (3–4 geographic buckets, quick round-robin, small
+  prize). Regional cups (Nordeste/Verde/Sul-Sudeste) skipped entirely.
+
+## E.4 — Economy balance & squad strength (after E.3)
 
 The gandula-rl numbers read the finances layer as a difficulty dial. Greedy
 goes broke in 91–99% of careers; a careful agent survives 99.7% but still wins
@@ -179,6 +216,19 @@ ideally E.2. The gandula-rl repo is the measurement substrate for E.4/E.6.
 
 ## Shipped
 
+- **E.2 — Three-tier pyramid (the structural-arc E.2)** — the world grew from
+  17 teams / 2 tiers to **60 teams / 3 tiers** (Série A/B/C × 20). New careers
+  start at the bottom (Série C) and climb; promotion/relegation now spans two
+  boundaries (3 up / 3 down at A↔B and B↔C, the middle tier shuffling both
+  ways). Schema bumped **v5 → v6** as a hard break — pre-v6 (2-tier) saves are
+  discarded and a fresh 3-tier career auto-starts (no legacy 2-tier code path).
+  Engine untouched: each tier is one `run_season(teams, seasonSeed ^ tier, …)`.
+  Data: the 60 fictional clubs are the strongest by avg overall from the FC25/
+  SoFIFA Kaggle set, via `scripts/build-fictional-teams.sh` (adapt → import →
+  fictionalize, all in `gandula-import-sofifa`, deterministic & reproducible).
+  A world-fixture test locks the monotonic A>B>C talent gradient. _(Note: the
+  living-world epic below is the **older** "E.2" — same number, different work;
+  this entry is the structural-arc E.2.)_
 - **E.1.a–e** — career mode: two divisions (Série A/B), promotion/relegation,
   the `Career` schema (currently v5) + in-place migrations, the finances layer,
   and the transfer market.

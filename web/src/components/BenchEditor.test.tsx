@@ -8,7 +8,7 @@ import type { LineupState } from "./LineupEditor";
 import { ALL_TEAMS } from "../teams";
 import type { Player, Team } from "../types";
 
-const team = ALL_TEAMS.find((t) => t.name === "Baviera FC")!;
+const team = ALL_TEAMS.find((t) => t.name === "Sociedade Onça SC")!;
 
 function fullBenchState(): LineupState {
   return {
@@ -76,10 +76,14 @@ describe("BenchEditor", () => {
   });
 
   it("shows no-GK warning when bench has no goalkeeper", () => {
-    // Baviera bench has one GK (25712). Remove only that one to trigger
-    // the warning while keeping the bench non-empty.
+    // Build a non-empty bench of only non-GK players to trigger the warning.
+    // Derive the GK ids from the roster so this is robust to the chosen team.
+    const gkIds = new Set(
+      team.roster.filter((p) => p.position === "GK").map((p) => p.id),
+    );
     const state = fullBenchState();
-    state.bench = state.bench.filter((id) => id !== 25712);
+    state.bench = state.bench.filter((id) => !gkIds.has(id));
+    expect(state.bench.length).toBeGreaterThan(0);
     render(<BenchEditor team={team} state={state} onChange={() => {}} />);
     expect(screen.getByText(/nenhum goleiro no banco/i)).toBeInTheDocument();
   });

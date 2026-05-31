@@ -1,0 +1,257 @@
+{
+  "id": 26,
+  "name": "Serra Júnior",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2601,
+    2602,
+    2603,
+    2604,
+    2605,
+    2606,
+    2607,
+    2608,
+    2609,
+    2610,
+    2611
+  ],
+  "bench": [
+    2612,
+    2613,
+    2614,
+    2615,
+    2616
+  ],
+  "roster": [
+    {
+      "id": 2601,
+      "name": "Thiago Nogueira",
+      "age": 36,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 89,
+        "passing": 86,
+        "defending": 49,
+        "finishing": 81,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 2602,
+      "name": "Nando Iglesias",
+      "age": 36,
+      "position": "DEF",
+      "attributes": {
+        "pace": 59,
+        "technique": 51,
+        "passing": 58,
+        "defending": 82,
+        "finishing": 55,
+        "stamina": 87
+      }
+    },
+    {
+      "id": 2603,
+      "name": "Adílson Macedo",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 78,
+        "passing": 82,
+        "defending": 65,
+        "finishing": 77,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 2604,
+      "name": "Igor Drummond",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 55,
+        "technique": 72,
+        "passing": 58,
+        "defending": 79,
+        "finishing": 50,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2605,
+      "name": "Paulinho Jardim",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 78,
+        "passing": 75,
+        "defending": 75,
+        "finishing": 70,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 2606,
+      "name": "Matheus Pacheco",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 77,
+        "passing": 68,
+        "defending": 47,
+        "finishing": 81,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 2607,
+      "name": "Roque Oliveira",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 90,
+        "technique": 75,
+        "passing": 72,
+        "defending": 74,
+        "finishing": 64,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2608,
+      "name": "Túlio Junqueira",
+      "age": 23,
+      "position": "GK",
+      "attributes": {
+        "pace": 44,
+        "technique": 13,
+        "passing": 28,
+        "defending": 10,
+        "finishing": 18,
+        "stamina": 43
+      }
+    },
+    {
+      "id": 2609,
+      "name": "Sandro Galvão",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 85,
+        "technique": 77,
+        "passing": 71,
+        "defending": 69,
+        "finishing": 59,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 2610,
+      "name": "Hélio Albuquerque",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 80,
+        "passing": 74,
+        "defending": 37,
+        "finishing": 71,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 2611,
+      "name": "Adílson Guimarães",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 84,
+        "passing": 73,
+        "defending": 34,
+        "finishing": 76,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 2612,
+      "name": "Robson Vasconcelos",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 72,
+        "passing": 61,
+        "defending": 76,
+        "finishing": 35,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2613,
+      "name": "Marcelo Yamada",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 69,
+        "passing": 55,
+        "defending": 78,
+        "finishing": 40,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2614,
+      "name": "Gustavo Klabin",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 78,
+        "passing": 64,
+        "defending": 70,
+        "finishing": 63,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2615,
+      "name": "Sandro Bezerra",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 68,
+        "technique": 74,
+        "passing": 56,
+        "defending": 43,
+        "finishing": 76,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 2616,
+      "name": "Washington Albuquerque",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 69,
+        "technique": 72,
+        "passing": 60,
+        "defending": 36,
+        "finishing": 76,
+        "stamina": 75
+      }
+    }
+  ]
+}

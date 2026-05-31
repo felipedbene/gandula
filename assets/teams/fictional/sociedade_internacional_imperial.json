@@ -1,0 +1,257 @@
+{
+  "id": 3,
+  "name": "Sociedade Internacional Imperial",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    301,
+    302,
+    303,
+    304,
+    305,
+    306,
+    307,
+    308,
+    309,
+    310,
+    311
+  ],
+  "bench": [
+    312,
+    313,
+    314,
+    315,
+    316
+  ],
+  "roster": [
+    {
+      "id": 301,
+      "name": "Paulinho Tabosa",
+      "age": 36,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 85,
+        "passing": 79,
+        "defending": 47,
+        "finishing": 88,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 302,
+      "name": "Carlos Bittencourt",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 90,
+        "technique": 88,
+        "passing": 83,
+        "defending": 54,
+        "finishing": 81,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 303,
+      "name": "Diego Pereira",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 21,
+        "passing": 40,
+        "defending": 16,
+        "finishing": 24,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 304,
+      "name": "Nélson Hollanda",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 89,
+        "passing": 79,
+        "defending": 69,
+        "finishing": 66,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 305,
+      "name": "Éder Siqueira",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 74,
+        "passing": 65,
+        "defending": 85,
+        "finishing": 46,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 306,
+      "name": "Antônio Rangel",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 86,
+        "passing": 82,
+        "defending": 76,
+        "finishing": 68,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 307,
+      "name": "Diego Uchôa",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 81,
+        "technique": 55,
+        "passing": 58,
+        "defending": 85,
+        "finishing": 49,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 308,
+      "name": "Breno Cardoso",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 60,
+        "passing": 69,
+        "defending": 85,
+        "finishing": 55,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 309,
+      "name": "Sebastião Zaccaro",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 82,
+        "passing": 75,
+        "defending": 39,
+        "finishing": 78,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 310,
+      "name": "Davi Ipojuca",
+      "age": 17,
+      "position": "MID",
+      "attributes": {
+        "pace": 84,
+        "technique": 91,
+        "passing": 80,
+        "defending": 24,
+        "finishing": 76,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 311,
+      "name": "Fábio Rebouças",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 87,
+        "passing": 80,
+        "defending": 49,
+        "finishing": 78,
+        "stamina": 61
+      }
+    },
+    {
+      "id": 312,
+      "name": "Everton Soares",
+      "age": 34,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 11,
+        "passing": 34,
+        "defending": 15,
+        "finishing": 21,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 313,
+      "name": "Genílson Tabosa",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 90,
+        "technique": 80,
+        "passing": 68,
+        "defending": 77,
+        "finishing": 48,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 314,
+      "name": "Nando Lopes",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 86,
+        "passing": 73,
+        "defending": 66,
+        "finishing": 63,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 315,
+      "name": "Bruno Furtado",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 66,
+        "technique": 67,
+        "passing": 59,
+        "defending": 84,
+        "finishing": 31,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 316,
+      "name": "Emerson Lopes",
+      "age": 17,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 73,
+        "passing": 54,
+        "defending": 82,
+        "finishing": 43,
+        "stamina": 73
+      }
+    }
+  ]
+}

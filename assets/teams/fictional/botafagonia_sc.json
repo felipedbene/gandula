@@ -1,0 +1,257 @@
+{
+  "id": 58,
+  "name": "Botafagonia SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5801,
+    5802,
+    5803,
+    5804,
+    5805,
+    5806,
+    5807,
+    5808,
+    5809,
+    5810,
+    5811
+  ],
+  "bench": [
+    5812,
+    5813,
+    5814,
+    5815,
+    5816
+  ],
+  "roster": [
+    {
+      "id": 5801,
+      "name": "Geraldo Hollanda",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 81,
+        "passing": 79,
+        "defending": 72,
+        "finishing": 74,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 5802,
+      "name": "Mauro Juruá",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 52,
+        "technique": 75,
+        "passing": 60,
+        "defending": 34,
+        "finishing": 79,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5803,
+      "name": "Yuri Junqueira",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 81,
+        "passing": 65,
+        "defending": 75,
+        "finishing": 48,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 5804,
+      "name": "Sandro Queiroz",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 41,
+        "technique": 54,
+        "passing": 50,
+        "defending": 80,
+        "finishing": 42,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 5805,
+      "name": "Kléber Tavares",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 69,
+        "passing": 64,
+        "defending": 74,
+        "finishing": 63,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 5806,
+      "name": "Mauro Queiroz",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 63,
+        "technique": 62,
+        "passing": 53,
+        "defending": 77,
+        "finishing": 40,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 5807,
+      "name": "Mauro Lopes",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 24,
+        "technique": 10,
+        "passing": 19,
+        "defending": 11,
+        "finishing": 16,
+        "stamina": 29
+      }
+    },
+    {
+      "id": 5808,
+      "name": "Gabriel Soares",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 76,
+        "passing": 67,
+        "defending": 65,
+        "finishing": 64,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5809,
+      "name": "Sandro Rebouças",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 70,
+        "technique": 72,
+        "passing": 62,
+        "defending": 33,
+        "finishing": 72,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5810,
+      "name": "Diego Alencar",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 72,
+        "passing": 71,
+        "defending": 70,
+        "finishing": 62,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 5811,
+      "name": "Cléber Juruá",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 74,
+        "passing": 73,
+        "defending": 68,
+        "finishing": 64,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5812,
+      "name": "Thiago Xavier",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 87,
+        "technique": 77,
+        "passing": 59,
+        "defending": 37,
+        "finishing": 70,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5813,
+      "name": "Emerson Quaresma",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 58,
+        "technique": 50,
+        "passing": 46,
+        "defending": 77,
+        "finishing": 35,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5814,
+      "name": "Cristiano Escobar",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 73,
+        "passing": 69,
+        "defending": 70,
+        "finishing": 65,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5815,
+      "name": "Cléber Zaccaro",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 70,
+        "passing": 68,
+        "defending": 67,
+        "finishing": 56,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 5816,
+      "name": "Joelson Pacheco",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 16,
+        "passing": 24,
+        "defending": 13,
+        "finishing": 19,
+        "stamina": 48
+      }
+    }
+  ]
+}

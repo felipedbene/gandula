@@ -1,0 +1,257 @@
+{
+  "id": 17,
+  "name": "Aurora Júnior",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1701,
+    1702,
+    1703,
+    1704,
+    1705,
+    1706,
+    1707,
+    1708,
+    1709,
+    1710,
+    1711
+  ],
+  "bench": [
+    1712,
+    1713,
+    1714,
+    1715,
+    1716
+  ],
+  "roster": [
+    {
+      "id": 1701,
+      "name": "Genílson Oliveira",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 94,
+        "technique": 79,
+        "passing": 65,
+        "defending": 35,
+        "finishing": 81,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1702,
+      "name": "Sandro Esteban",
+      "age": 21,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 87,
+        "passing": 78,
+        "defending": 61,
+        "finishing": 73,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1703,
+      "name": "Everton Negrão",
+      "age": 34,
+      "position": "GK",
+      "attributes": {
+        "pace": 43,
+        "technique": 19,
+        "passing": 26,
+        "defending": 21,
+        "finishing": 20,
+        "stamina": 47
+      }
+    },
+    {
+      "id": 1704,
+      "name": "Allan Hollanda",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 58,
+        "technique": 52,
+        "passing": 48,
+        "defending": 84,
+        "finishing": 36,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 1705,
+      "name": "Quincas Macedo",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 80,
+        "passing": 74,
+        "defending": 78,
+        "finishing": 58,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 1706,
+      "name": "Cristiano Klabin",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 85,
+        "technique": 79,
+        "passing": 80,
+        "defending": 72,
+        "finishing": 60,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 1707,
+      "name": "Yuri Negrão",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 78,
+        "passing": 72,
+        "defending": 71,
+        "finishing": 68,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1708,
+      "name": "Naldo Teixeira",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 79,
+        "passing": 62,
+        "defending": 49,
+        "finishing": 76,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1709,
+      "name": "João Drummond",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 80,
+        "passing": 75,
+        "defending": 70,
+        "finishing": 69,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1710,
+      "name": "Aristides Henriques",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 73,
+        "passing": 60,
+        "defending": 80,
+        "finishing": 44,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 1711,
+      "name": "Gabriel Resende",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 81,
+        "technique": 71,
+        "passing": 56,
+        "defending": 80,
+        "finishing": 48,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1712,
+      "name": "Válber Furtado",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 76,
+        "passing": 63,
+        "defending": 79,
+        "finishing": 55,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1713,
+      "name": "Mauro Cardoso",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 69,
+        "defending": 50,
+        "finishing": 72,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 1714,
+      "name": "Marcelo Veloso",
+      "age": 34,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 80,
+        "passing": 78,
+        "defending": 60,
+        "finishing": 68,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 1715,
+      "name": "Everton Coutinho",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 82,
+        "passing": 70,
+        "defending": 69,
+        "finishing": 70,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1716,
+      "name": "Ivan Alencar",
+      "age": 19,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 77,
+        "passing": 72,
+        "defending": 68,
+        "finishing": 56,
+        "stamina": 79
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 43,
+  "name": "Tubarão EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4301,
+    4302,
+    4303,
+    4304,
+    4305,
+    4306,
+    4307,
+    4308,
+    4309,
+    4310,
+    4311
+  ],
+  "bench": [
+    4312,
+    4313,
+    4314,
+    4315,
+    4316
+  ],
+  "roster": [
+    {
+      "id": 4301,
+      "name": "Zacarias Jardim",
+      "age": 34,
+      "position": "GK",
+      "attributes": {
+        "pace": 46,
+        "technique": 10,
+        "passing": 21,
+        "defending": 14,
+        "finishing": 20,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 4302,
+      "name": "Thiago Negrão",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 60,
+        "passing": 52,
+        "defending": 81,
+        "finishing": 43,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4303,
+      "name": "Anderson Esteves",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 56,
+        "technique": 82,
+        "passing": 81,
+        "defending": 55,
+        "finishing": 76,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4304,
+      "name": "Túlio Lacerda",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 75,
+        "passing": 71,
+        "defending": 79,
+        "finishing": 69,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 4305,
+      "name": "Everton Coutinho",
+      "age": 22,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 83,
+        "passing": 61,
+        "defending": 35,
+        "finishing": 75,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 4306,
+      "name": "Wesley Lopes",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 68,
+        "passing": 63,
+        "defending": 78,
+        "finishing": 39,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4307,
+      "name": "Fábio Cardoso",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 72,
+        "passing": 67,
+        "defending": 76,
+        "finishing": 65,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 4308,
+      "name": "Douglas Teixeira",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 90,
+        "technique": 76,
+        "passing": 64,
+        "defending": 54,
+        "finishing": 67,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4309,
+      "name": "Wallace Tabosa",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 75,
+        "passing": 62,
+        "defending": 38,
+        "finishing": 77,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4310,
+      "name": "Túlio Furtado",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 71,
+        "passing": 59,
+        "defending": 77,
+        "finishing": 50,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4311,
+      "name": "Vinícius Ribeiro",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 75,
+        "passing": 65,
+        "defending": 65,
+        "finishing": 68,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 4312,
+      "name": "Válber Xavier",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 78,
+        "passing": 65,
+        "defending": 34,
+        "finishing": 77,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 4313,
+      "name": "Romário Wanderley",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 86,
+        "technique": 75,
+        "passing": 66,
+        "defending": 66,
+        "finishing": 49,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 4314,
+      "name": "Rodrigo Damasceno",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 65,
+        "technique": 79,
+        "passing": 70,
+        "defending": 62,
+        "finishing": 67,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 4315,
+      "name": "Yuri Uchimura",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 71,
+        "technique": 77,
+        "passing": 74,
+        "defending": 68,
+        "finishing": 65,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4316,
+      "name": "Fábio Bittencourt",
+      "age": 19,
+      "position": "MID",
+      "attributes": {
+        "pace": 64,
+        "technique": 79,
+        "passing": 65,
+        "defending": 29,
+        "finishing": 73,
+        "stamina": 69
+      }
+    }
+  ]
+}

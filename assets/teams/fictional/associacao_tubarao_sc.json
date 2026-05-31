@@ -1,0 +1,257 @@
+{
+  "id": 33,
+  "name": "Associação Tubarão SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3301,
+    3302,
+    3303,
+    3304,
+    3305,
+    3306,
+    3307,
+    3308,
+    3309,
+    3310,
+    3311
+  ],
+  "bench": [
+    3312,
+    3313,
+    3314,
+    3315,
+    3316
+  ],
+  "roster": [
+    {
+      "id": 3301,
+      "name": "Zico Tabosa",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 87,
+        "passing": 74,
+        "defending": 56,
+        "finishing": 71,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3302,
+      "name": "João Iglesias",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 83,
+        "passing": 72,
+        "defending": 73,
+        "finishing": 66,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3303,
+      "name": "Mauro Alencar",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 83,
+        "technique": 83,
+        "passing": 69,
+        "defending": 41,
+        "finishing": 78,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3304,
+      "name": "Diego Juruá",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 76,
+        "passing": 78,
+        "defending": 67,
+        "finishing": 77,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 3305,
+      "name": "Naldo Oliveira",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 82,
+        "passing": 70,
+        "defending": 75,
+        "finishing": 66,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3306,
+      "name": "Geraldo Albuquerque",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 73,
+        "defending": 75,
+        "finishing": 59,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3307,
+      "name": "Wladimir Bezerra",
+      "age": 22,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 15,
+        "passing": 26,
+        "defending": 15,
+        "finishing": 17,
+        "stamina": 41
+      }
+    },
+    {
+      "id": 3308,
+      "name": "Ximenes Damasceno",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 69,
+        "technique": 68,
+        "passing": 68,
+        "defending": 77,
+        "finishing": 46,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3309,
+      "name": "Júnior Esteves",
+      "age": 34,
+      "position": "FWD",
+      "attributes": {
+        "pace": 54,
+        "technique": 78,
+        "passing": 69,
+        "defending": 47,
+        "finishing": 76,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 3310,
+      "name": "Naldo Damasceno",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 73,
+        "passing": 70,
+        "defending": 76,
+        "finishing": 65,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 3311,
+      "name": "Joelson Henriques",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 81,
+        "technique": 80,
+        "passing": 74,
+        "defending": 58,
+        "finishing": 74,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3312,
+      "name": "Válber Juruá",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 63,
+        "technique": 68,
+        "passing": 60,
+        "defending": 79,
+        "finishing": 48,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3313,
+      "name": "Hélio Galvão",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 66,
+        "technique": 50,
+        "passing": 49,
+        "defending": 76,
+        "finishing": 38,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 3314,
+      "name": "Rodrigo Kowalski",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 94,
+        "technique": 81,
+        "passing": 62,
+        "defending": 52,
+        "finishing": 64,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 3315,
+      "name": "Éder Pontes",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 80,
+        "passing": 75,
+        "defending": 64,
+        "finishing": 68,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 3316,
+      "name": "Matheus Ortiz",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 37,
+        "technique": 65,
+        "passing": 65,
+        "defending": 78,
+        "finishing": 49,
+        "stamina": 75
+      }
+    }
+  ]
+}

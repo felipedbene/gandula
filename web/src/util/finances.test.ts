@@ -47,15 +47,17 @@ beforeAll(async () => {
  * computeSeasonFinances can run against realistic matches and standings.
  */
 function makeFinishedCareer(seed: bigint): Career {
-  const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-  const starter = pickStarterTeam(tierB);
+  const [tierA, tierB, tierC] = divideIntoDivisions(ALL_TEAMS);
+  const starter = pickStarterTeam(tierC);
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   const totalA = Math.max(...recordA.fixtures.map((f) => f.round)) + 1;
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
+  const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -66,6 +68,7 @@ function makeFinishedCareer(seed: bigint): Career {
       divisions: [
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx: totalA },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: totalB },
+        { tier: 3, name: "Série C", record: recordC, currentRoundIdx: totalC },
       ],
       transfers: [],
     },

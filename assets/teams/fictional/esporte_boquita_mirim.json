@@ -1,0 +1,257 @@
+{
+  "id": 42,
+  "name": "Esporte Boquita Mirim",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4201,
+    4202,
+    4203,
+    4204,
+    4205,
+    4206,
+    4207,
+    4208,
+    4209,
+    4210,
+    4211
+  ],
+  "bench": [
+    4212,
+    4213,
+    4214,
+    4215,
+    4216
+  ],
+  "roster": [
+    {
+      "id": 4201,
+      "name": "Rodrigo Siqueira",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 85,
+        "passing": 82,
+        "defending": 78,
+        "finishing": 70,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 4202,
+      "name": "Matheus Hollanda",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 64,
+        "technique": 85,
+        "passing": 81,
+        "defending": 79,
+        "finishing": 77,
+        "stamina": 89
+      }
+    },
+    {
+      "id": 4203,
+      "name": "Washington Esteves",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 74,
+        "passing": 86,
+        "defending": 75,
+        "finishing": 76,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4204,
+      "name": "Geraldo Pacheco",
+      "age": 33,
+      "position": "GK",
+      "attributes": {
+        "pace": 38,
+        "technique": 20,
+        "passing": 32,
+        "defending": 16,
+        "finishing": 23,
+        "stamina": 48
+      }
+    },
+    {
+      "id": 4205,
+      "name": "João Quaresma",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 84,
+        "passing": 79,
+        "defending": 43,
+        "finishing": 78,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4206,
+      "name": "Nando Bittencourt",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 58,
+        "technique": 70,
+        "passing": 58,
+        "defending": 34,
+        "finishing": 81,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4207,
+      "name": "Wesley Cardoso",
+      "age": 33,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 69,
+        "passing": 57,
+        "defending": 82,
+        "finishing": 49,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4208,
+      "name": "Lucas Bittencourt",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 76,
+        "passing": 74,
+        "defending": 73,
+        "finishing": 67,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4209,
+      "name": "Maicon Esteves",
+      "age": 21,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 74,
+        "passing": 60,
+        "defending": 32,
+        "finishing": 77,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 4210,
+      "name": "Mauro Ribeiro",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 86,
+        "technique": 86,
+        "passing": 71,
+        "defending": 54,
+        "finishing": 73,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 4211,
+      "name": "Everton Resende",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 86,
+        "technique": 80,
+        "passing": 63,
+        "defending": 33,
+        "finishing": 60,
+        "stamina": 55
+      }
+    },
+    {
+      "id": 4212,
+      "name": "Wladimir Wanderley",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 60,
+        "passing": 52,
+        "defending": 72,
+        "finishing": 37,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4213,
+      "name": "Rafael Tabosa",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 72,
+        "passing": 68,
+        "defending": 68,
+        "finishing": 68,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 4214,
+      "name": "Felipe Soares",
+      "age": 35,
+      "position": "DEF",
+      "attributes": {
+        "pace": 43,
+        "technique": 34,
+        "passing": 36,
+        "defending": 70,
+        "finishing": 40,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4215,
+      "name": "Otávio Uchimura",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 93,
+        "technique": 69,
+        "passing": 59,
+        "defending": 56,
+        "finishing": 52,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 4216,
+      "name": "Élton Pereira",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 67,
+        "passing": 60,
+        "defending": 63,
+        "finishing": 57,
+        "stamina": 63
+      }
+    }
+  ]
+}

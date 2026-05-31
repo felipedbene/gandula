@@ -1,0 +1,257 @@
+{
+  "id": 24,
+  "name": "Esporte Baviera AC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2401,
+    2402,
+    2403,
+    2404,
+    2405,
+    2406,
+    2407,
+    2408,
+    2409,
+    2410,
+    2411
+  ],
+  "bench": [
+    2412,
+    2413,
+    2414,
+    2415,
+    2416
+  ],
+  "roster": [
+    {
+      "id": 2401,
+      "name": "Washington Rangel",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 91,
+        "technique": 80,
+        "passing": 62,
+        "defending": 45,
+        "finishing": 85,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 2402,
+      "name": "Davi Sampaio",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 79,
+        "passing": 76,
+        "defending": 78,
+        "finishing": 68,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 2403,
+      "name": "Quincas Mascarenhas",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 68,
+        "technique": 72,
+        "passing": 68,
+        "defending": 43,
+        "finishing": 82,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2404,
+      "name": "Nando Saldanha",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 75,
+        "passing": 54,
+        "defending": 81,
+        "finishing": 47,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 2405,
+      "name": "Paulinho Vasconcelos",
+      "age": 38,
+      "position": "GK",
+      "attributes": {
+        "pace": 44,
+        "technique": 25,
+        "passing": 28,
+        "defending": 17,
+        "finishing": 24,
+        "stamina": 47
+      }
+    },
+    {
+      "id": 2406,
+      "name": "Zacarias Drummond",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 75,
+        "passing": 74,
+        "defending": 77,
+        "finishing": 69,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2407,
+      "name": "Lucas Marinho",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 77,
+        "passing": 82,
+        "defending": 66,
+        "finishing": 70,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 2408,
+      "name": "Sandro Klabin",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 59,
+        "technique": 68,
+        "passing": 65,
+        "defending": 80,
+        "finishing": 49,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 2409,
+      "name": "Genílson Rangel",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 90,
+        "technique": 74,
+        "passing": 73,
+        "defending": 68,
+        "finishing": 73,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 2410,
+      "name": "Marquinhos Uchôa",
+      "age": 32,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 80,
+        "passing": 71,
+        "defending": 37,
+        "finishing": 81,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2411,
+      "name": "João Oliveira",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 92,
+        "technique": 76,
+        "passing": 68,
+        "defending": 68,
+        "finishing": 75,
+        "stamina": 88
+      }
+    },
+    {
+      "id": 2412,
+      "name": "Júnior Junqueira",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 80,
+        "passing": 71,
+        "defending": 41,
+        "finishing": 74,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 2413,
+      "name": "Juvenal Cavalcanti",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 81,
+        "passing": 66,
+        "defending": 55,
+        "finishing": 70,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2414,
+      "name": "Juvenal Rangel",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 59,
+        "technique": 77,
+        "passing": 78,
+        "defending": 67,
+        "finishing": 72,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2415,
+      "name": "Carlos Jardim",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 59,
+        "technique": 63,
+        "passing": 74,
+        "defending": 77,
+        "finishing": 58,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2416,
+      "name": "João Andrade",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 74,
+        "passing": 59,
+        "defending": 67,
+        "finishing": 58,
+        "stamina": 74
+      }
+    }
+  ]
+}

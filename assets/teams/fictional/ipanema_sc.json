@@ -1,0 +1,257 @@
+{
+  "id": 7,
+  "name": "Ipanema SC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    701,
+    702,
+    703,
+    704,
+    705,
+    706,
+    707,
+    708,
+    709,
+    710,
+    711
+  ],
+  "bench": [
+    712,
+    713,
+    714,
+    715,
+    716
+  ],
+  "roster": [
+    {
+      "id": 701,
+      "name": "Juvenal Werneck",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 69,
+        "passing": 67,
+        "defending": 89,
+        "finishing": 54,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 702,
+      "name": "Antônio Quaresma",
+      "age": 25,
+      "position": "GK",
+      "attributes": {
+        "pace": 52,
+        "technique": 28,
+        "passing": 28,
+        "defending": 18,
+        "finishing": 22,
+        "stamina": 49
+      }
+    },
+    {
+      "id": 703,
+      "name": "Fábio Damasceno",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 92,
+        "technique": 89,
+        "passing": 80,
+        "defending": 44,
+        "finishing": 81,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 704,
+      "name": "Rodrigo Wagner",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 92,
+        "technique": 80,
+        "passing": 79,
+        "defending": 76,
+        "finishing": 76,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 705,
+      "name": "Kléber Alencar",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 88,
+        "passing": 80,
+        "defending": 43,
+        "finishing": 76,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 706,
+      "name": "Ivan Justino",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 87,
+        "passing": 81,
+        "defending": 70,
+        "finishing": 77,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 707,
+      "name": "Reinaldo Mascarenhas",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 83,
+        "passing": 74,
+        "defending": 77,
+        "finishing": 69,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 708,
+      "name": "Lucas Zaccaro",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 92,
+        "technique": 81,
+        "passing": 73,
+        "defending": 77,
+        "finishing": 61,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 709,
+      "name": "Júnior Esteves",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 81,
+        "passing": 76,
+        "defending": 74,
+        "finishing": 75,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 710,
+      "name": "João Lacerda",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 79,
+        "technique": 52,
+        "passing": 52,
+        "defending": 82,
+        "finishing": 34,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 711,
+      "name": "Nélson Rebouças",
+      "age": 22,
+      "position": "FWD",
+      "attributes": {
+        "pace": 90,
+        "technique": 85,
+        "passing": 74,
+        "defending": 42,
+        "finishing": 75,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 712,
+      "name": "Ferraz Ipojuca",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 65,
+        "passing": 65,
+        "defending": 83,
+        "finishing": 53,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 713,
+      "name": "Fábio Coutinho",
+      "age": 19,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 89,
+        "passing": 76,
+        "defending": 53,
+        "finishing": 74,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 714,
+      "name": "Yuri Albuquerque",
+      "age": 18,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 78,
+        "passing": 72,
+        "defending": 74,
+        "finishing": 66,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 715,
+      "name": "Luan Esteban",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 76,
+        "passing": 61,
+        "defending": 50,
+        "finishing": 78,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 716,
+      "name": "Túlio Rebouças",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 73,
+        "technique": 82,
+        "passing": 80,
+        "defending": 51,
+        "finishing": 75,
+        "stamina": 70
+      }
+    }
+  ]
+}

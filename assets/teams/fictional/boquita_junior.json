@@ -1,0 +1,257 @@
+{
+  "id": 5,
+  "name": "Boquita Júnior",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    501,
+    502,
+    503,
+    504,
+    505,
+    506,
+    507,
+    508,
+    509,
+    510,
+    511
+  ],
+  "bench": [
+    512,
+    513,
+    514,
+    515,
+    516
+  ],
+  "roster": [
+    {
+      "id": 501,
+      "name": "Válter Tabosa",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 89,
+        "passing": 83,
+        "defending": 59,
+        "finishing": 83,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 502,
+      "name": "Carlos Henriques",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 88,
+        "passing": 87,
+        "defending": 64,
+        "finishing": 79,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 503,
+      "name": "Bruno Wagner",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 82,
+        "passing": 83,
+        "defending": 83,
+        "finishing": 72,
+        "stamina": 88
+      }
+    },
+    {
+      "id": 504,
+      "name": "João Cardoso",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 74,
+        "passing": 62,
+        "defending": 86,
+        "finishing": 42,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 505,
+      "name": "Cauã Sampaio",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 59,
+        "passing": 55,
+        "defending": 88,
+        "finishing": 42,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 506,
+      "name": "Válber Gonçalves",
+      "age": 29,
+      "position": "GK",
+      "attributes": {
+        "pace": 62,
+        "technique": 19,
+        "passing": 40,
+        "defending": 17,
+        "finishing": 26,
+        "stamina": 37
+      }
+    },
+    {
+      "id": 507,
+      "name": "Túlio Xavier",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 82,
+        "passing": 79,
+        "defending": 81,
+        "finishing": 75,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 508,
+      "name": "Antônio Justino",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 78,
+        "passing": 67,
+        "defending": 82,
+        "finishing": 36,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 509,
+      "name": "Válter Escobar",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 84,
+        "passing": 78,
+        "defending": 32,
+        "finishing": 81,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 510,
+      "name": "Bruno Falcão",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 80,
+        "passing": 77,
+        "defending": 78,
+        "finishing": 67,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 511,
+      "name": "Bebeto Pereira",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 84,
+        "passing": 75,
+        "defending": 51,
+        "finishing": 80,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 512,
+      "name": "Emerson Ribeiro",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 91,
+        "technique": 86,
+        "passing": 74,
+        "defending": 48,
+        "finishing": 75,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 513,
+      "name": "Rodrigo Escobar",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 77,
+        "passing": 66,
+        "defending": 80,
+        "finishing": 50,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 514,
+      "name": "Washington Damasceno",
+      "age": 33,
+      "position": "MID",
+      "attributes": {
+        "pace": 46,
+        "technique": 78,
+        "passing": 80,
+        "defending": 71,
+        "finishing": 70,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 515,
+      "name": "Osvaldo Falcão",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 87,
+        "passing": 71,
+        "defending": 42,
+        "finishing": 78,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 516,
+      "name": "Reinaldo Galvão",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 82,
+        "passing": 75,
+        "defending": 42,
+        "finishing": 73,
+        "stamina": 63
+      }
+    }
+  ]
+}

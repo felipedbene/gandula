@@ -1,0 +1,257 @@
+{
+  "id": 51,
+  "name": "Sociedade Palmares de Goyaz",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5101,
+    5102,
+    5103,
+    5104,
+    5105,
+    5106,
+    5107,
+    5108,
+    5109,
+    5110,
+    5111
+  ],
+  "bench": [
+    5112,
+    5113,
+    5114,
+    5115,
+    5116
+  ],
+  "roster": [
+    {
+      "id": 5101,
+      "name": "Wladimir Ribeiro",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 76,
+        "passing": 76,
+        "defending": 71,
+        "finishing": 66,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5102,
+      "name": "Ubirajara Saldanha",
+      "age": 25,
+      "position": "GK",
+      "attributes": {
+        "pace": 26,
+        "technique": 13,
+        "passing": 26,
+        "defending": 12,
+        "finishing": 16,
+        "stamina": 46
+      }
+    },
+    {
+      "id": 5103,
+      "name": "Túlio Pacheco",
+      "age": 41,
+      "position": "DEF",
+      "attributes": {
+        "pace": 32,
+        "technique": 61,
+        "passing": 64,
+        "defending": 80,
+        "finishing": 52,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 5104,
+      "name": "Fábio Zaluar",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 73,
+        "passing": 64,
+        "defending": 73,
+        "finishing": 54,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 5105,
+      "name": "Marquinhos Alencar",
+      "age": 30,
+      "position": "FWD",
+      "attributes": {
+        "pace": 70,
+        "technique": 78,
+        "passing": 73,
+        "defending": 43,
+        "finishing": 78,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 5106,
+      "name": "Wallace Linhares",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 82,
+        "technique": 78,
+        "passing": 64,
+        "defending": 32,
+        "finishing": 74,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 5107,
+      "name": "Aristides Vasconcelos",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 77,
+        "passing": 72,
+        "defending": 74,
+        "finishing": 64,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 5108,
+      "name": "Emerson Soares",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 65,
+        "technique": 76,
+        "passing": 75,
+        "defending": 70,
+        "finishing": 73,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5109,
+      "name": "Mauro Werneck",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 42,
+        "technique": 75,
+        "passing": 69,
+        "defending": 70,
+        "finishing": 65,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5110,
+      "name": "Gustavo Damasceno",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 85,
+        "technique": 84,
+        "passing": 72,
+        "defending": 41,
+        "finishing": 68,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 5111,
+      "name": "Ximenes Zaluar",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 82,
+        "passing": 75,
+        "defending": 51,
+        "finishing": 69,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 5112,
+      "name": "Daniel Ortiz",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 71,
+        "passing": 65,
+        "defending": 76,
+        "finishing": 52,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 5113,
+      "name": "Sandro Klabin",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 90,
+        "technique": 75,
+        "passing": 53,
+        "defending": 31,
+        "finishing": 73,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5114,
+      "name": "Nélson Resende",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 92,
+        "technique": 65,
+        "passing": 51,
+        "defending": 74,
+        "finishing": 43,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5115,
+      "name": "Zico Soares",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 84,
+        "passing": 74,
+        "defending": 66,
+        "finishing": 68,
+        "stamina": 59
+      }
+    },
+    {
+      "id": 5116,
+      "name": "Emerson Henriques",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 72,
+        "passing": 64,
+        "defending": 73,
+        "finishing": 63,
+        "stamina": 78
+      }
+    }
+  ]
+}

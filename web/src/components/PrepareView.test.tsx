@@ -28,20 +28,21 @@ beforeAll(async () => {
 });
 
 /**
- * Build a v3 Career with both divisions simulated. User goes to the
- * weakest team in Série B (deterministic via pickStarterTeam), so
- * `findUserDivisionIdxInSeason(career.currentSeason, ...) === 1` is
- * stable across tests.
+ * Build a Career with all three divisions simulated. User goes to the
+ * weakest team in Série C (the bottom tier, deterministic via
+ * pickStarterTeam), so `findUserDivisionIdxInSeason(...) === 2` is stable
+ * across tests.
  */
 function makeCareer(): Career {
-  const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-  const starter = pickStarterTeam(tierB);
+  const [tierA, tierB, tierC] = divideIntoDivisions(ALL_TEAMS);
+  const starter = pickStarterTeam(tierC);
   const seed = 1998n;
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -52,6 +53,40 @@ function makeCareer(): Career {
       divisions: [
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+        { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
+      ],
+      transfers: [],
+    },
+    manager: { money: STARTING_MONEY },
+    userRoster: [],
+  };
+}
+
+/**
+ * Build a Career whose user division has an ODD team count, so the engine
+ * inserts virtual byes and the user gets a bye round. The 60-team world has
+ * three 20-team (even) tiers with no byes, so the SEM JOGO branch can't be
+ * reached from a real season — this synthesizes a 9-team Série C in isolation
+ * to exercise that UI path. The other two tiers are stubbed minimally.
+ */
+function makeCareerWithBye(): Career {
+  const [, , tierC] = divideIntoDivisions(ALL_TEAMS);
+  const nine = tierC.slice(0, 9);
+  const starter = pickStarterTeam(nine);
+  const seed = 1998n;
+  const seasonSeed = seed ^ BigInt(FIRST_YEAR);
+  const recordC = run_season(nine, seasonSeed ^ 3n, "Série C") as SeasonRecord;
+  return {
+    schemaVersion: 6,
+    savedAt: new Date().toISOString(),
+    seed,
+    controlledTeamId: starter.id,
+    seasons: [],
+    currentSeason: {
+      year: FIRST_YEAR,
+      seed: seasonSeed,
+      divisions: [
+        { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
       ],
       transfers: [],
     },
@@ -83,9 +118,9 @@ function findPlayingRound(career: Career): number {
   return 0;
 }
 
-/** First round in the user's division where the team is on bye. Série B
- *  has 9 teams ⇒ 2 byes per team per season via the engine's virtual BYE
- *  — pickStarterTeam puts the user in B, so this always finds one. */
+/** First round in the user's division where the team is on bye. Only the
+ *  synthetic odd-N division (makeCareerWithBye) produces byes — the real
+ *  60-team world is all-even, so no team ever sits a round out. */
 function findByeRound(career: Career): number | null {
   const div = userDivOf(career);
   const rounds = new Set(div.record.fixtures.map((f) => f.round));
@@ -112,10 +147,11 @@ describe("PrepareView", () => {
   });
 
   it("renders SEM JOGO card on bye rounds", () => {
-    const career = makeCareer();
+    // Real tiers are even (no byes), so use the synthetic 9-team division.
+    const career = makeCareerWithBye();
     const byeRound = findByeRound(career);
     if (byeRound === null) {
-      throw new Error("Test setup: no bye found in Série B (9-team odd)");
+      throw new Error("Test setup: no bye found in synthetic 9-team division");
     }
     userDivOf(career).currentRoundIdx = byeRound;
     render(<PrepareView career={career} onPlay={() => {}} onBack={() => {}} />);

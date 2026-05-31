@@ -1,0 +1,257 @@
+{
+  "id": 22,
+  "name": "Associação Cerrado United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2201,
+    2202,
+    2203,
+    2204,
+    2205,
+    2206,
+    2207,
+    2208,
+    2209,
+    2210,
+    2211
+  ],
+  "bench": [
+    2212,
+    2213,
+    2214,
+    2215,
+    2216
+  ],
+  "roster": [
+    {
+      "id": 2201,
+      "name": "Marcelo Juruá",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 93,
+        "technique": 88,
+        "passing": 77,
+        "defending": 39,
+        "finishing": 72,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2202,
+      "name": "Rodrigo Damasceno",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 49,
+        "technique": 12,
+        "passing": 28,
+        "defending": 17,
+        "finishing": 23,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 2203,
+      "name": "Gustavo Furtado",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 84,
+        "passing": 76,
+        "defending": 69,
+        "finishing": 80,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2204,
+      "name": "Nando Iglesias",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 68,
+        "passing": 51,
+        "defending": 83,
+        "finishing": 49,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2205,
+      "name": "Davi Juruá",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 94,
+        "technique": 83,
+        "passing": 72,
+        "defending": 48,
+        "finishing": 79,
+        "stamina": 87
+      }
+    },
+    {
+      "id": 2206,
+      "name": "Cristiano Veloso",
+      "age": 34,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 72,
+        "passing": 72,
+        "defending": 76,
+        "finishing": 68,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2207,
+      "name": "Douglas Hollanda",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 78,
+        "passing": 68,
+        "defending": 54,
+        "finishing": 77,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2208,
+      "name": "Daniel Henriques",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 73,
+        "passing": 65,
+        "defending": 74,
+        "finishing": 49,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 2209,
+      "name": "Éder Linhares",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 65,
+        "passing": 56,
+        "defending": 35,
+        "finishing": 69,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 2210,
+      "name": "Rodrigo Gonçalves",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 85,
+        "technique": 84,
+        "passing": 79,
+        "defending": 66,
+        "finishing": 76,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 2211,
+      "name": "Wesley Drummond",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 77,
+        "passing": 75,
+        "defending": 74,
+        "finishing": 64,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2212,
+      "name": "Pedro Resende",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 72,
+        "passing": 67,
+        "defending": 75,
+        "finishing": 59,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2213,
+      "name": "Otávio Vasconcelos",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 71,
+        "technique": 46,
+        "passing": 40,
+        "defending": 77,
+        "finishing": 38,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2214,
+      "name": "Ubirajara Jardim",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 69,
+        "technique": 40,
+        "passing": 41,
+        "defending": 76,
+        "finishing": 26,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2215,
+      "name": "Edson Furtado",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 81,
+        "technique": 72,
+        "passing": 68,
+        "defending": 71,
+        "finishing": 59,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 2216,
+      "name": "Bruno Wagner",
+      "age": 24,
+      "position": "GK",
+      "attributes": {
+        "pace": 33,
+        "technique": 13,
+        "passing": 28,
+        "defending": 11,
+        "finishing": 18,
+        "stamina": 35
+      }
+    }
+  ]
+}

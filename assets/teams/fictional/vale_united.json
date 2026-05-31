@@ -1,0 +1,257 @@
+{
+  "id": 4,
+  "name": "Vale United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410,
+    411
+  ],
+  "bench": [
+    412,
+    413,
+    414,
+    415,
+    416
+  ],
+  "roster": [
+    {
+      "id": 401,
+      "name": "Nélson Pacheco",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 81,
+        "technique": 81,
+        "passing": 74,
+        "defending": 55,
+        "finishing": 86,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 402,
+      "name": "Lucas Hollanda",
+      "age": 36,
+      "position": "GK",
+      "attributes": {
+        "pace": 51,
+        "technique": 22,
+        "passing": 31,
+        "defending": 14,
+        "finishing": 23,
+        "stamina": 51
+      }
+    },
+    {
+      "id": 403,
+      "name": "Davi Saldanha",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 74,
+        "passing": 69,
+        "defending": 87,
+        "finishing": 46,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 404,
+      "name": "Vinícius Vasconcelos",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 84,
+        "passing": 80,
+        "defending": 78,
+        "finishing": 79,
+        "stamina": 87
+      }
+    },
+    {
+      "id": 405,
+      "name": "Maicon Bittencourt",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 71,
+        "technique": 78,
+        "passing": 86,
+        "defending": 78,
+        "finishing": 82,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 406,
+      "name": "Everton Soares",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 81,
+        "passing": 84,
+        "defending": 78,
+        "finishing": 79,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 407,
+      "name": "Maicon Wagner",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 85,
+        "passing": 72,
+        "defending": 54,
+        "finishing": 80,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 408,
+      "name": "Quincas Iglesias",
+      "age": 36,
+      "position": "DEF",
+      "attributes": {
+        "pace": 60,
+        "technique": 65,
+        "passing": 62,
+        "defending": 86,
+        "finishing": 49,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 409,
+      "name": "Zé Roberto Rangel",
+      "age": 35,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 82,
+        "passing": 80,
+        "defending": 71,
+        "finishing": 78,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 410,
+      "name": "Bebeto Queiroz",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 73,
+        "passing": 71,
+        "defending": 86,
+        "finishing": 68,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 411,
+      "name": "Bebeto Pacheco",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 83,
+        "technique": 78,
+        "passing": 69,
+        "defending": 80,
+        "finishing": 66,
+        "stamina": 89
+      }
+    },
+    {
+      "id": 412,
+      "name": "Thiago Wanderley",
+      "age": 32,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 66,
+        "passing": 59,
+        "defending": 84,
+        "finishing": 42,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 413,
+      "name": "Renan Hollanda",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 83,
+        "technique": 83,
+        "passing": 75,
+        "defending": 72,
+        "finishing": 75,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 414,
+      "name": "Robson Bezerra",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 82,
+        "passing": 78,
+        "defending": 68,
+        "finishing": 75,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 415,
+      "name": "Mauro Brandão",
+      "age": 35,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 72,
+        "passing": 69,
+        "defending": 80,
+        "finishing": 64,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 416,
+      "name": "Ximenes Junqueira",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 76,
+        "defending": 78,
+        "finishing": 71,
+        "stamina": 83
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 21,
+  "name": "Associação Ipanema United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2101,
+    2102,
+    2103,
+    2104,
+    2105,
+    2106,
+    2107,
+    2108,
+    2109,
+    2110,
+    2111
+  ],
+  "bench": [
+    2112,
+    2113,
+    2114,
+    2115,
+    2116
+  ],
+  "roster": [
+    {
+      "id": 2101,
+      "name": "Geraldo Cavalcanti",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 76,
+        "passing": 71,
+        "defending": 45,
+        "finishing": 81,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2102,
+      "name": "Wladimir Esteban",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 81,
+        "passing": 76,
+        "defending": 72,
+        "finishing": 65,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2103,
+      "name": "Edson Juruá",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 76,
+        "passing": 71,
+        "defending": 78,
+        "finishing": 68,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2104,
+      "name": "Zé Roberto Siqueira",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 44,
+        "technique": 16,
+        "passing": 23,
+        "defending": 17,
+        "finishing": 25,
+        "stamina": 39
+      }
+    },
+    {
+      "id": 2105,
+      "name": "Kléber Kowalski",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 75,
+        "technique": 78,
+        "passing": 69,
+        "defending": 77,
+        "finishing": 71,
+        "stamina": 89
+      }
+    },
+    {
+      "id": 2106,
+      "name": "Romário Gonçalves",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 87,
+        "passing": 72,
+        "defending": 45,
+        "finishing": 75,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 2107,
+      "name": "Quincas Rebouças",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 60,
+        "passing": 61,
+        "defending": 83,
+        "finishing": 47,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2108,
+      "name": "Ubirajara Linhares",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 81,
+        "passing": 72,
+        "defending": 79,
+        "finishing": 77,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 2109,
+      "name": "Robson Furtado",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 67,
+        "technique": 59,
+        "passing": 54,
+        "defending": 81,
+        "finishing": 48,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2110,
+      "name": "Adílson Bittencourt",
+      "age": 31,
+      "position": "FWD",
+      "attributes": {
+        "pace": 80,
+        "technique": 81,
+        "passing": 78,
+        "defending": 55,
+        "finishing": 76,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 2111,
+      "name": "Allan Juruá",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 86,
+        "technique": 80,
+        "passing": 68,
+        "defending": 75,
+        "finishing": 66,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 2112,
+      "name": "Reinaldo Cavalcanti",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 84,
+        "passing": 67,
+        "defending": 33,
+        "finishing": 76,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 2113,
+      "name": "Rafael Ipojuca",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 72,
+        "passing": 64,
+        "defending": 75,
+        "finishing": 50,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2114,
+      "name": "Sebastião Cavalcanti",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 86,
+        "technique": 83,
+        "passing": 71,
+        "defending": 33,
+        "finishing": 76,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2115,
+      "name": "Lucas Alencar",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 71,
+        "technique": 71,
+        "passing": 63,
+        "defending": 44,
+        "finishing": 78,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 2116,
+      "name": "Allan Gonçalves",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 50,
+        "technique": 77,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 74,
+        "stamina": 78
+      }
+    }
+  ]
+}

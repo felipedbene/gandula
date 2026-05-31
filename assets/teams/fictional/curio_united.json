@@ -1,0 +1,257 @@
+{
+  "id": 34,
+  "name": "Curió United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    3401,
+    3402,
+    3403,
+    3404,
+    3405,
+    3406,
+    3407,
+    3408,
+    3409,
+    3410,
+    3411
+  ],
+  "bench": [
+    3412,
+    3413,
+    3414,
+    3415,
+    3416
+  ],
+  "roster": [
+    {
+      "id": 3401,
+      "name": "Carlos Albuquerque",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 85,
+        "passing": 77,
+        "defending": 48,
+        "finishing": 79,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 3402,
+      "name": "Washington Xavier",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 72,
+        "passing": 64,
+        "defending": 82,
+        "finishing": 37,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 3403,
+      "name": "Zico Cardoso",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 76,
+        "passing": 66,
+        "defending": 77,
+        "finishing": 68,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 3404,
+      "name": "Otávio Marinho",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 78,
+        "passing": 62,
+        "defending": 42,
+        "finishing": 79,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 3405,
+      "name": "Sebastião Esteves",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 13,
+        "passing": 31,
+        "defending": 13,
+        "finishing": 17,
+        "stamina": 43
+      }
+    },
+    {
+      "id": 3406,
+      "name": "Bebeto Wagner",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 87,
+        "technique": 66,
+        "passing": 50,
+        "defending": 78,
+        "finishing": 40,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 3407,
+      "name": "Ubirajara Junqueira",
+      "age": 20,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 76,
+        "passing": 78,
+        "defending": 73,
+        "finishing": 60,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3408,
+      "name": "Vinícius Negrão",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 75,
+        "passing": 65,
+        "defending": 74,
+        "finishing": 56,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3409,
+      "name": "Romário Iglesias",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 81,
+        "technique": 77,
+        "passing": 54,
+        "defending": 30,
+        "finishing": 73,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 3410,
+      "name": "Cauã Klabin",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 75,
+        "technique": 77,
+        "passing": 76,
+        "defending": 73,
+        "finishing": 64,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 3411,
+      "name": "Douglas Nogueira",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 72,
+        "passing": 65,
+        "defending": 74,
+        "finishing": 44,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 3412,
+      "name": "Nando Wagner",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 74,
+        "passing": 68,
+        "defending": 76,
+        "finishing": 69,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 3413,
+      "name": "Igor Soares",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 76,
+        "passing": 76,
+        "defending": 54,
+        "finishing": 72,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 3414,
+      "name": "Anderson Brandão",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 91,
+        "technique": 78,
+        "passing": 71,
+        "defending": 29,
+        "finishing": 75,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 3415,
+      "name": "Sandro Alencar",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 57,
+        "passing": 52,
+        "defending": 77,
+        "finishing": 30,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 3416,
+      "name": "Rodrigo Juruá",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 50,
+        "technique": 74,
+        "passing": 73,
+        "defending": 71,
+        "finishing": 64,
+        "stamina": 68
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 16,
+  "name": "Associação Maracanã Real",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1601,
+    1602,
+    1603,
+    1604,
+    1605,
+    1606,
+    1607,
+    1608,
+    1609,
+    1610,
+    1611
+  ],
+  "bench": [
+    1612,
+    1613,
+    1614,
+    1615,
+    1616
+  ],
+  "roster": [
+    {
+      "id": 1601,
+      "name": "Quincas Rangel",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 77,
+        "technique": 87,
+        "passing": 86,
+        "defending": 50,
+        "finishing": 84,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 1602,
+      "name": "Washington Hollanda",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 78,
+        "passing": 72,
+        "defending": 81,
+        "finishing": 63,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 1603,
+      "name": "Carlos Veloso",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 80,
+        "passing": 77,
+        "defending": 80,
+        "finishing": 64,
+        "stamina": 84
+      }
+    },
+    {
+      "id": 1604,
+      "name": "Igor Kowalski",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 68,
+        "technique": 80,
+        "passing": 83,
+        "defending": 74,
+        "finishing": 76,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 1605,
+      "name": "Mauro Lopes",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 83,
+        "passing": 82,
+        "defending": 80,
+        "finishing": 72,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 1606,
+      "name": "Maicon Junqueira",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 84,
+        "passing": 66,
+        "defending": 43,
+        "finishing": 75,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1607,
+      "name": "Nélson Escobar",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 80,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 54,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 1608,
+      "name": "Nélson Esteves",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 59,
+        "technique": 20,
+        "passing": 34,
+        "defending": 16,
+        "finishing": 20,
+        "stamina": 47
+      }
+    },
+    {
+      "id": 1609,
+      "name": "Emerson Negrão",
+      "age": 18,
+      "position": "FWD",
+      "attributes": {
+        "pace": 75,
+        "technique": 65,
+        "passing": 48,
+        "defending": 35,
+        "finishing": 66,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 1610,
+      "name": "Quincas Andrade",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 84,
+        "passing": 80,
+        "defending": 46,
+        "finishing": 79,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 1611,
+      "name": "Douglas Sampaio",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 90,
+        "passing": 76,
+        "defending": 34,
+        "finishing": 74,
+        "stamina": 63
+      }
+    },
+    {
+      "id": 1612,
+      "name": "Edson Saldanha",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 71,
+        "passing": 55,
+        "defending": 80,
+        "finishing": 41,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 1613,
+      "name": "Sebastião Ortiz",
+      "age": 21,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 68,
+        "passing": 66,
+        "defending": 79,
+        "finishing": 41,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1614,
+      "name": "Léo Uchôa",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 90,
+        "technique": 85,
+        "passing": 72,
+        "defending": 40,
+        "finishing": 74,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 1615,
+      "name": "Sebastião Rangel",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 91,
+        "technique": 83,
+        "passing": 72,
+        "defending": 39,
+        "finishing": 74,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 1616,
+      "name": "Anderson Linhares",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 73,
+        "technique": 65,
+        "passing": 63,
+        "defending": 78,
+        "finishing": 52,
+        "stamina": 75
+      }
+    }
+  ]
+}

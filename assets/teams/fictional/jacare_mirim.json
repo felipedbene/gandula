@@ -1,0 +1,257 @@
+{
+  "id": 60,
+  "name": "Jacaré Mirim",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    6001,
+    6002,
+    6003,
+    6004,
+    6005,
+    6006,
+    6007,
+    6008,
+    6009,
+    6010,
+    6011
+  ],
+  "bench": [
+    6012,
+    6013,
+    6014,
+    6015,
+    6016
+  ],
+  "roster": [
+    {
+      "id": 6001,
+      "name": "Edson Nogueira",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 66,
+        "technique": 68,
+        "passing": 59,
+        "defending": 49,
+        "finishing": 81,
+        "stamina": 90
+      }
+    },
+    {
+      "id": 6002,
+      "name": "Caio Queiroz",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 79,
+        "passing": 76,
+        "defending": 54,
+        "finishing": 76,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 6003,
+      "name": "Sebastião Toledo",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 79,
+        "passing": 78,
+        "defending": 42,
+        "finishing": 77,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 6004,
+      "name": "Naldo Henriques",
+      "age": 29,
+      "position": "MID",
+      "attributes": {
+        "pace": 55,
+        "technique": 71,
+        "passing": 70,
+        "defending": 71,
+        "finishing": 62,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 6005,
+      "name": "Talles Zaccaro",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 68,
+        "passing": 53,
+        "defending": 78,
+        "finishing": 56,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 6006,
+      "name": "Hélio Sampaio",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 62,
+        "passing": 55,
+        "defending": 78,
+        "finishing": 41,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 6007,
+      "name": "Davi Furtado",
+      "age": 30,
+      "position": "GK",
+      "attributes": {
+        "pace": 52,
+        "technique": 27,
+        "passing": 32,
+        "defending": 23,
+        "finishing": 24,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 6008,
+      "name": "Breno Henriques",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 61,
+        "technique": 43,
+        "passing": 48,
+        "defending": 76,
+        "finishing": 40,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 6009,
+      "name": "Válber Damasceno",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 76,
+        "technique": 70,
+        "passing": 64,
+        "defending": 37,
+        "finishing": 71,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 6010,
+      "name": "Fábio Pacheco",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 77,
+        "passing": 70,
+        "defending": 76,
+        "finishing": 67,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 6011,
+      "name": "Cristiano Siqueira",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 80,
+        "passing": 71,
+        "defending": 34,
+        "finishing": 73,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 6012,
+      "name": "Luan Toledo",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 57,
+        "technique": 76,
+        "passing": 82,
+        "defending": 61,
+        "finishing": 71,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 6013,
+      "name": "Felipe Ipojuca",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 76,
+        "passing": 73,
+        "defending": 64,
+        "finishing": 68,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 6014,
+      "name": "Mário Rebouças",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 74,
+        "passing": 69,
+        "defending": 72,
+        "finishing": 59,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 6015,
+      "name": "Washington Mascarenhas",
+      "age": 27,
+      "position": "GK",
+      "attributes": {
+        "pace": 22,
+        "technique": 16,
+        "passing": 27,
+        "defending": 14,
+        "finishing": 18,
+        "stamina": 40
+      }
+    },
+    {
+      "id": 6016,
+      "name": "Fábio Wagner",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 71,
+        "passing": 57,
+        "defending": 71,
+        "finishing": 47,
+        "stamina": 74
+      }
+    }
+  ]
+}

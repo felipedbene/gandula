@@ -1,0 +1,257 @@
+{
+  "id": 20,
+  "name": "Grêmio Ipanema EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    2001,
+    2002,
+    2003,
+    2004,
+    2005,
+    2006,
+    2007,
+    2008,
+    2009,
+    2010,
+    2011
+  ],
+  "bench": [
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+  ],
+  "roster": [
+    {
+      "id": 2001,
+      "name": "Ferraz Wagner",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 80,
+        "technique": 76,
+        "passing": 62,
+        "defending": 41,
+        "finishing": 80,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 2002,
+      "name": "Aristides Queiroz",
+      "age": 38,
+      "position": "FWD",
+      "attributes": {
+        "pace": 56,
+        "technique": 77,
+        "passing": 70,
+        "defending": 44,
+        "finishing": 80,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2003,
+      "name": "Bebeto Pereira",
+      "age": 36,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 82,
+        "passing": 85,
+        "defending": 44,
+        "finishing": 79,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 2004,
+      "name": "Zé Roberto Kowalski",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 82,
+        "passing": 82,
+        "defending": 48,
+        "finishing": 85,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2005,
+      "name": "Vinícius Lopes",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 82,
+        "technique": 81,
+        "passing": 81,
+        "defending": 68,
+        "finishing": 75,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 2006,
+      "name": "Válber Resende",
+      "age": 29,
+      "position": "DEF",
+      "attributes": {
+        "pace": 57,
+        "technique": 64,
+        "passing": 53,
+        "defending": 82,
+        "finishing": 48,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 2007,
+      "name": "Genílson Galvão",
+      "age": 29,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 19,
+        "passing": 34,
+        "defending": 20,
+        "finishing": 18,
+        "stamina": 44
+      }
+    },
+    {
+      "id": 2008,
+      "name": "Bebeto Hollanda",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 65,
+        "passing": 61,
+        "defending": 79,
+        "finishing": 48,
+        "stamina": 65
+      }
+    },
+    {
+      "id": 2009,
+      "name": "Élton Quaresma",
+      "age": 30,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 65,
+        "passing": 62,
+        "defending": 78,
+        "finishing": 49,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2010,
+      "name": "Robson Andrade",
+      "age": 31,
+      "position": "MID",
+      "attributes": {
+        "pace": 78,
+        "technique": 81,
+        "passing": 78,
+        "defending": 74,
+        "finishing": 72,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 2011,
+      "name": "Rafael Junqueira",
+      "age": 27,
+      "position": "FWD",
+      "attributes": {
+        "pace": 90,
+        "technique": 90,
+        "passing": 70,
+        "defending": 31,
+        "finishing": 70,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 2012,
+      "name": "Osvaldo Hollanda",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 74,
+        "technique": 81,
+        "passing": 81,
+        "defending": 57,
+        "finishing": 74,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 2013,
+      "name": "Aristides Teixeira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 62,
+        "technique": 74,
+        "passing": 72,
+        "defending": 73,
+        "finishing": 68,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 2014,
+      "name": "Válber Kowalski",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 79,
+        "technique": 75,
+        "passing": 78,
+        "defending": 58,
+        "finishing": 72,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 2015,
+      "name": "Zacarias Pereira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 56,
+        "technique": 52,
+        "passing": 50,
+        "defending": 78,
+        "finishing": 34,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 2016,
+      "name": "Anderson Klabin",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 71,
+        "passing": 68,
+        "defending": 75,
+        "finishing": 58,
+        "stamina": 82
+      }
+    }
+  ]
+}

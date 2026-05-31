@@ -1,44 +1,49 @@
-// Pure unit tests — no WASM, no DOM, no IndexedDB. The util operates
-// on a SavedSeason shape we build by hand: synthetic standings in the
-// order the engine's compute_standings would have produced.
+// Pure unit tests — no WASM, no DOM, no IndexedDB. The util operates on a
+// season-shaped value we build by hand: synthetic standings in the order the
+// engine's compute_standings would have produced.
 import { describe, it, expect } from "vitest";
 import {
   computePromotionRelegation,
   PROMOTION_SLOTS,
   RELEGATION_SLOTS,
 } from "./promotion";
-import type { Division, SavedSeason } from "../persistence";
+import type { Division } from "../persistence";
 import type { Fixture, Match, SeasonRecord, TeamStats } from "../types";
 
-/** TeamStats fixture builder. Tests only depend on `team_id`, the order
- *  of the standings array, and `points(s)` derivation — wins/draws are
- *  set to make `points = won*3 + drawn` produce the desired total. */
+const TIER_SIZE = 20;
+const TOTAL_ROUNDS = (TIER_SIZE - 1) * 2; // 38 — even N, no byes
+
+/** TeamStats fixture builder. Tests only depend on `team_id`, the order of
+ *  the standings array, and `points(s)` derivation. */
 function ts(team_id: number, pts: number): TeamStats {
   const won = Math.floor(pts / 3);
   const drawn = pts - won * 3;
   return {
     team_id,
-    played: 14,
+    played: TOTAL_ROUNDS,
     won,
     drawn,
-    lost: 14 - won - drawn,
+    lost: TOTAL_ROUNDS - won - drawn,
     goals_for: pts * 2,
     goals_against: pts,
   };
 }
 
-/** Minimal Division with `totalRoundsOf(div) === totalRounds`. Synthesizes
- *  `totalRounds` fixtures so the helper's `max(fixtures.round) + 1` math
- *  returns the right number; matches are sized to match (P/R doesn't read
- *  them, but the type shape demands the array). */
+/** A 20-team standings list for one tier, ids `base+1 … base+20`, with
+ *  strictly descending points so tiebreakers never come into play. */
+function tierStandings(base: number): TeamStats[] {
+  return Array.from({ length: TIER_SIZE }, (_, i) =>
+    ts(base + i + 1, 100 - i * 2),
+  );
+}
+
 function makeDivision(
-  tier: 1 | 2,
+  tier: 1 | 2 | 3,
   name: string,
   standings: TeamStats[],
-  roundsPlayed: number,
-  totalRounds: number,
+  finished: boolean,
 ): Division {
-  const fixtures: Fixture[] = Array.from({ length: totalRounds }, (_, i) => ({
+  const fixtures: Fixture[] = Array.from({ length: TOTAL_ROUNDS }, (_, i) => ({
     round: i,
     home_idx: 0,
     away_idx: 1,
@@ -50,192 +55,106 @@ function makeDivision(
     result: { home_goals: 0, away_goals: 0 },
     events: [],
   }));
-  const record: SeasonRecord = {
-    league_name: name,
-    fixtures,
-    matches,
-    standings,
+  const record: SeasonRecord = { league_name: name, fixtures, matches, standings };
+  return {
+    tier,
+    name,
+    record,
+    currentRoundIdx: finished ? TOTAL_ROUNDS : Math.floor(TOTAL_ROUNDS / 2),
   };
-  return { tier, name, record, currentRoundIdx: roundsPlayed };
 }
 
-function makeSaved(opts: {
+// Tier A ids 101–120, B 201–220, C 301–320.
+const tierA = tierStandings(100);
+const tierB = tierStandings(200);
+const tierC = tierStandings(300);
+
+function makeSeason(opts: {
   controlledTeamId: number;
-  tierAStandings: TeamStats[];
-  tierBStandings: TeamStats[];
-  tierAFinished?: boolean;
-  tierBFinished?: boolean;
-}): SavedSeason {
+  aFinished?: boolean;
+  bFinished?: boolean;
+  cFinished?: boolean;
+}): { divisions: Division[] } {
   return {
-    schemaVersion: 2,
-    savedAt: "2026-01-01T00:00:00Z",
-    seed: 1998n,
-    controlledTeamId: opts.controlledTeamId,
     divisions: [
-      makeDivision(
-        1,
-        "Série A",
-        opts.tierAStandings,
-        opts.tierAFinished === false ? 7 : 14,
-        14,
-      ),
-      makeDivision(
-        2,
-        "Série B",
-        opts.tierBStandings,
-        opts.tierBFinished === false ? 9 : 18,
-        18,
-      ),
+      makeDivision(1, "Série A", tierA, opts.aFinished ?? true),
+      makeDivision(2, "Série B", tierB, opts.bFinished ?? true),
+      makeDivision(3, "Série C", tierC, opts.cFinished ?? true),
     ],
   };
 }
 
+const ids = (xs: TeamStats[]) => xs.map((s) => s.team_id);
+
 describe("computePromotionRelegation", () => {
-  // Standings hand-ordered with strictly descending points so we don't
-  // have to second-guess tiebreakers in these tests.
-  const tierA: TeamStats[] = [
-    ts(101, 30),
-    ts(102, 28),
-    ts(103, 26),
-    ts(104, 24),
-    ts(105, 22),
-    ts(106, 20),
-    ts(107, 18), // 7º — relegated
-    ts(108, 16), // 8º — relegated
-  ];
-  const tierB: TeamStats[] = [
-    ts(201, 40), // 1º — promoted
-    ts(202, 38), // 2º — promoted
-    ts(203, 36),
-    ts(204, 34),
-    ts(205, 32),
-    ts(206, 30),
-    ts(207, 28),
-    ts(208, 26),
-    ts(209, 24),
-  ];
-
-  it("promoted contains top 2 of Série B", () => {
-    const saved = makeSaved({
-      controlledTeamId: 209,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    const result = computePromotionRelegation(saved, saved.controlledTeamId);
-    expect(result.promoted.map((s) => s.team_id)).toEqual([201, 202]);
-    expect(result.promoted).toHaveLength(PROMOTION_SLOTS);
+  it("slot constants: 3 up / 3 down per boundary", () => {
+    expect(PROMOTION_SLOTS).toBe(3);
+    expect(RELEGATION_SLOTS).toBe(3);
   });
 
-  it("relegated contains bottom 2 of Série A", () => {
-    const saved = makeSaved({
-      controlledTeamId: 209,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    const result = computePromotionRelegation(saved, saved.controlledTeamId);
-    expect(result.relegated.map((s) => s.team_id)).toEqual([107, 108]);
-    expect(result.relegated).toHaveLength(RELEGATION_SLOTS);
+  it("promotedBtoA = top 3 of Série B", () => {
+    const r = computePromotionRelegation(makeSeason({ controlledTeamId: 320 }), 320);
+    expect(ids(r.promotedBtoA)).toEqual([201, 202, 203]);
+    expect(r.promotedBtoA).toHaveLength(PROMOTION_SLOTS);
   });
 
-  it("userPromoted true when user is 1º of Série B", () => {
-    const saved = makeSaved({
-      controlledTeamId: 201,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    const result = computePromotionRelegation(saved, saved.controlledTeamId);
-    expect(result.userPromoted).toBe(true);
-    expect(result.userRelegated).toBe(false);
+  it("relegatedAtoB = bottom 3 of Série A (18º,19º,20º order)", () => {
+    const r = computePromotionRelegation(makeSeason({ controlledTeamId: 320 }), 320);
+    expect(ids(r.relegatedAtoB)).toEqual([118, 119, 120]);
+    expect(r.relegatedAtoB).toHaveLength(RELEGATION_SLOTS);
   });
 
-  it("userPromoted true when user is 2º of Série B", () => {
-    const saved = makeSaved({
-      controlledTeamId: 202,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    expect(
-      computePromotionRelegation(saved, saved.controlledTeamId).userPromoted,
-    ).toBe(true);
+  it("promotedCtoB = top 3 of Série C", () => {
+    const r = computePromotionRelegation(makeSeason({ controlledTeamId: 320 }), 320);
+    expect(ids(r.promotedCtoB)).toEqual([301, 302, 303]);
   });
 
-  it("userPromoted false when user is 3º or lower in Série B", () => {
-    const saved = makeSaved({
-      controlledTeamId: 203,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    expect(
-      computePromotionRelegation(saved, saved.controlledTeamId).userPromoted,
-    ).toBe(false);
+  it("relegatedBtoC = bottom 3 of Série B", () => {
+    const r = computePromotionRelegation(makeSeason({ controlledTeamId: 320 }), 320);
+    expect(ids(r.relegatedBtoC)).toEqual([218, 219, 220]);
   });
 
-  it("userRelegated true when user is 7º or 8º of Série A", () => {
-    const saved7 = makeSaved({
-      controlledTeamId: 107,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    const saved8 = makeSaved({
-      controlledTeamId: 108,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    expect(
-      computePromotionRelegation(saved7, saved7.controlledTeamId).userRelegated,
-    ).toBe(true);
-    expect(
-      computePromotionRelegation(saved8, saved8.controlledTeamId).userRelegated,
-    ).toBe(true);
+  it("userPromoted when user is top-3 of B (B→A) or top-3 of C (C→B)", () => {
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 201 }), 201).userPromoted).toBe(true);
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 303 }), 303).userPromoted).toBe(true);
   });
 
-  it("userRelegated false when user finishes 6º or better in Série A", () => {
-    const saved = makeSaved({
-      controlledTeamId: 106,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    expect(
-      computePromotionRelegation(saved, saved.controlledTeamId).userRelegated,
-    ).toBe(false);
+  it("userPromoted false below the promotion line", () => {
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 204 }), 204).userPromoted).toBe(false);
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 304 }), 304).userPromoted).toBe(false);
   });
 
-  it("PROMOTION_SLOTS equals RELEGATION_SLOTS (preserves 8+9 split)", () => {
-    expect(PROMOTION_SLOTS).toBe(RELEGATION_SLOTS);
+  it("userRelegated when user is bottom-3 of A (A→B) or bottom-3 of B (B→C)", () => {
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 120 }), 120).userRelegated).toBe(true);
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 220 }), 220).userRelegated).toBe(true);
   });
 
-  it("throws when Série A is not finished", () => {
-    const saved = makeSaved({
-      controlledTeamId: 209,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-      tierAFinished: false,
-    });
+  it("userRelegated false above the relegation line", () => {
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 117 }), 117).userRelegated).toBe(false);
+    expect(computePromotionRelegation(makeSeason({ controlledTeamId: 217 }), 217).userRelegated).toBe(false);
+  });
+
+  it("the middle tier both promotes and is relegated from", () => {
+    const r = computePromotionRelegation(makeSeason({ controlledTeamId: 320 }), 320);
+    // B sends 3 up and 3 down → nets zero, keeping 20.
+    expect(r.promotedBtoA).toHaveLength(3);
+    expect(r.relegatedBtoC).toHaveLength(3);
+  });
+
+  it.each([
+    ["Série A", { aFinished: false }, /Série A/],
+    ["Série B", { bFinished: false }, /Série B/],
+    ["Série C", { cFinished: false }, /Série C/],
+  ])("throws when %s is not finished", (_label, partial, re) => {
     expect(() =>
-      computePromotionRelegation(saved, saved.controlledTeamId),
-    ).toThrow(/Série A/);
-  });
-
-  it("throws when Série B is not finished", () => {
-    const saved = makeSaved({
-      controlledTeamId: 209,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-      tierBFinished: false,
-    });
-    expect(() =>
-      computePromotionRelegation(saved, saved.controlledTeamId),
-    ).toThrow(/Série B/);
+      computePromotionRelegation(makeSeason({ controlledTeamId: 320, ...partial }), 320),
+    ).toThrow(re as RegExp);
   });
 
   it("is deterministic across repeated calls", () => {
-    const saved = makeSaved({
-      controlledTeamId: 209,
-      tierAStandings: tierA,
-      tierBStandings: tierB,
-    });
-    const a = computePromotionRelegation(saved, saved.controlledTeamId);
-    const b = computePromotionRelegation(saved, saved.controlledTeamId);
-    expect(a).toEqual(b);
+    const season = makeSeason({ controlledTeamId: 320 });
+    expect(computePromotionRelegation(season, 320)).toEqual(
+      computePromotionRelegation(season, 320),
+    );
   });
 });

@@ -1,0 +1,257 @@
+{
+  "id": 59,
+  "name": "Associação Vitória Régia EC",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5901,
+    5902,
+    5903,
+    5904,
+    5905,
+    5906,
+    5907,
+    5908,
+    5909,
+    5910,
+    5911
+  ],
+  "bench": [
+    5912,
+    5913,
+    5914,
+    5915,
+    5916
+  ],
+  "roster": [
+    {
+      "id": 5901,
+      "name": "Ivan Furtado",
+      "age": 25,
+      "position": "GK",
+      "attributes": {
+        "pace": 36,
+        "technique": 18,
+        "passing": 34,
+        "defending": 14,
+        "finishing": 20,
+        "stamina": 37
+      }
+    },
+    {
+      "id": 5902,
+      "name": "Fábio Hollanda",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 86,
+        "technique": 85,
+        "passing": 69,
+        "defending": 56,
+        "finishing": 72,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5903,
+      "name": "Matheus Rebouças",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 71,
+        "passing": 71,
+        "defending": 73,
+        "finishing": 66,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 5904,
+      "name": "Robson Guimarães",
+      "age": 20,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 71,
+        "passing": 55,
+        "defending": 28,
+        "finishing": 74,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5905,
+      "name": "Allan Siqueira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 71,
+        "passing": 74,
+        "defending": 70,
+        "finishing": 66,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 5906,
+      "name": "Sebastião Tabosa",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 84,
+        "technique": 76,
+        "passing": 66,
+        "defending": 70,
+        "finishing": 65,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5907,
+      "name": "Thiago Esteban",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 60,
+        "technique": 47,
+        "passing": 47,
+        "defending": 78,
+        "finishing": 36,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5908,
+      "name": "Pedro Tavares",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 62,
+        "passing": 56,
+        "defending": 75,
+        "finishing": 44,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 5909,
+      "name": "Lucas Junqueira",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 79,
+        "technique": 76,
+        "passing": 58,
+        "defending": 27,
+        "finishing": 70,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 5910,
+      "name": "Túlio Mascarenhas",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 79,
+        "passing": 76,
+        "defending": 50,
+        "finishing": 72,
+        "stamina": 58
+      }
+    },
+    {
+      "id": 5911,
+      "name": "Válter Wanderley",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 59,
+        "passing": 48,
+        "defending": 76,
+        "finishing": 43,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5912,
+      "name": "Davi Queiroz",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 75,
+        "passing": 71,
+        "defending": 69,
+        "finishing": 57,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5913,
+      "name": "Antônio Esteves",
+      "age": 18,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 73,
+        "passing": 66,
+        "defending": 65,
+        "finishing": 56,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 5914,
+      "name": "Fábio Kowalski",
+      "age": 37,
+      "position": "DEF",
+      "attributes": {
+        "pace": 46,
+        "technique": 52,
+        "passing": 53,
+        "defending": 75,
+        "finishing": 43,
+        "stamina": 60
+      }
+    },
+    {
+      "id": 5915,
+      "name": "Rafael Siqueira",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 58,
+        "technique": 75,
+        "passing": 67,
+        "defending": 73,
+        "finishing": 67,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 5916,
+      "name": "Thiago Juruá",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 57,
+        "passing": 63,
+        "defending": 74,
+        "finishing": 53,
+        "stamina": 73
+      }
+    }
+  ]
+}

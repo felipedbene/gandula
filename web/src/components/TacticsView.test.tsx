@@ -24,21 +24,22 @@ beforeAll(async () => {
 });
 
 /**
- * Build a v3 Career with both divisions simulated. User is the weakest
- * team in Série B via pickStarterTeam (deterministic). The dropdown
+ * Build a v3 Career with all divisions simulated. User is the weakest
+ * team in Série C via pickStarterTeam (deterministic). The dropdown
  * initialization in TacticsView reads from the base team via
  * teamById(career.controlledTeamId), so we surface that team back to the
  * tests through `starterId` for assertions.
  */
 function makeCareer(): { career: Career; starterId: number } {
-  const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-  const starter = pickStarterTeam(tierB);
+  const [tierA, tierB, tierC] = divideIntoDivisions(ALL_TEAMS);
+  const starter = pickStarterTeam(tierC);
   const seed = 1998n;
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   const career: Career = {
-    schemaVersion: 5,
+    schemaVersion: 6,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -49,6 +50,7 @@ function makeCareer(): { career: Career; starterId: number } {
       divisions: [
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+        { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
       ],
       transfers: [],
     },

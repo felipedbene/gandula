@@ -1,0 +1,257 @@
+{
+  "id": 48,
+  "name": "Associação Fortalezense Central",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    4801,
+    4802,
+    4803,
+    4804,
+    4805,
+    4806,
+    4807,
+    4808,
+    4809,
+    4810,
+    4811
+  ],
+  "bench": [
+    4812,
+    4813,
+    4814,
+    4815,
+    4816
+  ],
+  "roster": [
+    {
+      "id": 4801,
+      "name": "Éder Coutinho",
+      "age": 25,
+      "position": "FWD",
+      "attributes": {
+        "pace": 88,
+        "technique": 83,
+        "passing": 76,
+        "defending": 49,
+        "finishing": 82,
+        "stamina": 81
+      }
+    },
+    {
+      "id": 4802,
+      "name": "Reinaldo Soares",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 85,
+        "technique": 80,
+        "passing": 65,
+        "defending": 35,
+        "finishing": 80,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4803,
+      "name": "Matheus Iglesias",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 80,
+        "passing": 80,
+        "defending": 64,
+        "finishing": 69,
+        "stamina": 72
+      }
+    },
+    {
+      "id": 4804,
+      "name": "Naldo Macedo",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 52,
+        "technique": 68,
+        "passing": 70,
+        "defending": 77,
+        "finishing": 62,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 4805,
+      "name": "Élton Lacerda",
+      "age": 31,
+      "position": "GK",
+      "attributes": {
+        "pace": 32,
+        "technique": 12,
+        "passing": 28,
+        "defending": 14,
+        "finishing": 23,
+        "stamina": 40
+      }
+    },
+    {
+      "id": 4806,
+      "name": "Diego Henriques",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 62,
+        "technique": 64,
+        "passing": 50,
+        "defending": 78,
+        "finishing": 31,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4807,
+      "name": "Sebastião Pontes",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 76,
+        "technique": 64,
+        "passing": 54,
+        "defending": 78,
+        "finishing": 39,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 4808,
+      "name": "Washington Esteban",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 73,
+        "passing": 77,
+        "defending": 66,
+        "finishing": 64,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 4809,
+      "name": "Nando Werneck",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 64,
+        "technique": 60,
+        "passing": 51,
+        "defending": 78,
+        "finishing": 38,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 4810,
+      "name": "Quincas Juruá",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 68,
+        "passing": 50,
+        "defending": 40,
+        "finishing": 74,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 4811,
+      "name": "Bruno Sampaio",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 71,
+        "passing": 56,
+        "defending": 72,
+        "finishing": 44,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 4812,
+      "name": "Sílvio Guimarães",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 94,
+        "technique": 79,
+        "passing": 61,
+        "defending": 34,
+        "finishing": 68,
+        "stamina": 68
+      }
+    },
+    {
+      "id": 4813,
+      "name": "Válber Rangel",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 72,
+        "passing": 69,
+        "defending": 70,
+        "finishing": 68,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 4814,
+      "name": "Maicon Yamada",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 68,
+        "technique": 75,
+        "passing": 60,
+        "defending": 74,
+        "finishing": 53,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 4815,
+      "name": "Naldo Uchimura",
+      "age": 35,
+      "position": "DEF",
+      "attributes": {
+        "pace": 42,
+        "technique": 50,
+        "passing": 49,
+        "defending": 77,
+        "finishing": 41,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 4816,
+      "name": "João Quaresma",
+      "age": 23,
+      "position": "DEF",
+      "attributes": {
+        "pace": 80,
+        "technique": 77,
+        "passing": 69,
+        "defending": 68,
+        "finishing": 65,
+        "stamina": 72
+      }
+    }
+  ]
+}

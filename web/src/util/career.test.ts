@@ -33,21 +33,23 @@ beforeAll(async () => {
 });
 
 /**
- * Build a freshly-finished Career at year=FIRST_YEAR with both divisions
- * at their terminal `currentRoundIdx`. Uses real ALL_TEAMS + run_season
- * so standings + P/R outcomes are realistic for the given seed. The user
- * is always the weakest team of Série B via pickStarterTeam.
+ * Build a freshly-finished Career at year=FIRST_YEAR with all three divisions
+ * at their terminal `currentRoundIdx`. Uses real ALL_TEAMS + run_season so
+ * standings + P/R outcomes are realistic for the given seed. The user is
+ * always the weakest team of Série C (the bottom tier) via pickStarterTeam.
  */
 function makeFinishedCareer(seed: bigint): Career {
-  const { tierA, tierB } = divideIntoDivisions(ALL_TEAMS);
-  const starter = pickStarterTeam(tierB);
+  const [tierA, tierB, tierC] = divideIntoDivisions(ALL_TEAMS);
+  const starter = pickStarterTeam(tierC);
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordA = run_season(tierA, seasonSeed ^ 1n, "Série A") as SeasonRecord;
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   const totalA = Math.max(...recordA.fixtures.map((f) => f.round)) + 1;
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
+  const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 5,
+    schemaVersion: 6,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -58,6 +60,7 @@ function makeFinishedCareer(seed: bigint): Career {
       divisions: [
         { tier: 1, name: "Série A", record: recordA, currentRoundIdx: totalA },
         { tier: 2, name: "Série B", record: recordB, currentRoundIdx: totalB },
+        { tier: 3, name: "Série C", record: recordC, currentRoundIdx: totalC },
       ],
       transfers: [],
     },
@@ -84,11 +87,11 @@ describe("advanceCareer — history", () => {
       career.controlledTeamId,
     );
     const { history } = advanceCareer(career, pr);
-    // User starts as weakest of Série B → tier 2, 1..9.
-    expect(history.userDivision.tier).toBe(2);
-    expect(history.userDivision.name).toBe("Série B");
+    // User starts as weakest of Série C → tier 3, position 1..20.
+    expect(history.userDivision.tier).toBe(3);
+    expect(history.userDivision.name).toBe("Série C");
     expect(history.userPosition).toBeGreaterThanOrEqual(1);
-    expect(history.userPosition).toBeLessThanOrEqual(9);
+    expect(history.userPosition).toBeLessThanOrEqual(20);
   });
 
   it("champion is the position-0 team of the user's division", () => {
@@ -98,7 +101,7 @@ describe("advanceCareer — history", () => {
       career.controlledTeamId,
     );
     const { history } = advanceCareer(career, pr);
-    const userDiv = career.currentSeason.divisions.find((d) => d.tier === 2)!;
+    const userDiv = career.currentSeason.divisions.find((d) => d.tier === 3)!;
     const championId = userDiv.record.standings[0].team_id;
     expect(history.champion.teamId).toBe(championId);
     expect(history.champion.teamName).toBe(teamById(championId)?.name);
@@ -127,8 +130,9 @@ describe("advanceCareer — history", () => {
       career.controlledTeamId,
     );
     const { history } = advanceCareer(career, pr);
-    expect(history.promoted).toHaveLength(2);
-    expect(history.relegated).toHaveLength(2);
+    // Both boundaries: 3 promoted (B→A) + 3 promoted (C→B) = 6; same for down.
+    expect(history.promoted).toHaveLength(6);
+    expect(history.relegated).toHaveLength(6);
     history.promoted.forEach((p) => {
       expect(p.teamName).toBe(teamById(p.teamId)?.name);
     });
@@ -159,32 +163,40 @@ describe("advanceCareer — nextSeason", () => {
     expect(nextSeason.seed).toBe(1998n ^ BigInt(FIRST_YEAR + 1));
   });
 
-  it("has 2 divisions sized 8 and 9", () => {
+  it("has 3 divisions sized 20 each", () => {
     const career = makeFinishedCareer(1998n);
     const pr = computePromotionRelegation(
       career.currentSeason,
       career.controlledTeamId,
     );
     const { nextSeason } = advanceCareer(career, pr);
-    const a = nextSeason.divisions.find((d) => d.tier === 1)!;
-    const b = nextSeason.divisions.find((d) => d.tier === 2)!;
-    expect(a.record.standings).toHaveLength(8);
-    expect(b.record.standings).toHaveLength(9);
+    expect(nextSeason.divisions).toHaveLength(3);
+    nextSeason.divisions.forEach((d) =>
+      expect(d.record.standings).toHaveLength(20),
+    );
   });
 
-  it("promoted teams move to next Série A, relegated to next Série B", () => {
+  it("P/R movers land in the correct destination tiers", () => {
     const career = makeFinishedCareer(1998n);
     const pr = computePromotionRelegation(
       career.currentSeason,
       career.controlledTeamId,
     );
     const { nextSeason } = advanceCareer(career, pr);
-    const a = nextSeason.divisions.find((d) => d.tier === 1)!;
-    const b = nextSeason.divisions.find((d) => d.tier === 2)!;
-    const aIds = new Set(a.record.standings.map((s) => s.team_id));
-    const bIds = new Set(b.record.standings.map((s) => s.team_id));
-    pr.promoted.forEach((p) => expect(aIds.has(p.team_id)).toBe(true));
-    pr.relegated.forEach((r) => expect(bIds.has(r.team_id)).toBe(true));
+    const ids = (tier: number) =>
+      new Set(
+        nextSeason.divisions
+          .find((d) => d.tier === tier)!
+          .record.standings.map((s) => s.team_id),
+      );
+    const a = ids(1);
+    const b = ids(2);
+    const c = ids(3);
+    // B→A and C→B promotions; A→B and B→C relegations.
+    pr.promotedBtoA.forEach((p) => expect(a.has(p.team_id)).toBe(true));
+    pr.promotedCtoB.forEach((p) => expect(b.has(p.team_id)).toBe(true));
+    pr.relegatedAtoB.forEach((r) => expect(b.has(r.team_id)).toBe(true));
+    pr.relegatedBtoC.forEach((r) => expect(c.has(r.team_id)).toBe(true));
   });
 
   it("currentRoundIdx is 0 (fresh season, no rounds played yet)", () => {
@@ -216,21 +228,17 @@ describe("advanceCareer — nextSeason", () => {
       career.controlledTeamId,
     );
     const { nextSeason } = advanceCareer(career, pr);
-    const a = nextSeason.divisions.find((d) => d.tier === 1)!;
-    const b = nextSeason.divisions.find((d) => d.tier === 2)!;
-    const inA = a.record.standings.some(
-      (s) => s.team_id === career.controlledTeamId,
+    const tiersWithUser = nextSeason.divisions.filter((d) =>
+      d.record.standings.some((s) => s.team_id === career.controlledTeamId),
     );
-    const inB = b.record.standings.some(
-      (s) => s.team_id === career.controlledTeamId,
-    );
-    expect(inA !== inB).toBe(true);
+    expect(tiersWithUser).toHaveLength(1);
     if (pr.userPromoted) {
-      expect(inA).toBe(true);
+      // User started in Série C; promotion moves them to Série B (tier 2).
+      expect(tiersWithUser[0].tier).toBe(2);
     } else {
-      // User started in Série B; relegation is impossible from B and
-      // "stayed" keeps them in B. Either way they remain in tier 2.
-      expect(inB).toBe(true);
+      // Relegation is impossible from the bottom tier; "stayed" keeps them
+      // in Série C (tier 3).
+      expect(tiersWithUser[0].tier).toBe(3);
     }
   });
 });

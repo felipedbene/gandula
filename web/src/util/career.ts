@@ -1,6 +1,12 @@
 import { run_season } from "../wasm/gandula_wasm.js";
 import { teamById } from "../teams";
-import { points, type Player, type SeasonRecord, type Team } from "../types";
+import {
+  points,
+  type Player,
+  type SeasonRecord,
+  type Team,
+  type TeamStats,
+} from "../types";
 import {
   FIRST_YEAR,
   findUserDivisionIdxInSeason,
@@ -48,10 +54,11 @@ export type AdvanceResult = {
  *   2. Builds a `SeasonHistory` summarising the current season's outcome
  *      (champion of user's division, user's final position, P/R applied,
  *      moneyDelta / moneyAfter).
- *   3. Recomposes the two divisions by applying P/R: relegated teams
- *      move from A → B, promoted teams from B → A. Survivors stay put.
- *   4. Simulates next season's schedule + matches via `run_season` twice
- *      (once per tier), using a per-season seed namespace
+ *   3. Recomposes the three divisions by applying P/R across both boundaries
+ *      (A↔B and B↔C): the middle tier shuffles in both directions, the top
+ *      and bottom in one. Survivors stay put.
+ *   4. Simulates next season's schedule + matches via `run_season` three
+ *      times (once per tier), using a per-season seed namespace
  *      `career.seed XOR BigInt(nextYear)` so each (career, year)
  *      combination is deterministic and distinct.
  *
@@ -144,14 +151,19 @@ function buildSeasonHistory(
       teamId: championStats.team_id,
       teamName: championTeamName,
     },
-    promoted: prResult.promoted.map((s) => ({
+    // History records all movement across both boundaries (B→A + C→B for
+    // promoted, A→B + B→C for relegated) so HistoryCard can show the full
+    // season's churn, not just the user's tier.
+    promoted: [...prResult.promotedBtoA, ...prResult.promotedCtoB].map((s) => ({
       teamId: s.team_id,
       teamName: teamById(s.team_id)?.name ?? `Time ${s.team_id}`,
     })),
-    relegated: prResult.relegated.map((s) => ({
-      teamId: s.team_id,
-      teamName: teamById(s.team_id)?.name ?? `Time ${s.team_id}`,
-    })),
+    relegated: [...prResult.relegatedAtoB, ...prResult.relegatedBtoC].map(
+      (s) => ({
+        teamId: s.team_id,
+        teamName: teamById(s.team_id)?.name ?? `Time ${s.team_id}`,
+      }),
+    ),
     userOutcome,
     // moneyDelta is the season's full P&L (the change over the season).
     // moneyAfter adds only the P/R bonus: tickets/salaries already accrued
@@ -170,19 +182,21 @@ function buildSeasonHistory(
 }
 
 /**
- * Compose the next Season by recomposing divisions and simulating them.
+ * Compose the next Season by recomposing the three divisions across the two
+ * P/R boundaries and simulating them.
  *
- * Recomposition: take the current Série A standings, remove the
- * `relegated` teams; take Série B standings, remove the `promoted`
- * teams. Then put promoted into Série A and relegated into Série B.
- * Each tier's team COUNT is preserved (8 + 9), and the user's team
- * naturally ends up in whichever tier the P/R placed it.
+ * Recomposition, each tier kept at exactly 20:
+ *   - Série A next = (A survivors − relegatedAtoB) ++ promotedBtoA.
+ *   - Série B next = (B survivors − promotedBtoA − relegatedBtoC)
+ *                    ++ relegatedAtoB ++ promotedCtoB   ← the 3-way shuffle.
+ *   - Série C next = (C survivors − promotedCtoB) ++ relegatedBtoC.
  *
- * Team ORDER within each tier is survivors-first (by previous-season
- * standings position) then newcomers — deterministic and stable. The
- * order shapes the schedule run_season generates (different input order
- * → different home/away pairings per round), but matches are still
- * deterministic given the same input.
+ * The user's team naturally ends up in whichever tier the P/R placed it.
+ *
+ * Team ORDER within each tier is survivors-first (by previous-season standings
+ * position) then incomers — deterministic and stable. The order shapes the
+ * schedule run_season generates, but matches stay deterministic given the same
+ * input.
  */
 function buildNextSeason(
   career: Career,
@@ -191,34 +205,13 @@ function buildNextSeason(
 ): Season {
   const tierAOld = current.divisions.find((d) => d.tier === 1);
   const tierBOld = current.divisions.find((d) => d.tier === 2);
-  if (!tierAOld || !tierBOld) {
+  const tierCOld = current.divisions.find((d) => d.tier === 3);
+  if (!tierAOld || !tierBOld || !tierCOld) {
     throw new Error(
-      "advanceCareer: current season must have both Série A and Série B",
+      "advanceCareer: current season must have Série A, B and C",
     );
   }
 
-  const promotedIds = new Set(prResult.promoted.map((s) => s.team_id));
-  const relegatedIds = new Set(prResult.relegated.map((s) => s.team_id));
-
-  const tierASurvivors: Team[] = tierAOld.record.standings
-    .filter((s) => !relegatedIds.has(s.team_id))
-    .map((s) => mustGetTeam(s.team_id));
-  const tierBSurvivors: Team[] = tierBOld.record.standings
-    .filter((s) => !promotedIds.has(s.team_id))
-    .map((s) => mustGetTeam(s.team_id));
-
-  const newPromoted: Team[] = prResult.promoted.map((s) =>
-    mustGetTeam(s.team_id),
-  );
-  const newRelegated: Team[] = prResult.relegated.map((s) =>
-    mustGetTeam(s.team_id),
-  );
-
-  // Substitute the user's team (wherever it ends up post-P/R) with the
-  // userTeam() view so transfer-market activity (E.1.e+) flows through:
-  // next season's run_season sees the bought/sold roster, not the registry
-  // default. The user's roster is already aged by advanceCareer (E.2.a).
-  //
   // E.2.a.2 / E.2.b: opponents reset to the immutable registry each season, so
   // we replay their evolution from the registry base by the elapsed-season
   // count — aging plus retire/youth/rebuild (evolveTeam) — so the league ages
@@ -231,39 +224,59 @@ function buildNextSeason(
       ? userTeamWithRoster
       : evolveTeam(t, elapsed, career.seed);
 
-  const tierATeams: Team[] = [...tierASurvivors, ...newPromoted].map(composeTeam);
-  const tierBTeams: Team[] = [...tierBSurvivors, ...newRelegated].map(composeTeam);
+  // Recompose one tier: survivors (current standings minus everyone leaving)
+  // in finishing order, then the incoming teams. Resolves ids to Team records
+  // and applies composeTeam so the user/opponent evolution flows through.
+  const recompose = (
+    oldDiv: Division,
+    leaving: TeamStats[],
+    incoming: TeamStats[],
+  ): Team[] => {
+    const leavingIds = new Set(leaving.map((s) => s.team_id));
+    const survivors = oldDiv.record.standings.filter(
+      (s) => !leavingIds.has(s.team_id),
+    );
+    const teams = [...survivors, ...incoming].map((s) =>
+      composeTeam(mustGetTeam(s.team_id)),
+    );
+    // Invariant: tier size unchanged. Mismatch means PRResult was malformed
+    // or standings were missing teams. The middle tier (3-way shuffle) is the
+    // one most worth guarding.
+    if (teams.length !== oldDiv.record.standings.length) {
+      throw new Error(
+        `advanceCareer: ${oldDiv.name} size changed (${oldDiv.record.standings.length} → ${teams.length})`,
+      );
+    }
+    return teams;
+  };
 
-  // Invariant: division sizes must match the previous season. Mismatch
-  // would mean PRResult was malformed or the standings were missing teams.
-  if (tierATeams.length !== tierAOld.record.standings.length) {
-    throw new Error(
-      `advanceCareer: tier A size changed (${tierAOld.record.standings.length} → ${tierATeams.length})`,
-    );
-  }
-  if (tierBTeams.length !== tierBOld.record.standings.length) {
-    throw new Error(
-      `advanceCareer: tier B size changed (${tierBOld.record.standings.length} → ${tierBTeams.length})`,
-    );
-  }
+  const tierATeams = recompose(
+    tierAOld,
+    prResult.relegatedAtoB,
+    prResult.promotedBtoA,
+  );
+  const tierBTeams = recompose(
+    tierBOld,
+    [...prResult.promotedBtoA, ...prResult.relegatedBtoC],
+    [...prResult.relegatedAtoB, ...prResult.promotedCtoB],
+  );
+  const tierCTeams = recompose(
+    tierCOld,
+    prResult.promotedCtoB,
+    prResult.relegatedBtoC,
+  );
 
   const nextYear = current.year + 1;
   const seasonSeed = career.seed ^ BigInt(nextYear);
 
-  const recordA = run_season(
-    tierATeams,
-    seasonSeed ^ 1n,
-    "Série A",
-  ) as SeasonRecord;
-  const recordB = run_season(
-    tierBTeams,
-    seasonSeed ^ 2n,
-    "Série B",
-  ) as SeasonRecord;
+  const recordA = run_season(tierATeams, seasonSeed ^ 1n, "Série A") as SeasonRecord;
+  const recordB = run_season(tierBTeams, seasonSeed ^ 2n, "Série B") as SeasonRecord;
+  const recordC = run_season(tierCTeams, seasonSeed ^ 3n, "Série C") as SeasonRecord;
 
   const divisions: Division[] = [
     { tier: 1, name: "Série A", record: recordA, currentRoundIdx: 0 },
     { tier: 2, name: "Série B", record: recordB, currentRoundIdx: 0 },
+    { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
   ];
 
   return {

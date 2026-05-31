@@ -1,0 +1,257 @@
+{
+  "id": 50,
+  "name": "Fênix Mirim",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5001,
+    5002,
+    5003,
+    5004,
+    5005,
+    5006,
+    5007,
+    5008,
+    5009,
+    5010,
+    5011
+  ],
+  "bench": [
+    5012,
+    5013,
+    5014,
+    5015,
+    5016
+  ],
+  "roster": [
+    {
+      "id": 5001,
+      "name": "Otávio Uchôa",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 59,
+        "technique": 78,
+        "passing": 77,
+        "defending": 74,
+        "finishing": 57,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5002,
+      "name": "Joelson Alencar",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 78,
+        "passing": 71,
+        "defending": 76,
+        "finishing": 60,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 5003,
+      "name": "Emerson Klabin",
+      "age": 28,
+      "position": "GK",
+      "attributes": {
+        "pace": 48,
+        "technique": 26,
+        "passing": 37,
+        "defending": 17,
+        "finishing": 23,
+        "stamina": 46
+      }
+    },
+    {
+      "id": 5004,
+      "name": "Matheus Marinho",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 67,
+        "technique": 78,
+        "passing": 72,
+        "defending": 37,
+        "finishing": 81,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 5005,
+      "name": "João Lacerda",
+      "age": 26,
+      "position": "FWD",
+      "attributes": {
+        "pace": 69,
+        "technique": 77,
+        "passing": 69,
+        "defending": 45,
+        "finishing": 77,
+        "stamina": 82
+      }
+    },
+    {
+      "id": 5006,
+      "name": "Bebeto Lemos",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 83,
+        "technique": 86,
+        "passing": 71,
+        "defending": 51,
+        "finishing": 67,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 5007,
+      "name": "Kléber Tavares",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 83,
+        "passing": 72,
+        "defending": 58,
+        "finishing": 67,
+        "stamina": 69
+      }
+    },
+    {
+      "id": 5008,
+      "name": "Edson Gonçalves",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 49,
+        "technique": 55,
+        "passing": 39,
+        "defending": 78,
+        "finishing": 32,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5009,
+      "name": "Nando Pacheco",
+      "age": 25,
+      "position": "DEF",
+      "attributes": {
+        "pace": 54,
+        "technique": 51,
+        "passing": 52,
+        "defending": 77,
+        "finishing": 34,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 5010,
+      "name": "Felipe Brandão",
+      "age": 22,
+      "position": "FWD",
+      "attributes": {
+        "pace": 67,
+        "technique": 82,
+        "passing": 59,
+        "defending": 43,
+        "finishing": 71,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5011,
+      "name": "Naldo Furtado",
+      "age": 28,
+      "position": "MID",
+      "attributes": {
+        "pace": 48,
+        "technique": 66,
+        "passing": 54,
+        "defending": 77,
+        "finishing": 35,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 5012,
+      "name": "Éder Lemos",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 85,
+        "technique": 80,
+        "passing": 60,
+        "defending": 45,
+        "finishing": 68,
+        "stamina": 75
+      }
+    },
+    {
+      "id": 5013,
+      "name": "Diego Uchimura",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 87,
+        "technique": 76,
+        "passing": 63,
+        "defending": 69,
+        "finishing": 57,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 5014,
+      "name": "Zé Roberto Lopes",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 74,
+        "passing": 72,
+        "defending": 50,
+        "finishing": 65,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5015,
+      "name": "Douglas Damasceno",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 81,
+        "technique": 75,
+        "passing": 70,
+        "defending": 54,
+        "finishing": 71,
+        "stamina": 66
+      }
+    },
+    {
+      "id": 5016,
+      "name": "Bruno Werneck",
+      "age": 23,
+      "position": "FWD",
+      "attributes": {
+        "pace": 78,
+        "technique": 72,
+        "passing": 57,
+        "defending": 29,
+        "finishing": 70,
+        "stamina": 66
+      }
+    }
+  ]
+}

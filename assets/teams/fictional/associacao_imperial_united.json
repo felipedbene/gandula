@@ -1,0 +1,257 @@
+{
+  "id": 14,
+  "name": "Associação Imperial United",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    1401,
+    1402,
+    1403,
+    1404,
+    1405,
+    1406,
+    1407,
+    1408,
+    1409,
+    1410,
+    1411
+  ],
+  "bench": [
+    1412,
+    1413,
+    1414,
+    1415,
+    1416
+  ],
+  "roster": [
+    {
+      "id": 1401,
+      "name": "João Sampaio",
+      "age": 32,
+      "position": "GK",
+      "attributes": {
+        "pace": 56,
+        "technique": 24,
+        "passing": 42,
+        "defending": 22,
+        "finishing": 27,
+        "stamina": 52
+      }
+    },
+    {
+      "id": 1402,
+      "name": "Allan Rangel",
+      "age": 29,
+      "position": "FWD",
+      "attributes": {
+        "pace": 84,
+        "technique": 81,
+        "passing": 70,
+        "defending": 53,
+        "finishing": 81,
+        "stamina": 86
+      }
+    },
+    {
+      "id": 1403,
+      "name": "Romário Uchôa",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 54,
+        "technique": 79,
+        "passing": 83,
+        "defending": 70,
+        "finishing": 80,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 1404,
+      "name": "Ferraz Ipojuca",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 73,
+        "passing": 68,
+        "defending": 82,
+        "finishing": 55,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1405,
+      "name": "Renan Pontes",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 75,
+        "passing": 66,
+        "defending": 82,
+        "finishing": 48,
+        "stamina": 79
+      }
+    },
+    {
+      "id": 1406,
+      "name": "Renan Mascarenhas",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 70,
+        "technique": 64,
+        "passing": 73,
+        "defending": 83,
+        "finishing": 46,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1407,
+      "name": "Ximenes Werneck",
+      "age": 30,
+      "position": "MID",
+      "attributes": {
+        "pace": 70,
+        "technique": 81,
+        "passing": 76,
+        "defending": 74,
+        "finishing": 74,
+        "stamina": 87
+      }
+    },
+    {
+      "id": 1408,
+      "name": "Sílvio Lemos",
+      "age": 28,
+      "position": "FWD",
+      "attributes": {
+        "pace": 75,
+        "technique": 83,
+        "passing": 80,
+        "defending": 45,
+        "finishing": 78,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 1409,
+      "name": "Nando Kowalski",
+      "age": 31,
+      "position": "DEF",
+      "attributes": {
+        "pace": 72,
+        "technique": 76,
+        "passing": 80,
+        "defending": 76,
+        "finishing": 70,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1410,
+      "name": "Nélson Jardim",
+      "age": 22,
+      "position": "MID",
+      "attributes": {
+        "pace": 76,
+        "technique": 84,
+        "passing": 74,
+        "defending": 60,
+        "finishing": 72,
+        "stamina": 78
+      }
+    },
+    {
+      "id": 1411,
+      "name": "Joelson Marinho",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 90,
+        "technique": 87,
+        "passing": 74,
+        "defending": 39,
+        "finishing": 74,
+        "stamina": 64
+      }
+    },
+    {
+      "id": 1412,
+      "name": "Wallace Brandão",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 88,
+        "technique": 85,
+        "passing": 70,
+        "defending": 39,
+        "finishing": 79,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 1413,
+      "name": "Válber Soares",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 89,
+        "technique": 83,
+        "passing": 76,
+        "defending": 36,
+        "finishing": 82,
+        "stamina": 67
+      }
+    },
+    {
+      "id": 1414,
+      "name": "Daniel Guimarães",
+      "age": 22,
+      "position": "DEF",
+      "attributes": {
+        "pace": 88,
+        "technique": 81,
+        "passing": 72,
+        "defending": 72,
+        "finishing": 62,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 1415,
+      "name": "Emerson Resende",
+      "age": 27,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 75,
+        "passing": 68,
+        "defending": 72,
+        "finishing": 63,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 1416,
+      "name": "Quincas Pontes",
+      "age": 23,
+      "position": "MID",
+      "attributes": {
+        "pace": 73,
+        "technique": 76,
+        "passing": 68,
+        "defending": 78,
+        "finishing": 59,
+        "stamina": 79
+      }
+    }
+  ]
+}

@@ -1,0 +1,257 @@
+{
+  "id": 53,
+  "name": "Grêmio Real",
+  "formation": "F433",
+  "tactics": {
+    "mentality": "Attacking",
+    "tempo": "Fast",
+    "pressing": "High",
+    "width": "Wide"
+  },
+  "starting_xi": [
+    5301,
+    5302,
+    5303,
+    5304,
+    5305,
+    5306,
+    5307,
+    5308,
+    5309,
+    5310,
+    5311
+  ],
+  "bench": [
+    5312,
+    5313,
+    5314,
+    5315,
+    5316
+  ],
+  "roster": [
+    {
+      "id": 5301,
+      "name": "Sebastião Cardoso",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 80,
+        "technique": 85,
+        "passing": 78,
+        "defending": 48,
+        "finishing": 79,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5302,
+      "name": "Rafael Drummond",
+      "age": 32,
+      "position": "MID",
+      "attributes": {
+        "pace": 60,
+        "technique": 76,
+        "passing": 72,
+        "defending": 73,
+        "finishing": 71,
+        "stamina": 80
+      }
+    },
+    {
+      "id": 5303,
+      "name": "Zé Roberto Junqueira",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 72,
+        "technique": 79,
+        "passing": 73,
+        "defending": 73,
+        "finishing": 79,
+        "stamina": 83
+      }
+    },
+    {
+      "id": 5304,
+      "name": "Juvenal Quaresma",
+      "age": 33,
+      "position": "GK",
+      "attributes": {
+        "pace": 51,
+        "technique": 18,
+        "passing": 24,
+        "defending": 14,
+        "finishing": 22,
+        "stamina": 40
+      }
+    },
+    {
+      "id": 5305,
+      "name": "Genílson Oliveira",
+      "age": 28,
+      "position": "DEF",
+      "attributes": {
+        "pace": 78,
+        "technique": 72,
+        "passing": 67,
+        "defending": 76,
+        "finishing": 58,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5306,
+      "name": "Mauro Teixeira",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 50,
+        "technique": 59,
+        "passing": 56,
+        "defending": 79,
+        "finishing": 53,
+        "stamina": 73
+      }
+    },
+    {
+      "id": 5307,
+      "name": "Hélio Damasceno",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 66,
+        "technique": 58,
+        "passing": 56,
+        "defending": 76,
+        "finishing": 39,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5308,
+      "name": "Túlio Queiroz",
+      "age": 24,
+      "position": "FWD",
+      "attributes": {
+        "pace": 72,
+        "technique": 70,
+        "passing": 62,
+        "defending": 36,
+        "finishing": 74,
+        "stamina": 71
+      }
+    },
+    {
+      "id": 5309,
+      "name": "Quincas Lopes",
+      "age": 20,
+      "position": "FWD",
+      "attributes": {
+        "pace": 79,
+        "technique": 75,
+        "passing": 60,
+        "defending": 45,
+        "finishing": 73,
+        "stamina": 62
+      }
+    },
+    {
+      "id": 5310,
+      "name": "Sílvio Cavalcanti",
+      "age": 24,
+      "position": "MID",
+      "attributes": {
+        "pace": 89,
+        "technique": 83,
+        "passing": 65,
+        "defending": 64,
+        "finishing": 70,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5311,
+      "name": "Gabriel Ipojuca",
+      "age": 26,
+      "position": "DEF",
+      "attributes": {
+        "pace": 74,
+        "technique": 70,
+        "passing": 62,
+        "defending": 76,
+        "finishing": 53,
+        "stamina": 74
+      }
+    },
+    {
+      "id": 5312,
+      "name": "Ximenes Gonçalves",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 75,
+        "passing": 71,
+        "defending": 71,
+        "finishing": 60,
+        "stamina": 70
+      }
+    },
+    {
+      "id": 5313,
+      "name": "Ximenes Gonçalves",
+      "age": 27,
+      "position": "MID",
+      "attributes": {
+        "pace": 67,
+        "technique": 73,
+        "passing": 71,
+        "defending": 72,
+        "finishing": 64,
+        "stamina": 76
+      }
+    },
+    {
+      "id": 5314,
+      "name": "Ferraz Cavalcanti",
+      "age": 24,
+      "position": "DEF",
+      "attributes": {
+        "pace": 82,
+        "technique": 74,
+        "passing": 62,
+        "defending": 67,
+        "finishing": 62,
+        "stamina": 85
+      }
+    },
+    {
+      "id": 5315,
+      "name": "Válber Hollanda",
+      "age": 26,
+      "position": "MID",
+      "attributes": {
+        "pace": 66,
+        "technique": 74,
+        "passing": 73,
+        "defending": 70,
+        "finishing": 72,
+        "stamina": 77
+      }
+    },
+    {
+      "id": 5316,
+      "name": "Bebeto Uchimura",
+      "age": 25,
+      "position": "MID",
+      "attributes": {
+        "pace": 74,
+        "technique": 75,
+        "passing": 67,
+        "defending": 45,
+        "finishing": 73,
+        "stamina": 80
+      }
+    }
+  ]
+}
