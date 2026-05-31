@@ -13,6 +13,7 @@ import {
   SELL_MULTIPLIER,
   canBuy,
   canExpand,
+  canMarket,
   canSell,
   generateFreeAgents,
   playerOverall,
@@ -20,8 +21,10 @@ import {
   scoutReport,
 } from "./transfer-market";
 import {
+  MARKETING_MOMENTUM_MAX,
   STADIUM_MAX_CAPACITY,
   expansionCost,
+  marketingCost,
 } from "./finances";
 import {
   FIRST_YEAR,
@@ -86,7 +89,7 @@ function makeCareer(opts: {
     makePlayer(1000 + i, "MID"),
   );
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: 1,
@@ -117,7 +120,7 @@ function makeCareer(opts: {
         : {}),
       transfers: [],
     },
-    manager: { money: opts.money ?? STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: opts.money ?? STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: roster,
   };
 }
@@ -374,5 +377,30 @@ describe("canExpand (E.4.b.4 stadium)", () => {
 
   it("expansionCost rises with capacity", () => {
     expect(expansionCost(30_000)).toBeGreaterThan(expansionCost(10_000));
+  });
+});
+
+describe("canMarket (E.4.b.5 marketing)", () => {
+  it("allows a campaign with enough money below the momentum cap", () => {
+    const career = makeCareer({ rosterSize: 16, money: 5_000_000 });
+    expect(canMarket(career).ok).toBe(true);
+  });
+
+  it("blocks when money is below the campaign cost", () => {
+    const career = makeCareer({ rosterSize: 16, money: 1_000 });
+    expect(canMarket(career).ok).toBe(false);
+  });
+
+  it("blocks at the momentum cap", () => {
+    const career = makeCareer({ rosterSize: 16, money: 1_000_000_000 });
+    const maxed: Career = {
+      ...career,
+      manager: { ...career.manager, marketingMomentum: MARKETING_MOMENTUM_MAX },
+    };
+    expect(canMarket(maxed).ok).toBe(false);
+  });
+
+  it("marketingCost rises with momentum", () => {
+    expect(marketingCost(20_000)).toBeGreaterThan(marketingCost(0));
   });
 });

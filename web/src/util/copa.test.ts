@@ -194,7 +194,7 @@ function careerAtRound(roundIdx: number): Career {
   const mk = (teams: Team[], ns: bigint, name: string) =>
     run_season(teams, seasonSeed ^ ns, name) as SeasonRecord;
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,
@@ -210,7 +210,7 @@ function careerAtRound(roundIdx: number): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: [],
   };
 }

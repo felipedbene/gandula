@@ -42,7 +42,7 @@ function newCareer(seed: bigint): Career {
   const starter = pickStarterTeam(c);
   const ss = seed ^ BigInt(FIRST_YEAR);
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,
@@ -58,7 +58,7 @@ function newCareer(seed: bigint): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: [],
   };
 }

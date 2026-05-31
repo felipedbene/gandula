@@ -40,7 +40,7 @@ function makeCareer(): { career: Career; starterId: number } {
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   const career: Career = {
-    schemaVersion: 8,
+    schemaVersion: 9,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -56,7 +56,7 @@ function makeCareer(): { career: Career; starterId: number } {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000, marketingMomentum: 0 },
     userRoster: [],
   };
   return { career, starterId: starter.id };

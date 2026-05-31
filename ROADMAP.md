@@ -110,11 +110,15 @@ richer SoFIFA market (E.4.c).
     b.5–b.7 are additive; fanbase is first-class state for a future RL
     observation. Numbers illustrative (TICKET_PRICE=1.5 keeps a baseline A gate
     ~65k); re-measure via E.6.
-  - [ ] **E.4.b.5 — Marketing campaigns** · _M, core + web_ — a spend action
-    that grows the **fanbase** (a new career-state value), which feeds demand
-    for the gate (E.4.b.4) and sponsorship (E.4.b.6). The _demand_-side lever:
-    stadium raises supply (seats), marketing raises demand (fans to fill them) —
-    they compound only together. Player-controlled, build-vs-buy.
+  - [x] **E.4.b.5 — Marketing campaigns** · _M, core + web_ — **Shipped.** A
+    paid campaign in the transfer market adds `+CAMPAIGN_FANBASE` (6k) now AND
+    raises a decaying **`marketingMomentum`** that the seasonal fanbase-drift
+    target reads, so a campaign persists ~3–4 seasons rather than snapping back
+    (momentum halves each season, snapping to 0 at the tail). Rising cost
+    (`800k + momentum×120`) up to a momentum cap; reversible like the stadium
+    spend. Schema **v8→v9** (additive; `migratedV8` seeds momentum 0). The
+    demand-side complement to the stadium: capacity raises supply, marketing
+    raises the crowd to fill it — they compound only together. Re-measure via E.6.
   - [ ] **E.4.b.6 — Patronage / sponsorship** · _M, core_ — recurring income
     (per-season or per-round), tiered by division + fanbase + recent
     performance. Unlike the gate it's not gated by home/away or capacity, so it

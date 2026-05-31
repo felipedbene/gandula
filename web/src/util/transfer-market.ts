@@ -1,6 +1,11 @@
 import { mulberry32 } from "./prng";
 import { userTeam } from "./roster";
-import { expansionCost, STADIUM_MAX_CAPACITY } from "./finances";
+import {
+  expansionCost,
+  marketingCost,
+  MARKETING_MOMENTUM_MAX,
+  STADIUM_MAX_CAPACITY,
+} from "./finances";
 import { FIRST_YEAR, type Career } from "../persistence";
 import type { Attributes, Player, Position } from "../types";
 
@@ -325,7 +330,8 @@ export function canSell(career: Career, playerId: number): CheckResult {
 export type TransferAction =
   | { kind: "buy"; player: Player; price: number }
   | { kind: "sell"; player: Player; price: number }
-  | { kind: "expandStadium"; seats: number; price: number };
+  | { kind: "expandStadium"; seats: number; price: number }
+  | { kind: "runCampaign"; fanbase: number; momentum: number; price: number };
 
 /** Whether the club can expand the stadium right now (E.4.b.4): below the cap
  *  and enough cash for the next +STEP increment. */
@@ -334,6 +340,18 @@ export function canExpand(career: Career): CheckResult {
     return { ok: false, reason: `Capacidade máxima (${STADIUM_MAX_CAPACITY})` };
   }
   if (career.manager.money < expansionCost(career.manager.stadiumCapacity)) {
+    return { ok: false, reason: "Dinheiro insuficiente" };
+  }
+  return { ok: true };
+}
+
+/** Whether the club can run a marketing campaign now (E.4.b.5): below the
+ *  momentum cap and enough cash for the next campaign. */
+export function canMarket(career: Career): CheckResult {
+  if (career.manager.marketingMomentum >= MARKETING_MOMENTUM_MAX) {
+    return { ok: false, reason: "Marketing no limite" };
+  }
+  if (career.manager.money < marketingCost(career.manager.marketingMomentum)) {
     return { ok: false, reason: "Dinheiro insuficiente" };
   }
   return { ok: true };
