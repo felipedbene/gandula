@@ -131,17 +131,28 @@ function generateName(rng: () => number): string {
   return `${first} ${last}`;
 }
 
+/** Fraction of free agents that roll as rare "elites" (E.4.c) — a realistic
+ *  tail of expensive, title-grade players, lifting the means wall the old flat
+ *  [30,70]+cap-85 roll couldn't clear. Most agents stay common. */
+export const ELITE_AGENT_FRACTION = 0.12;
+/** Attribute cap for the rare elite tier (vs 85 for common agents). */
+export const ELITE_ATTR_CAP = 92;
+
 /**
- * Generate position-biased attribute set in 30..85 range. Each attribute
- * starts random in [30, 70], then the position-relevant ones get a
- * boost so a GK isn't competing with an FWD for finishing.
- *
- * Returns are still clamped to <= 85 — no superhuman free agents at the
- * cheap end of the market.
+ * Generate position-biased attribute set. A common agent rolls each attribute
+ * in [30, 70] (cap 85 after the positional boost) — the bulk of the market. A
+ * rare elite (E.4.c, ELITE_AGENT_FRACTION of agents) rolls in a higher band
+ * ([62, 86], cap ELITE_ATTR_CAP) so the market carries a tail of title-grade
+ * players you can actually out-build the top clubs with. Deterministic via the
+ * shared rng (the elite roll is just the first draw), so the pool stays a pure
+ * function of (seed, year).
  */
 function scaleByPosition(rng: () => number, position: Position): Attributes {
-  const base = (): number => 30 + Math.floor(rng() * 41); // [30, 70]
-  const boost = (n: number, bonus: number): number => Math.min(85, n + bonus);
+  const elite = rng() < ELITE_AGENT_FRACTION;
+  const cap = elite ? ELITE_ATTR_CAP : 85;
+  const base = (): number =>
+    elite ? 62 + Math.floor(rng() * 25) : 30 + Math.floor(rng() * 41); // elite [62,86] / common [30,70]
+  const boost = (n: number, bonus: number): number => Math.min(cap, n + bonus);
   const a: Attributes = {
     pace: base(),
     technique: base(),

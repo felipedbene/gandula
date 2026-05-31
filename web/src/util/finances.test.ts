@@ -23,9 +23,12 @@ import {
   MARKETING_MOMENTUM_PER_CAMPAIGN,
   STADIUM_EXPANSION_STEP,
   STADIUM_MAX_CAPACITY,
+  FORM_MAX,
+  FORM_MIN,
   computeSeasonFinances,
   cupPrizeForAdvance,
   expansionCost,
+  formMultiplier,
   homeTicketForRound,
   isManagerFired,
   marketingCost,
@@ -727,5 +730,63 @@ describe("E.4.b.6 — sponsorship floor", () => {
     const withoutSponsorship =
       fin.net - fin.sponsorship; // hypothetical pre-b.6 net
     expect(fin.net).toBeGreaterThan(withoutSponsorship);
+  });
+});
+
+describe("E.4.b.7 — team form (bounded gate multiplier)", () => {
+  // Build a career whose user-division record we can rewrite to force results.
+  function careerWithResults(deltas: number[]): Career {
+    const c = makeFinishedCareer(1998n);
+    const idx = findUserDivisionIdxInSeason(c.currentSeason, c.controlledTeamId);
+    const div = c.currentSeason.divisions[idx];
+    const uid = c.controlledTeamId;
+    // Find the user's matches in round order and overwrite their scores to the
+    // requested win(+1)/draw(0)/loss(−1) sequence.
+    const userFix = div.record.fixtures
+      .map((f, i) => ({ round: f.round, i }))
+      .filter(({ i }) => {
+        const m = div.record.matches[i];
+        return m.home === uid || m.away === uid;
+      })
+      .sort((a, b) => a.round - b.round);
+    const matches = div.record.matches.map((m) => ({ ...m, result: { ...m.result } }));
+    // Apply the delta sequence across ALL the user's matches (cycling if
+    // shorter), so the form window — the LAST FORM_WINDOW matches — reflects it.
+    userFix.forEach((slot, k) => {
+      const d = deltas[k % deltas.length];
+      const m = matches[slot.i];
+      const isHome = m.home === uid;
+      const win = { hg: 2, ag: 0 };
+      const loss = { hg: 0, ag: 2 };
+      const draw = { hg: 1, ag: 1 };
+      const r = d > 0 ? win : d < 0 ? loss : draw;
+      m.result = isHome
+        ? { home_goals: r.hg, away_goals: r.ag }
+        : { home_goals: r.ag, away_goals: r.hg };
+    });
+    const newDiv = { ...div, record: { ...div.record, matches } };
+    const divisions = c.currentSeason.divisions.map((dd, i2) => (i2 === idx ? newDiv : dd));
+    return { ...c, currentSeason: { ...c.currentSeason, divisions } };
+  }
+
+  it("is 1.0 with no prior matches and clamped to [FORM_MIN, FORM_MAX]", () => {
+    const c = makeFinishedCareer(1998n);
+    expect(formMultiplier(c, 0)).toBe(1);
+    // A long win streak hits the ceiling, a long skid the floor.
+    const winners = careerWithResults(Array(10).fill(1));
+    const losers = careerWithResults(Array(10).fill(-1));
+    expect(formMultiplier(winners, 38)).toBe(FORM_MAX);
+    expect(formMultiplier(losers, 38)).toBe(FORM_MIN);
+  });
+
+  it("a win streak raises the gate, a loss streak lowers it (gate only)", () => {
+    const winners = careerWithResults(Array(10).fill(1));
+    const losers = careerWithResults(Array(10).fill(-1));
+    const winFin = computeSeasonFinances(winners, "stayed");
+    const lossFin = computeSeasonFinances(losers, "stayed");
+    expect(winFin.ticketRevenue).toBeGreaterThan(lossFin.ticketRevenue);
+    // Floors are untouched by form — TV + sponsorship identical.
+    expect(winFin.tvRevenue).toBe(lossFin.tvRevenue);
+    expect(winFin.sponsorship).toBe(lossFin.sponsorship);
   });
 });

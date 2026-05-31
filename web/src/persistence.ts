@@ -81,11 +81,12 @@ export type Division = {
  *  Imaginário feels like a near-future fictional league. */
 export const FIRST_YEAR = 2026;
 
-/** Starting balance for any new career (or any career migrated from v3,
- *  which had no money concept). One million units of generic "moedas" —
- *  round number, narrative-friendly, not tied to any real currency. The
- *  Brasileirão Imaginário's economy is its own thing. */
-export const STARTING_MONEY = 1_000_000;
+/** Starting balance for any new career. Raised to 2M (E.4.b.3) — the cheapest
+ *  affordability knob: enough to fund a first strong buy without trivializing
+ *  early survival (the prizes/floors are what move the title ceiling, not this
+ *  one-time bump). A difficulty lever; gandula-rl (E.6) re-measures. Generic
+ *  "moedas", not tied to any real currency. */
+export const STARTING_MONEY = 2_000_000;
 
 /**
  * Manager-level state that persists across the entire career, separate
