@@ -36,6 +36,8 @@ import {
   roundCashDelta,
   salarySliceForRound,
   seedStadiumForTier,
+  sponsorshipForRound,
+  sponsorshipSeasonTotal,
   tvIncomeForRound,
 } from "./finances";
 import { divideIntoDivisions, pickStarterTeam } from "./divisions";
@@ -332,6 +334,7 @@ describe("computeSeasonFinances — net + determinism", () => {
       expect(f.net).toBe(
         f.ticketRevenue +
           f.tvRevenue +
+          f.sponsorship +
           f.matchBonuses -
           f.salaries +
           f.cupPrize +
@@ -391,17 +394,26 @@ describe("per-round finances", () => {
     expect(sum).toBe(computeSeasonFinances(career, "stayed").salaries);
   });
 
-  it("roundCashDelta = home ticket + TV + match bonus − salary slice, every round", () => {
+  it("roundCashDelta = gate + TV + sponsorship + match bonus − salary slice, every round", () => {
     const career = makeFinishedCareer(1998n);
     const total = userRounds(career);
     for (let r = 0; r < total; r++) {
       expect(roundCashDelta(career, r)).toBe(
         homeTicketForRound(career, r) +
           tvIncomeForRound(career, r) +
+          sponsorshipForRound(career, r) +
           matchBonusForRound(career, r) -
           salarySliceForRound(career, r),
       );
     }
+  });
+
+  it("sponsorship slices sum EXACTLY to the season sponsorship (fair rounding)", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += sponsorshipForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").sponsorship);
   });
 
   it("TV slices sum EXACTLY to the season TV revenue (fair rounding)", () => {
@@ -658,5 +670,62 @@ describe("E.4.b.5 — marketing campaigns", () => {
   it("seedStadiumForTier starts marketing momentum at 0", () => {
     expect(seedStadiumForTier(1).marketingMomentum).toBe(0);
     expect(seedStadiumForTier(3).marketingMomentum).toBe(0);
+  });
+});
+
+describe("E.4.b.6 — sponsorship floor", () => {
+  // Helper: same finished career with a chosen fanbase + optional prior-season
+  // history (for the placement term).
+  function withSponsorship(fanbase: number, lastPosition?: number): Career {
+    const c = makeFinishedCareer(1998n);
+    const seasons =
+      lastPosition === undefined
+        ? []
+        : [
+            {
+              year: FIRST_YEAR - 1,
+              userDivision: { tier: 3 as const, name: "Série C" },
+              userPosition: lastPosition,
+              userPoints: 0,
+              champion: { tier: 3 as const, teamId: 0, teamName: "x" },
+              promoted: [],
+              relegated: [],
+              userOutcome: "stayed" as const,
+              moneyDelta: 0,
+              moneyAfter: STARTING_MONEY,
+            },
+          ];
+    return { ...c, seasons, manager: { ...c.manager, fanbase } };
+  }
+
+  it("rises with fanbase", () => {
+    expect(sponsorshipSeasonTotal(withSponsorship(40_000))).toBeGreaterThan(
+      sponsorshipSeasonTotal(withSponsorship(10_000)),
+    );
+  });
+
+  it("rises with a better last-season placement", () => {
+    const champ = sponsorshipSeasonTotal(withSponsorship(20_000, 1));
+    const midtable = sponsorshipSeasonTotal(withSponsorship(20_000, 10));
+    expect(champ).toBeGreaterThan(midtable);
+  });
+
+  it("a new career (no prior season) computes with no placement term", () => {
+    const fresh = withSponsorship(10_000); // seasons: []
+    expect(sponsorshipSeasonTotal(fresh)).toBeGreaterThan(0); // base + fanbase
+  });
+
+  it("is floored at 0 (a terrible finish can't make it negative)", () => {
+    expect(sponsorshipSeasonTotal(withSponsorship(0, 20))).toBeGreaterThanOrEqual(0);
+  });
+
+  it("is a floor: a Série C season nets more with sponsorship than without", () => {
+    // sponsorship is part of net; a positive sponsorship strictly raises net.
+    const career = makeFinishedCareer(1998n);
+    const fin = computeSeasonFinances(career, "stayed");
+    expect(fin.sponsorship).toBeGreaterThan(0);
+    const withoutSponsorship =
+      fin.net - fin.sponsorship; // hypothetical pre-b.6 net
+    expect(fin.net).toBeGreaterThan(withoutSponsorship);
   });
 });

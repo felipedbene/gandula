@@ -119,11 +119,15 @@ richer SoFIFA market (E.4.c).
     spend. Schema **v8→v9** (additive; `migratedV8` seeds momentum 0). The
     demand-side complement to the stadium: capacity raises supply, marketing
     raises the crowd to fill it — they compound only together. Re-measure via E.6.
-  - [ ] **E.4.b.6 — Patronage / sponsorship** · _M, core_ — recurring income
-    (per-season or per-round), tiered by division + fanbase + recent
-    performance. Unlike the gate it's not gated by home/away or capacity, so it
-    acts as a **revenue floor** that directly attacks the 91% firing rate.
-    Could be passive (auto-scaling) or a chosen deal with risk/reward terms.
+  - [x] **E.4.b.6 — Patronage / sponsorship** · _M, core_ — **Shipped.** A
+    passive recurring floor = `SPONSORSHIP_BASE_BY_TIER + fanbase×4 +
+    placementBonus(lastSeasonPos)`, floored at 0. Accrues **per round** (sliced
+    like TV) so it eases mid-season cash-flow / firing; not gated by home/away
+    or capacity. Reads the fanbase substrate (so b.5 marketing compounds into
+    it) and rewards sustained success via last-season placement (another
+    flywheel input). Derived from tier/fanbase/history → **no schema bump**.
+    New `sponsorship` line in `SeasonFinances` + finale panel. Passive (not a
+    chosen deal) — re-measure via E.6.
   - [ ] **E.4.b.7 — Team momentum / form** · _M, core_ — recent form (win
     streak) acts as a transient multiplier on attendance: winning fills seats →
     more gate → fund better squad → keep winning. The _short-term, volatile_
