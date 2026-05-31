@@ -16,6 +16,10 @@ import {
 import { teamById } from "../teams";
 import { userTeam } from "../util/roster";
 import { resimulateFromRound } from "../util/resimulate";
+import {
+  COPA_ROUND_AT_LEAGUE_ROUND,
+  userTieInRound,
+} from "../util/copa";
 import { avgStrength } from "../util/divisions";
 import { formatMoney } from "../util/money";
 import { Button, Group, Stack, Text } from "@mantine/core";
@@ -176,6 +180,8 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
         />
       )}
 
+      <CopaBanner career={career} round={userDiv.currentRoundIdx} />
+
       <Panel title="Tática">
         <form
           onSubmit={(e) => {
@@ -284,6 +290,41 @@ function ByeCard() {
           Mudanças de tática aplicam às próximas rodadas onde seu time joga.
         </Text>
       </Stack>
+    </Panel>
+  );
+}
+
+// Copa do Brasil banner: shown when this matchday also hosts the user's cup
+// tie (so the tactics they set here apply to the cup tie too). Hidden if this
+// round isn't a cup matchday or the user is already out.
+function CopaBanner({ career, round }: { career: Career; round: number }) {
+  const copa = career.currentSeason.copa;
+  const cupRoundIdx = COPA_ROUND_AT_LEAGUE_ROUND.indexOf(round);
+  // Only on a cup matchday that hasn't been played yet.
+  if (cupRoundIdx < 0 || cupRoundIdx !== copa.currentCupRoundIdx) return null;
+  const tie = userTieInRound(copa, cupRoundIdx, career.controlledTeamId);
+  if (!tie) {
+    if (copa.userEliminatedAtRoundIdx !== undefined) {
+      return (
+        <Panel title="Copa do Brasil">
+          <Text c="dimmed" size="sm">
+            Seu time já foi eliminado da Copa.
+          </Text>
+        </Panel>
+      );
+    }
+    return null;
+  }
+  const oppId = tie.homeId === career.controlledTeamId ? tie.awayId : tie.homeId;
+  const oppName = teamById(oppId)?.name ?? `Time ${oppId}`;
+  return (
+    <Panel title="Copa do Brasil">
+      <Text c="phosphor.4" fw={600}>
+        Jogo da Copa nesta rodada — vs {oppName}
+      </Text>
+      <Text c="dimmed" size="sm">
+        Mata-mata: empate é decidido nos pênaltis. Sua tática vale para os dois jogos.
+      </Text>
     </Panel>
   );
 }

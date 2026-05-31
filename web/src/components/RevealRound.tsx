@@ -4,6 +4,7 @@ import type { Match } from "../types";
 import { findUserDivisionIdxInSeason, type Career } from "../persistence";
 import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
+import { COPA_ROUND_AT_LEAGUE_ROUND, userTieInRound } from "../util/copa";
 import { Panel } from "./ui/Panel";
 import MatchReveal, {
   HALFTIME_PAUSE_MS,
@@ -159,6 +160,8 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
         </Card>
       )}
 
+      <CopaMatchday career={career} revealRound={revealRound} />
+
       <Panel title="Outros jogos">
         {otherWithTiming.length === 0 ? (
           <Text c="dimmed">Nenhum outro jogo nesta rodada.</Text>
@@ -186,6 +189,68 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
       )}
     </Stack>
   );
+}
+
+/**
+ * Copa do Brasil card shown when the just-revealed league round was a cup
+ * matchday. Renders the user's tie result (score + shootout marker) when they
+ * played, or a note that the cup advanced (when they're already out). Static —
+ * the league match is the animated one; the cup tie shows its final score.
+ */
+function CopaMatchday({ career, revealRound }: { career: Career; revealRound: number }) {
+  const copa = career.currentSeason.copa;
+  const cupRoundIdx = COPA_ROUND_AT_LEAGUE_ROUND.indexOf(revealRound);
+  // Only render on a cup matchday whose round has actually been played.
+  if (cupRoundIdx < 0 || cupRoundIdx >= copa.currentCupRoundIdx) return null;
+  const round = copa.rounds[cupRoundIdx];
+  if (!round) return null;
+
+  const tie = userTieInRound(copa, cupRoundIdx, career.controlledTeamId);
+  const roundLabel = `Copa do Brasil · ${cupRoundTitle(round.name)}`;
+
+  if (!tie) {
+    return (
+      <Panel title={roundLabel}>
+        <Text c="dimmed" size="sm">
+          {copa.championId !== undefined
+            ? `Campeão da Copa: ${teamById(copa.championId)?.name ?? `Time ${copa.championId}`}`
+            : "Seu time não está mais na Copa — os jogos seguem sem você."}
+        </Text>
+      </Panel>
+    );
+  }
+
+  const m = tie.match!;
+  const won = tie.winnerId === career.controlledTeamId;
+  const homeName = teamById(tie.homeId)?.name ?? `Time ${tie.homeId}`;
+  const awayName = teamById(tie.awayId)?.name ?? `Time ${tie.awayId}`;
+  return (
+    <Panel title={roundLabel}>
+      <Box style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
+        <Text ta="right" size="sm">{homeName}</Text>
+        <Text px="md" size="sm" ff="monospace" fw={700}>
+          {m.result.home_goals} - {m.result.away_goals}
+          {tie.shootout && ` (${tie.shootout.homeGoals}-${tie.shootout.awayGoals} pen)`}
+        </Text>
+        <Text ta="left" size="sm">{awayName}</Text>
+      </Box>
+      <Text ta="center" size="sm" mt={4} fw={700} c={won ? "phosphor.4" : "red.5"}>
+        {won ? "AVANÇOU na Copa!" : "ELIMINADO da Copa"}
+      </Text>
+    </Panel>
+  );
+}
+
+function cupRoundTitle(name: string): string {
+  switch (name) {
+    case "prelim": return "Fase preliminar";
+    case "r32": return "Oitavas (32)";
+    case "r16": return "Oitavas de final";
+    case "qf": return "Quartas de final";
+    case "sf": return "Semifinal";
+    case "final": return "Final";
+    default: return name;
+  }
 }
 
 /**

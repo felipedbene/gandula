@@ -4,6 +4,7 @@
 // it only reads controlledTeamId + userRoster off the Career.
 import { describe, it, expect } from "vitest";
 import { userTeam } from "./roster";
+import { freshCopa } from "./copa";
 import { ALL_TEAMS } from "../teams";
 import { FIRST_YEAR, STARTING_MONEY, type Career } from "../persistence";
 
@@ -11,7 +12,7 @@ const team = ALL_TEAMS.find((t) => t.name === "Amazônia do Norte")!;
 
 function careerWith(userRoster: typeof team.roster): Career {
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: team.id,
@@ -21,6 +22,7 @@ function careerWith(userRoster: typeof team.roster): Career {
       seed: 1998n,
       divisions: [],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster,

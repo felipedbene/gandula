@@ -81,12 +81,13 @@ function makeCareer(opts: {
     makePlayer(1000 + i, "MID"),
   );
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: 1,
     seasons: [],
     currentSeason: {
+      copa: freshCopa(),
       year: FIRST_YEAR,
       seed: 1998n ^ BigInt(FIRST_YEAR),
       divisions: [makeDivision()],
@@ -124,6 +125,7 @@ function makeCareer(opts: {
 // teamById entirely we use a team id known to exist in ALL_TEAMS:
 // the first team's id.
 import { ALL_TEAMS } from "../teams";
+import { freshCopa } from "./copa";
 const REAL_TEAM_ID = ALL_TEAMS[0].id;
 
 function makeCareerWithRealTeam(opts: {

@@ -32,6 +32,15 @@ import {
   computePromotionRelegation,
   userOutcomeFromPRResult,
 } from "../util/promotion";
+import {
+  COPA_ROUND_AT_LEAGUE_ROUND,
+  cupResultFor,
+  cupSeedFor,
+  cupTeamResolver,
+  freshCopa,
+  initCopaForSeason,
+  playCupRound,
+} from "../util/copa";
 import { advanceCareer } from "../util/career";
 import {
   computeSeasonFinances,
@@ -44,6 +53,7 @@ import SupportView from "./SupportView";
 import { Button, Divider, Group, Stack, Table, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
+import CopaView from "./CopaView";
 import TacticsView from "./TacticsView";
 import PrepareView from "./PrepareView";
 
@@ -72,6 +82,7 @@ type Phase =
   | { tag: "form" }
   | { tag: "running"; career: Career }
   | { tag: "viewOtherDivision"; career: Career }
+  | { tag: "copa"; career: Career }
   | { tag: "prepare"; career: Career }
   | { tag: "revealing"; career: Career }
   | { tag: "tactics"; career: Career }
@@ -118,9 +129,23 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   // silent transitions would confuse the user.
   useEffect(() => {
     loadCareer()
-      .then((result) => {
-        if (result.kind === "loaded") {
-          const career = result.career;
+      .then(async (result) => {
+        if (result.kind === "loaded" || result.kind === "migratedV6") {
+          let career = result.career;
+          // v6 → v7: add the Copa for the current season (deterministic from
+          // the season seed, fast-forwarded past already-played cup rounds),
+          // then persist the upgraded career. Additive — progress preserved.
+          if (result.kind === "migratedV6") {
+            career = {
+              ...career,
+              schemaVersion: 7,
+              currentSeason: {
+                ...career.currentSeason,
+                copa: initCopaForSeason(career),
+              },
+            };
+            await saveCareer(career);
+          }
           const userDivIdx = findUserDivisionIdxInSeason(
             career.currentSeason,
             career.controlledTeamId,
@@ -129,8 +154,10 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           const teamName =
             teamById(career.controlledTeamId)?.name ??
             `Time ${career.controlledTeamId}`;
+          const prefix =
+            result.kind === "migratedV6" ? "save v6 migrado (Copa)" : "save carregado";
           onStatus(
-            `save carregado · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
+            `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
           setPhase(initialPhaseFor(career));
         } else if (result.kind === "expandedWorld") {
@@ -183,7 +210,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 6,
+        schemaVersion: 7,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -197,6 +224,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
           ],
           transfers: [],
+          copa: freshCopa(),
         },
         manager: { money: STARTING_MONEY },
         userRoster: [],
@@ -280,16 +308,20 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
   }
 
   function openOtherDivision(career: Career) {
-    const userDivIdx = findUserDivisionIdxInSeason(
-      career.currentSeason,
-      career.controlledTeamId,
-    );
-    const otherDiv = career.currentSeason.divisions[1 - userDivIdx];
-    onStatus(`visualizando ${otherDiv.name}`);
+    onStatus("visualizando outras divisões");
     setPhase({ tag: "viewOtherDivision", career });
   }
 
   function backFromOtherDivision(career: Career) {
+    setPhase({ tag: "running", career });
+  }
+
+  function openCopa(career: Career) {
+    onStatus("Copa do Brasil");
+    setPhase({ tag: "copa", career });
+  }
+
+  function backFromCopa(career: Career) {
     setPhase({ tag: "running", career });
   }
 
@@ -405,12 +437,29 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         ? `+ $ ${formatMoney(cashDelta)}`
         : `− $ ${formatMoney(Math.abs(cashDelta))}`;
 
+    // Copa do Brasil: if this matchday hosts a cup round and it hasn't been
+    // played yet, play the whole round now (the user's tie uses the live
+    // userTeam/tactics; the rest auto-sims) and advance the cup cursor. Prize
+    // money is intentionally NOT applied here — that's the E.4 handoff.
+    let copa = season.copa;
+    const cupRoundIdx = COPA_ROUND_AT_LEAGUE_ROUND.indexOf(playedRound);
+    if (cupRoundIdx >= 0 && copa.currentCupRoundIdx === cupRoundIdx) {
+      copa = playCupRound(
+        copa,
+        cupRoundIdx,
+        cupTeamResolver(newCareer),
+        cupSeedFor(season),
+        newCareer.controlledTeamId,
+      );
+    }
+
     const advanced: Career = {
       ...newCareer,
       savedAt: new Date().toISOString(),
       currentSeason: {
         ...season,
         divisions: advancedDivisions,
+        copa,
       },
       manager: {
         ...newCareer.manager,
@@ -541,6 +590,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           onPrepare={() => openPrepare(phase.career)}
           onTactics={() => openTactics(phase.career)}
           onViewOtherDivision={() => openOtherDivision(phase.career)}
+          onViewCopa={() => openCopa(phase.career)}
           onOpenMarket={() => openTransferMarket(phase.career, "running")}
         />
       )}
@@ -549,6 +599,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           career={phase.career}
           onBack={() => backFromOtherDivision(phase.career)}
         />
+      )}
+      {phase.tag === "copa" && (
+        <CopaView career={phase.career} onBack={() => backFromCopa(phase.career)} />
       )}
       {phase.tag === "prepare" && (
         <PrepareView
@@ -656,6 +709,7 @@ function CampeonatoEmCurso({
   onPrepare,
   onTactics,
   onViewOtherDivision,
+  onViewCopa,
   onOpenMarket,
 }: {
   career: Career;
@@ -663,6 +717,7 @@ function CampeonatoEmCurso({
   onPrepare: () => void;
   onTactics: () => void;
   onViewOtherDivision: () => void;
+  onViewCopa: () => void;
   onOpenMarket: () => void;
 }) {
   const team = teamById(career.controlledTeamId);
@@ -670,7 +725,6 @@ function CampeonatoEmCurso({
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const userDiv = season.divisions[userDivIdx];
-  const otherDiv = season.divisions[1 - userDivIdx];
   const totalRounds = totalRoundsOf(userDiv);
 
   const teamIds = userDiv.record.standings.map((s) => s.team_id);
@@ -723,8 +777,11 @@ function CampeonatoEmCurso({
         <Button variant="default" onClick={onOpenMarket}>
           Mercado
         </Button>
+        <Button variant="default" onClick={onViewCopa}>
+          Copa
+        </Button>
         <Button variant="default" onClick={onViewOtherDivision}>
-          Ver {otherDiv.name}
+          Outras divisões
         </Button>
         <Button variant="subtle" color="red" onClick={onReset}>
           Nova carreira
@@ -735,8 +792,8 @@ function CampeonatoEmCurso({
 }
 
 // ─── Phase: viewOtherDivision ───────────────────────────────────────────────
-// Read-only peek at the other tier's standings. Shows "ENCERRADA" when
-// that division has already played all its rounds.
+// Read-only peek at the OTHER tiers' standings (the two divisions the user
+// isn't in). Each shows "ENCERRADA" when it has played all its rounds.
 function OtherDivisionView({
   career,
   onBack,
@@ -746,31 +803,33 @@ function OtherDivisionView({
 }) {
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
-  const otherDiv = season.divisions[1 - userDivIdx];
-  const total = totalRoundsOf(otherDiv);
-  const isFinished = otherDiv.currentRoundIdx >= total;
-
-  const standings = computeStandings(
-    otherDiv.record.matches,
-    otherDiv.record.fixtures,
-    otherDiv.currentRoundIdx,
-    otherDiv.record.standings.map((s) => s.team_id),
-  );
+  const others = season.divisions.filter((_, i) => i !== userDivIdx);
 
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
-        ANO {season.year} · DIVISÃO: {otherDiv.name} ·{" "}
-        {isFinished
-          ? `ENCERRADA · ${total} / ${total}`
-          : `RODADA ${otherDiv.currentRoundIdx + 1} / ${total}`}{" "}
-        · $ {formatMoney(career.manager.money)}
+        ANO {season.year} · OUTRAS DIVISÕES · $ {formatMoney(career.manager.money)}
       </Text>
 
-      <StandingsTable
-        standings={standings}
-        title={`Classificação · ${otherDiv.name}`}
-      />
+      {others.map((div) => {
+        const total = totalRoundsOf(div);
+        const isFinished = div.currentRoundIdx >= total;
+        const standings = computeStandings(
+          div.record.matches,
+          div.record.fixtures,
+          div.currentRoundIdx,
+          div.record.standings.map((s) => s.team_id),
+        );
+        return (
+          <StandingsTable
+            key={div.tier}
+            standings={standings}
+            title={`${div.name} · ${
+              isFinished ? `ENCERRADA ${total}/${total}` : `RODADA ${div.currentRoundIdx + 1}/${total}`
+            }`}
+          />
+        );
+      })}
 
       <Group justify="center">
         <Button variant="default" onClick={onBack}>
@@ -779,6 +838,53 @@ function OtherDivisionView({
       </Group>
     </Stack>
   );
+}
+
+// Copa do Brasil result line for the season finale: the cup champion and how
+// far the user's club got.
+function CopaFinaleLine({ career }: { career: Career }) {
+  const copa = career.currentSeason.copa;
+  if (copa.championId === undefined) return null;
+  const champName =
+    teamById(copa.championId)?.name ?? `Time ${copa.championId}`;
+  const userWon = copa.championId === career.controlledTeamId;
+  const result = cupResultFor(copa, career.controlledTeamId);
+  const userLine =
+    result === "champion"
+      ? null
+      : result
+        ? `Seu time caiu na Copa: ${copaRoundLabel(result)}.`
+        : null;
+  return (
+    <Panel title={userWon ? "*** Campeão da Copa do Brasil ***" : "Copa do Brasil"}>
+      {userWon ? (
+        <Text c="phosphor.4" fw={700}>
+          PARABÉNS! {champName} levantou a Copa do Brasil.
+        </Text>
+      ) : (
+        <Stack gap={2}>
+          <Text>Campeão: {champName}</Text>
+          {userLine && (
+            <Text size="sm" c="dimmed">
+              {userLine}
+            </Text>
+          )}
+        </Stack>
+      )}
+    </Panel>
+  );
+}
+
+function copaRoundLabel(name: string): string {
+  switch (name) {
+    case "prelim": return "fase preliminar";
+    case "r32": return "rodada de 32";
+    case "r16": return "oitavas";
+    case "qf": return "quartas";
+    case "sf": return "semifinal";
+    case "final": return "final (vice)";
+    default: return name;
+  }
 }
 
 // ─── Phase: finale ──────────────────────────────────────────────────────────
@@ -866,6 +972,8 @@ function SeasonFinale({
           <Text>{champName}</Text>
         )}
       </Panel>
+
+      <CopaFinaleLine career={career} />
 
       <Panel title="Destaques da temporada">
         <Stack gap={4}>

@@ -15,6 +15,7 @@ import { divideIntoDivisions, pickStarterTeam } from "./divisions";
 import { RETIREMENT_AGE } from "./regen";
 import { REGEN_ID_BASE } from "./transfer-market";
 import { userTeam } from "./roster";
+import { freshCopa } from "./copa";
 import { ALL_TEAMS, teamById } from "../teams";
 import {
   FIRST_YEAR,
@@ -49,7 +50,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -63,6 +64,7 @@ function makeFinishedCareer(seed: bigint): Career {
         { tier: 3, name: "Série C", record: recordC, currentRoundIdx: totalC },
       ],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster: [],

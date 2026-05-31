@@ -39,6 +39,14 @@ export function applyUserTactics(baseTeam: Team, override: UserTactics): Team {
  * same seed, same teams, same engine ⇒ identical result, re-running is
  * wasted work.
  *
+ * Copa (E.3) is intentionally NOT touched here. This re-sims the user's
+ * UPCOMING (unplayed) league rounds; the cup tie that shares a matchday is
+ * also still unplayed, so there is nothing already-played to re-sim. The cup
+ * tie is simulated exactly once — in SeasonView.playRound, when the matchday
+ * is advanced — using whatever userTactics is live at that moment. So a
+ * tactical change before a cup matchday is naturally reflected when the tie
+ * plays, with no re-sim path needed.
+ *
  * Determinism: each fixture's match_seed is derived from a per-division
  * seed namespace `currentSeason.seed XOR BigInt(division.tier)`. The same
  * XOR is used at division creation (`run_season(tier, seasonSeed ^ tier,
