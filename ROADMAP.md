@@ -29,14 +29,24 @@ The league spine already exists — each tier is a double round-robin via
 The engine stays untouched: `play_match`, `run_season`, `derive_match_seed`
 are exported via wasm and divisions/competitions are pure TS on top.
 
-- [ ] **E.3.a — Copa do Brasil knockout** · _M, web_ — a TS-built knockout
-  bracket that calls `play_match` per tie. **Determinism:** seed each tie via
-  `derive_match_seed` keyed on `(season, "copa", round, homeId, awayId)` so the
-  bracket replays identically. Série A clubs entering at a later phase is just a
-  seeding rule in the bracket builder. Emits a `CompetitionResult` carrying
-  prize money — the handoff into E.4.
-- [ ] **E.3.b — Calendar** · _M, web_ — order league rounds and cup ties without
-  collisions (a club plays at most one fixture per slot).
+- [x] **E.3.a — Copa do Brasil knockout** · _M, web_ — **Shipped.** A pure-TS
+  64-slot knockout over all 60 clubs (`util/copa.ts`): the 4 strongest Série A
+  clubs bye the prelim, the other 56 play 28 ties → r32, then 32→16→8→4→2→1
+  (6 named rounds). Each tie is one `play_match`; a draw is decided by a
+  deterministic **seeded penalty shootout** (the engine has no extra-time). Cup
+  ties **share matchdays** with mapped league rounds (`COPA_ROUND_AT_LEAGUE_ROUND`)
+  — advancing a mapped round plays the user's tie (live tactics) and auto-sims
+  the rest; after the user is out the cup completes in the background. Schema
+  bumped **v6 → v7**: the cup is additive, so v6 saves migrate in-place
+  (`initCopaForSeason` builds + fast-forwards the bracket — no wipe). UI:
+  PrepareView banner, a `CopaView` bracket peek, the user's tie in the round
+  reveal, and a finale cup-champion line. `cupResultFor` structures the result;
+  **prize money is deferred to E.4** (not paid yet). Determinism: cup seed is
+  its own namespace (`season.seed ^ 0xC09A`), tie seeds via `derive_match_seed`
+  on a monotonic index; bracket pairing is no-PRNG strength-mirror.
+- [ ] **E.3.b — Calendar polish** · _S, web_ — the matchday-sharing model
+  shipped in E.3.a. Remaining: two-leg ties, evolved-strength seeding, a richer
+  animated cup reveal.
 - [ ] **E.3.c — State championship** · _S, web, DEFERRED_ — the scope trap (real
   Brazil has ~27 with disjoint team sets). If ever built: a short optional
   pre-season regional cup (3–4 geographic buckets, quick round-robin, small

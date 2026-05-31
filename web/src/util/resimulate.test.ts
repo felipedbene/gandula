@@ -19,6 +19,7 @@ import { advanceCareer } from "./career";
 import { computePromotionRelegation } from "./promotion";
 import { userTeam } from "./roster";
 import { evolveTeam } from "./regen";
+import { freshCopa } from "./copa";
 import { ALL_TEAMS, teamById } from "../teams";
 import {
   FIRST_YEAR,
@@ -54,7 +55,7 @@ function makeCareer(seed: bigint, currentRoundIdx: number): Career {
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -68,6 +69,7 @@ function makeCareer(seed: bigint, currentRoundIdx: number): Career {
         { tier: 3, name: "Série C", record: recordC, currentRoundIdx },
       ],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster: [],

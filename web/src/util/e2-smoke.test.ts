@@ -12,6 +12,7 @@ import { ALL_TEAMS } from "../teams";
 import { divideIntoDivisions, pickStarterTeam, WORLD_SIZE } from "./divisions";
 import { advanceCareer } from "./career";
 import { computePromotionRelegation } from "./promotion";
+import { freshCopa } from "./copa";
 import { FIRST_YEAR, STARTING_MONEY, totalRoundsOf, type Career } from "../persistence";
 import type { SeasonRecord } from "../types";
 
@@ -25,7 +26,7 @@ function newCareer(seed: bigint): Career {
   const starter = pickStarterTeam(c);
   const ss = seed ^ BigInt(FIRST_YEAR);
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,
@@ -39,6 +40,7 @@ function newCareer(seed: bigint): Career {
         { tier: 3, name: "Série C", record: run_season(c, ss ^ 3n, "Série C") as SeasonRecord, currentRoundIdx: 0 },
       ],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster: [],

@@ -15,6 +15,7 @@ import {
   saveCareer,
   type Career,
 } from "./persistence";
+import { freshCopa } from "./util/copa";
 
 // Same IDB coords as persistence.ts. We hit the DB directly here to seed
 // pre-v6 payloads so loadCareer can exercise the discard path.
@@ -34,9 +35,9 @@ async function writeRaw(value: unknown): Promise<void> {
   await conn.put(STORE, value, SLOT_KEY);
 }
 
-function makeV6Career(opts: { seed: bigint; controlledTeamId: number }): Career {
+function makeV7Career(opts: { seed: bigint; controlledTeamId: number }): Career {
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: "2026-01-01T00:00:00Z",
     seed: opts.seed,
     controlledTeamId: opts.controlledTeamId,
@@ -46,6 +47,7 @@ function makeV6Career(opts: { seed: bigint; controlledTeamId: number }): Career 
       seed: opts.seed ^ BigInt(FIRST_YEAR),
       divisions: [],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster: [],
@@ -62,8 +64,8 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v6 Career is present", async () => {
-    await saveCareer(makeV6Career({ seed: 1998n, controlledTeamId: 60 }));
+  it("returns kind:'loaded' when a v7 Career is present", async () => {
+    await saveCareer(makeV7Career({ seed: 1998n, controlledTeamId: 60 }));
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
@@ -71,6 +73,33 @@ describe("loadCareer", () => {
       expect(result.career.manager.money).toBe(STARTING_MONEY);
       expect(result.career.userRoster).toEqual([]);
     }
+  });
+
+  // A v6 save (3-tier world, but pre-Copa: no currentSeason.copa) is no longer
+  // discarded — it migrates forward. loadCareer returns kind:'migratedV6' and
+  // the caller fills in the Copa via initCopaForSeason + re-saves as v7.
+  it("returns kind:'migratedV6' for a v6 save (3-tier, no copa)", async () => {
+    await writeRaw({
+      schemaVersion: 6,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 1998n,
+      controlledTeamId: 60,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 1998n ^ BigInt(FIRST_YEAR),
+        divisions: [
+          { tier: 1, name: "Série A", record: {}, currentRoundIdx: 0 },
+          { tier: 2, name: "Série B", record: {}, currentRoundIdx: 0 },
+          { tier: 3, name: "Série C", record: {}, currentRoundIdx: 0 },
+        ],
+        transfers: [],
+      },
+      manager: { money: STARTING_MONEY },
+      userRoster: [],
+    });
+    const result = await loadCareer();
+    expect(result.kind).toBe("migratedV6");
   });
 
   // Every pre-v6 schema (v2 2-tier saves, v3/v4/v5 careers, and v1-like

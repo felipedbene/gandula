@@ -16,6 +16,7 @@ import {
   type SeasonHistory,
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
+import { cupResultFor, freshCopa } from "./copa";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
 import { evolveTeam, evolveRoster } from "./regen";
 import { userTeam } from "./roster";
@@ -178,6 +179,11 @@ function buildSeasonHistory(
     // FECHAR-without-changes, so this branch is the source of truth.
     transfers:
       current.transfers.length > 0 ? current.transfers : undefined,
+    // Copa do Brasil (E.3): the season's cup champion and how far the user
+    // got. Both undefined if the cup didn't finish (shouldn't happen at a
+    // season boundary, but keeps the record honest).
+    copaChampionId: current.copa.championId,
+    copaUserResult: cupResultFor(current.copa, career.controlledTeamId),
   };
 }
 
@@ -288,6 +294,9 @@ function buildNextSeason(
     // transfers starts empty — mercado opens between this Season and the
     // NEXT, and writes accumulate into THIS season's `transfers` (E.1.e.2).
     transfers: [],
+    // A fresh Copa bracket each season (drawn, no rounds played). The cup
+    // seed derives from this season's seed, so each year's draw differs.
+    copa: freshCopa(),
   };
 }
 

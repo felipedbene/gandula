@@ -1,5 +1,12 @@
 import { openDB, type IDBPDatabase } from "idb";
-import type { Formation, Player, Position, SeasonRecord, Tactics } from "./types";
+import type {
+  Formation,
+  Match,
+  Player,
+  Position,
+  SeasonRecord,
+  Tactics,
+} from "./types";
 
 /**
  * IndexedDB persistence for the in-progress Elifoot-mode career.
@@ -116,6 +123,53 @@ export type TransferRecord = {
  * resimulate) to give every (career, year, tier) combination a unique
  * match-seed namespace.
  */
+// ─── Copa do Brasil — season-long knockout cup (E.3) ─────────────────────
+//
+// A 64-slot bracket over all 60 clubs, seeded by tier. The 4 strongest Série
+// A clubs get a prelim bye; the other 56 play 28 prelim ties → 28 winners, so
+// the round of 32 is 28 winners + 4 byes. Then 32→16→8→4→2→1. Six named
+// rounds, each played on a mapped league round (util/copa.ts). Single match
+// per tie; a drawn tie is decided by a deterministic seeded shootout. Pure
+// TS over the engine's play_match — no engine knowledge of cups.
+
+/** Penalty-shootout outcome for a drawn tie. `winnerId` ∈ {tie.homeId, awayId}. */
+export type CupShootout = { homeGoals: number; awayGoals: number; winnerId: number };
+
+/** One knockout tie. `homeId`/`awayId` are TEAM IDS. A bye tie has
+ *  `bye: true` and `awayId === COPA_BYE` — `homeId` auto-advances unplayed. */
+export type CupTie = {
+  homeId: number;
+  awayId: number;
+  bye?: boolean;
+  played: boolean;
+  /** Present once a non-bye tie is played. */
+  match?: Match;
+  /** Present only when `match` was a draw and a shootout decided it. */
+  shootout?: CupShootout;
+  /** Set once resolved (the advancing club). */
+  winnerId?: number;
+};
+
+export type CupRoundName = "prelim" | "r32" | "r16" | "qf" | "sf" | "final";
+
+export type CupRound = { name: CupRoundName; ties: CupTie[] };
+
+/**
+ * Copa state for one season. `rounds[0]` (prelim) is built in full at season
+ * start; later rounds are appended as each round's winners resolve, so a
+ * round's `ties.length` is the source of truth for "has this round been
+ * drawn yet". `currentCupRoundIdx` is the next round to play.
+ */
+export type Copa = {
+  rounds: CupRound[];
+  currentCupRoundIdx: number;
+  /** Set when the final resolves. */
+  championId?: number;
+  /** Round index at which the user's club was knocked out (undefined while
+   *  still in, or if they win it). For the "you went out in the QF" UI. */
+  userEliminatedAtRoundIdx?: number;
+};
+
 export type Season = {
   year: number;
   /** Derived: `career.seed XOR BigInt(year)`. Stored explicitly so
@@ -123,6 +177,8 @@ export type Season = {
   seed: bigint;
   divisions: Division[];
   userTactics?: UserTactics;
+  /** Copa do Brasil bracket for this season (E.3). Always present in v7+. */
+  copa: Copa;
   /** Transfer-market activity accumulated during this season. Mercado
    *  abre na phase entre `finale` e the next season's `running`, so by
    *  the time `advanceCareer` runs these are the year-N transfers being
@@ -175,6 +231,12 @@ export type SeasonHistory = {
    *  transfer data to backfill, and (b) skipping the market entirely
    *  leaves no record either way. UI treats absent and empty the same. */
   transfers?: TransferRecord[];
+  /** Copa do Brasil champion this season (E.3). Optional — absent on
+   *  seasons archived before the cup existed. */
+  copaChampionId?: number;
+  /** How far the user's club got in the Copa: the round they were knocked
+   *  out at, or "champion" if they won it. Absent pre-E.3. */
+  copaUserResult?: CupRoundName | "champion";
 };
 
 /**
@@ -185,7 +247,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 6;
+  schemaVersion: 7;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -232,19 +294,29 @@ async function db(): Promise<IDBPDatabase> {
 /**
  * Result of `loadCareer`. Discriminated with three kinds:
  *   - `loaded`: a current (v6) Career was read directly.
+ *   - `migratedV6`: a v6 save (no Copa) was read; the caller initializes the
+ *     Copa for the current season (deterministic from the season seed) and
+ *     saves the upgraded v7 career. The cup is additive, so unlike the E.2
+ *     break this preserves the in-progress career.
  *   - `expandedWorld`: a pre-v6 save was found and discarded because the
  *     world expanded to three tiers (E.2). The caller should start a fresh
  *     3-tier career — there's no in-place migration.
  *   - `none`: empty slot.
+ *
+ * The v6→v7 Copa init lives in the caller (util/copa.initCopaForSeason), not
+ * here, so persistence has no runtime dependency on the cup module.
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV6"; career: Career }
   | { kind: "expandedWorld" }
   | { kind: "none" };
 
 /**
  * Read the current career.
- *   - v6 (current): returned as-is.
+ *   - v7 (current): returned as-is.
+ *   - v6 (pre-Copa): returned as `migratedV6` — the caller adds the Copa and
+ *     re-saves. Additive, so the career is preserved.
  *   - any earlier version (v1–v5): discarded. The E.2 three-tier expansion
  *     is a hard break — a 2-tier / 17-team career can't be inflated into the
  *     60-team / 3-tier world — so the slot is cleared and the caller
@@ -257,8 +329,13 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 6) {
+  if (candidate.schemaVersion === 7) {
     return { kind: "loaded", career: value as Career };
+  }
+  if (candidate.schemaVersion === 6) {
+    // The raw v6 lacks currentSeason.copa; the caller fills it via
+    // initCopaForSeason and re-saves as v7.
+    return { kind: "migratedV6", career: value as unknown as Career };
   }
   await conn.delete(STORE, SLOT_KEY);
   return { kind: "expandedWorld" };

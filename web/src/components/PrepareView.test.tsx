@@ -10,6 +10,7 @@ import init, { run_season } from "../wasm/gandula_wasm.js";
 import PrepareView from "./PrepareView";
 import { ALL_TEAMS, teamById } from "../teams";
 import { divideIntoDivisions, pickStarterTeam } from "../util/divisions";
+import { freshCopa } from "../util/copa";
 import {
   FIRST_YEAR,
   STARTING_MONEY,
@@ -42,7 +43,7 @@ function makeCareer(): Career {
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -56,6 +57,7 @@ function makeCareer(): Career {
         { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
       ],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster: [],
@@ -77,7 +79,7 @@ function makeCareerWithBye(): Career {
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordC = run_season(nine, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -89,6 +91,7 @@ function makeCareerWithBye(): Career {
         { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
       ],
       transfers: [],
+      copa: freshCopa(),
     },
     manager: { money: STARTING_MONEY },
     userRoster: [],
