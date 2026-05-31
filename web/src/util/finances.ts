@@ -7,7 +7,10 @@ import {
   findUserDivisionIdxInSeason,
   totalRoundsOf,
   type Career,
+  type Copa,
+  type CupRoundName,
 } from "../persistence";
+import { userTieInRound } from "./copa";
 import type { Player } from "../types";
 
 /**
@@ -61,6 +64,161 @@ export function isManagerFired(balance: number): boolean {
   return balance < MANAGER_FIRING_FLOOR;
 }
 
+// ─── E.4 — title flywheel + cup prize + TV-deal floor ────────────────────
+//
+// These add compounding revenue (finishing high → cash → stronger squad) and
+// a structural floor that softens the 91%-fired economy gandula-rl measured.
+// All numbers here are ILLUSTRATIVE and gandula-rl-tunable (E.6 re-measures and
+// re-tunes this one block). Reference scale: a home gate is ~50–65k, a season
+// has ~19 home games (~1.0–1.2M gate/season), the wage bill is ~400k baseline
+// rising with squad strength, and STARTING_MONEY is 1M.
+
+/** Season-total TV money by tier (sliced per round, like the wage bill). The
+ *  structural floor: Série C (~600k) roughly covers a baseline C wage bill, so
+ *  a careful C club is cash-positive before the gate (dents the 91% firing);
+ *  Série A (4M) ≫ a strong-A bill, and that headroom funds compounding buys.
+ *  The ~6.7 : 2.5 : 1 ratio makes climbing the pyramid the dominant lever. */
+export const TV_DEAL_BY_TIER: Record<1 | 2 | 3, number> = {
+  1: 4_000_000,
+  2: 1_500_000,
+  3: 600_000,
+};
+
+/** Per-match performance bonus. ~one home gate per win; a ~27-win title run is
+ *  ~1.08M ≈ one season wage bill, so winning literally pays for the squad. */
+export const WIN_BONUS = 40_000;
+export const DRAW_BONUS = 12_000;
+
+/** End-of-season placement prize for the user's FINAL position in their tier.
+ *  Closed-form decay over 1-based position: champion gets the full base, fading
+ *  to 0 by `PLACEMENT_CUTOFF`. Survival alone (≥ cutoff) earns nothing — you
+ *  must compete to capitalize. Tier-scaled below so each title up the pyramid
+ *  is worth dramatically more (the climb incentive). */
+export const PLACEMENT_PRIZE_BASE = 2_500_000;
+export const PLACEMENT_CUTOFF = 12;
+export const PLACEMENT_TIER_MULTIPLIER: Record<1 | 2 | 3, number> = {
+  1: 1.0,
+  2: 0.4,
+  3: 0.15,
+};
+
+/** Copa do Brasil prize for the round a club REACHED (regardless of that tie's
+ *  result), plus a champion bonus on winning the final. A deep run (final +
+ *  win ≈ 2.1M) rivals a league title — a second flywheel for a lower-tier
+ *  user. Mirrors the E.3 round names. */
+export const CUP_PRIZE_BY_ROUND: Record<CupRoundName, number> = {
+  prelim: 0,
+  r32: 60_000,
+  r16: 120_000,
+  qf: 250_000,
+  sf: 500_000,
+  final: 900_000,
+};
+export const CUP_CHAMPION_BONUS = 1_200_000;
+
+/** TV-money slice for `roundIdx` — the season-total TV deal for the user's
+ *  current tier, paid in equal per-round slices with the same fair-rounding as
+ *  the wage bill (`round(S·(r+1)/T) − round(S·r/T)`), so slices sum to the exact
+ *  season total with no drift. Accrues EVERY round (incl. away) — it's a
+ *  structural floor, not gated by home/away. */
+export function tvIncomeForRound(career: Career, roundIdx: number): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const total = totalRoundsOf(userDiv);
+  if (total <= 0) return 0;
+  const s = TV_DEAL_BY_TIER[userDiv.tier];
+  return (
+    Math.round((s * (roundIdx + 1)) / total) - Math.round((s * roundIdx) / total)
+  );
+}
+
+/** Per-match win/draw bonus for the user's match in `roundIdx`: WIN_BONUS on a
+ *  win, DRAW_BONUS on a draw, 0 on a loss/bye. */
+export function matchBonusForRound(career: Career, roundIdx: number): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const { fixtures, matches } = season.divisions[userDivIdx].record;
+  for (let i = 0; i < fixtures.length; i++) {
+    if (fixtures[i].round !== roundIdx) continue;
+    const m = matches[i];
+    const isHome = m.home === career.controlledTeamId;
+    const isAway = m.away === career.controlledTeamId;
+    if (!isHome && !isAway) continue;
+    const gf = isHome ? m.result.home_goals : m.result.away_goals;
+    const ga = isHome ? m.result.away_goals : m.result.home_goals;
+    if (gf > ga) return WIN_BONUS;
+    if (gf === ga) return DRAW_BONUS;
+    return 0;
+  }
+  return 0; // bye / no fixture this round
+}
+
+/** End-of-season placement prize for the user's final position in their tier.
+ *  Pure; applied at the season boundary (NOT per round). */
+export function placementPrizeFor(career: Career): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const pos =
+    userDiv.record.standings.findIndex(
+      (s) => s.team_id === career.controlledTeamId,
+    ) + 1;
+  if (pos <= 0) return 0;
+  const base = Math.round(
+    PLACEMENT_PRIZE_BASE *
+      Math.max(0, (PLACEMENT_CUTOFF - pos + 1) / PLACEMENT_CUTOFF),
+  );
+  return Math.round(base * PLACEMENT_TIER_MULTIPLIER[userDiv.tier]);
+}
+
+/**
+ * Cup prize the user EARNED by the transition from `prevCopa` to `nextCopa` —
+ * called once per cup matchday inside SeasonView.playRound (the cursor advances
+ * exactly once, so it can't double-pay). Pays the prize for the round just
+ * played if the user had a tie in it, plus the champion bonus when the user
+ * just won the final.
+ */
+export function cupPrizeForAdvance(
+  prevCopa: Copa,
+  nextCopa: Copa,
+  controlledTeamId: number,
+): number {
+  const roundIdx = prevCopa.currentCupRoundIdx;
+  const round = nextCopa.rounds[roundIdx];
+  let prize = 0;
+  if (round && userTieInRound(nextCopa, roundIdx, controlledTeamId)) {
+    prize += CUP_PRIZE_BY_ROUND[round.name];
+  }
+  if (
+    nextCopa.championId === controlledTeamId &&
+    prevCopa.championId !== controlledTeamId
+  ) {
+    prize += CUP_CHAMPION_BONUS;
+  }
+  return prize;
+}
+
+/**
+ * Total cup prize the user banked across the (finished) season — the
+ * season-total reconciliation of the per-matchday `cupPrizeForAdvance`
+ * payments. Sums the prize for every round the user reached (had a tie in)
+ * plus the champion bonus if they won. Used by computeSeasonFinances so the
+ * finale panel and `net` reflect cup money already banked in-season.
+ */
+export function cupPrizeTotal(copa: Copa, controlledTeamId: number): number {
+  let prize = 0;
+  for (let i = 0; i < copa.rounds.length; i++) {
+    const round = copa.rounds[i];
+    if (i >= copa.currentCupRoundIdx) break; // round not played yet
+    if (userTieInRound(copa, i, controlledTeamId)) {
+      prize += CUP_PRIZE_BY_ROUND[round.name];
+    }
+  }
+  if (copa.championId === controlledTeamId) prize += CUP_CHAMPION_BONUS;
+  return prize;
+}
+
 /**
  * Home-gate revenue for the user's match in `roundIdx` — same home-only basis
  * as computeSeasonFinances, just for one round. Away games and byes earn
@@ -103,11 +261,16 @@ export function salarySliceForRound(career: Career, roundIdx: number): number {
   );
 }
 
-/** Net cash for playing `roundIdx`: home gate (if mandante) minus the wage
- *  slice. Used to move `manager.money` each round. */
+/** Net cash for playing `roundIdx`: home gate (if mandante) + TV slice + the
+ *  win/draw bonus, minus the wage slice. Used to move `manager.money` each
+ *  round. (Cup prize and the placement prize land elsewhere — on the cup
+ *  matchday and at the season boundary respectively.) */
 export function roundCashDelta(career: Career, roundIdx: number): number {
   return (
-    homeTicketForRound(career, roundIdx) - salarySliceForRound(career, roundIdx)
+    homeTicketForRound(career, roundIdx) +
+    tvIncomeForRound(career, roundIdx) +
+    matchBonusForRound(career, roundIdx) -
+    salarySliceForRound(career, roundIdx)
   );
 }
 
@@ -119,7 +282,16 @@ export function roundCashDelta(career: Career, roundIdx: number): number {
  */
 export type SeasonFinances = {
   ticketRevenue: number;
+  /** Season-total TV money (TV_DEAL_BY_TIER for the user's tier). Banked
+   *  per-round during the season. */
+  tvRevenue: number;
+  /** Σ per-match win/draw bonus. Banked per-round during the season. */
+  matchBonuses: number;
   salaries: number;
+  /** Σ Copa prize banked in-season (rounds reached + champion bonus). */
+  cupPrize: number;
+  /** End-of-season placement prize. Applied at the season BOUNDARY. */
+  placementPrize: number;
   prBonus: number;
   net: number;
 };
@@ -173,15 +345,37 @@ export function computeSeasonFinances(
   const team = userTeam(career);
 
   let ticketRevenue = 0;
+  let matchBonuses = 0;
   userDiv.record.matches.forEach((m) => {
-    if (m.home !== career.controlledTeamId) return;
-    ticketRevenue += opponentStrength(career, m.away) * TICKET_REVENUE_PER_STRENGTH;
+    const isHome = m.home === career.controlledTeamId;
+    const isAway = m.away === career.controlledTeamId;
+    if (isHome) {
+      ticketRevenue +=
+        opponentStrength(career, m.away) * TICKET_REVENUE_PER_STRENGTH;
+    }
+    if (isHome || isAway) {
+      const gf = isHome ? m.result.home_goals : m.result.away_goals;
+      const ga = isHome ? m.result.away_goals : m.result.home_goals;
+      matchBonuses += gf > ga ? WIN_BONUS : gf === ga ? DRAW_BONUS : 0;
+    }
   });
+
+  // TV money is a flat season total for the user's tier (per-round slices sum
+  // to exactly this).
+  const tvRevenue = TV_DEAL_BY_TIER[userDiv.tier];
 
   const salaries = team.roster.reduce(
     (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
     0,
   );
+
+  // Cup prize already banked in-season (reconciles with the per-matchday
+  // cupPrizeForAdvance payments).
+  const cupPrize = cupPrizeTotal(season.copa, career.controlledTeamId);
+
+  // Placement prize is applied at the season boundary (see advanceToNextSeason)
+  // — it is NOT in manager.money during the season, but it IS part of net.
+  const placementPrize = placementPrizeFor(career);
 
   const prBonus =
     userOutcome === "promoted"
@@ -190,7 +384,23 @@ export function computeSeasonFinances(
         ? -RELEGATION_PENALTY
         : 0;
 
-  const net = ticketRevenue - salaries + prBonus;
+  const net =
+    ticketRevenue +
+    tvRevenue +
+    matchBonuses -
+    salaries +
+    cupPrize +
+    placementPrize +
+    prBonus;
 
-  return { ticketRevenue, salaries, prBonus, net };
+  return {
+    ticketRevenue,
+    tvRevenue,
+    matchBonuses,
+    salaries,
+    cupPrize,
+    placementPrize,
+    prBonus,
+    net,
+  };
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Box, Button, Card, Group, Stack, Text } from "@mantine/core";
 import type { Match } from "../types";
-import { findUserDivisionIdxInSeason, type Career } from "../persistence";
+import { findUserDivisionIdxInSeason, type Career, type CupTie } from "../persistence";
 import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
 import { COPA_ROUND_AT_LEAGUE_ROUND, userTieInRound } from "../util/copa";
@@ -84,10 +84,23 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
     }));
   }, [divSeed, revealRound, others]);
 
+  // Is there an animatable cup tie for the user this round? A cup matchday whose
+  // round has been played AND the user has a real (non-bye) tie in it. When not,
+  // the cup card is the static note (or absent) and the cup gate starts done.
+  const userCupTie = useMemo(() => {
+    const copa = season.copa;
+    const cupRoundIdx = COPA_ROUND_AT_LEAGUE_ROUND.indexOf(revealRound);
+    if (cupRoundIdx < 0 || cupRoundIdx >= copa.currentCupRoundIdx) return undefined;
+    const tie = userTieInRound(copa, cupRoundIdx, career.controlledTeamId);
+    return tie?.match ? tie : undefined;
+  }, [season.copa, revealRound, career.controlledTeamId]);
+
   const [othersRevealed, setOthersRevealed] = useState<boolean[]>(() =>
     new Array(otherWithTiming.length).fill(false),
   );
   const [userDone, setUserDone] = useState(userMatch === undefined);
+  // The cup gate: already done when there's no animatable tie this round.
+  const [cupDone, setCupDone] = useState(userCupTie === undefined);
   const [skipAll, setSkipAll] = useState(false);
   const doneFiredRef = useRef(false);
 
@@ -120,17 +133,17 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
     otherWithTiming.length === 0 || othersRevealed.every((b) => b);
 
   useEffect(() => {
-    if (!doneFiredRef.current && userDone && allOthersDone) {
+    if (!doneFiredRef.current && userDone && allOthersDone && cupDone) {
       doneFiredRef.current = true;
       onDone();
     }
-  }, [userDone, allOthersDone, onDone]);
+  }, [userDone, allOthersDone, cupDone, onDone]);
 
   const headerText = userMatch
     ? `REVELANDO RODADA ${revealRound + 1} · ${userDiv.name}`
     : `REVELANDO RODADA ${revealRound + 1} · ${userDiv.name} — SEU TIME DESCANSA`;
 
-  const isPlaying = !userDone || !allOthersDone;
+  const isPlaying = !userDone || !allOthersDone || !cupDone;
 
   // On a bye round there's no MatchReveal (and thus no clock), so run a
   // standalone matchday clock here — it ticks while the other games reveal.
@@ -160,7 +173,13 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
         </Card>
       )}
 
-      <CopaMatchday career={career} revealRound={revealRound} />
+      <CopaMatchday
+        career={career}
+        revealRound={revealRound}
+        start={userDone}
+        skipAll={skipAll}
+        onCupDone={() => setCupDone(true)}
+      />
 
       <Panel title="Outros jogos">
         {otherWithTiming.length === 0 ? (
@@ -193,11 +212,29 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
 
 /**
  * Copa do Brasil card shown when the just-revealed league round was a cup
- * matchday. Renders the user's tie result (score + shootout marker) when they
- * played, or a note that the cup advanced (when they're already out). Static —
- * the league match is the animated one; the cup tie shows its final score.
+ * matchday. When the user played a real tie, the match animates tick-by-tick
+ * via MatchReveal (sequenced AFTER the league match, gated by `start`), then a
+ * shootout beat if it went to penalties, then the AVANÇOU/ELIMINADO verdict.
+ * When the user is out / had a bye / the cup is won, it's the static note.
+ *
+ * `start` flips true once the league pane resolves (so only one match clock
+ * runs at a time). `onCupDone` fires once the verdict shows (or immediately on
+ * skip), feeding RevealRound's third reveal gate. Pure presentation over the
+ * already-simulated `tie.match` / `tie.shootout` — no persistence, F5-safe.
  */
-function CopaMatchday({ career, revealRound }: { career: Career; revealRound: number }) {
+function CopaMatchday({
+  career,
+  revealRound,
+  start,
+  skipAll,
+  onCupDone,
+}: {
+  career: Career;
+  revealRound: number;
+  start: boolean;
+  skipAll: boolean;
+  onCupDone: () => void;
+}) {
   const copa = career.currentSeason.copa;
   const cupRoundIdx = COPA_ROUND_AT_LEAGUE_ROUND.indexOf(revealRound);
   // Only render on a cup matchday whose round has actually been played.
@@ -208,7 +245,9 @@ function CopaMatchday({ career, revealRound }: { career: Career; revealRound: nu
   const tie = userTieInRound(copa, cupRoundIdx, career.controlledTeamId);
   const roundLabel = `Copa do Brasil · ${cupRoundTitle(round.name)}`;
 
-  if (!tie) {
+  // No animatable tie (out / bye / champion): the static note. The parent set
+  // the cup gate done already, so nothing to fire here.
+  if (!tie?.match) {
     return (
       <Panel title={roundLabel}>
         <Text c="dimmed" size="sm">
@@ -220,23 +259,103 @@ function CopaMatchday({ career, revealRound }: { career: Career; revealRound: nu
     );
   }
 
+  return (
+    <CopaTieReveal
+      title={roundLabel}
+      tie={tie}
+      userId={career.controlledTeamId}
+      start={start}
+      skipAll={skipAll}
+      onCupDone={onCupDone}
+    />
+  );
+}
+
+/**
+ * The animated cup-tie card: a small state machine over the (already-resolved)
+ * tie. `match` → MatchReveal plays the 90'; `shootout` → a brief penalties beat
+ * (drawn ties only); `verdict` → AVANÇOU/ELIMINADO, then onCupDone fires.
+ */
+function CopaTieReveal({
+  title,
+  tie,
+  userId,
+  start,
+  skipAll,
+  onCupDone,
+}: {
+  title: string;
+  tie: CupTie;
+  userId: number;
+  start: boolean;
+  skipAll: boolean;
+  onCupDone: () => void;
+}) {
+  type Phase = "match" | "shootout" | "verdict";
+  const [phase, setPhase] = useState<Phase>("match");
+  const cupDoneFiredRef = useRef(false);
+
   const m = tie.match!;
-  const won = tie.winnerId === career.controlledTeamId;
+  const won = tie.winnerId === userId;
   const homeName = teamById(tie.homeId)?.name ?? `Time ${tie.homeId}`;
   const awayName = teamById(tie.awayId)?.name ?? `Time ${tie.awayId}`;
+
+  // Skip jumps straight to the verdict (and fires the gate) — covers a "Pular"
+  // pressed during the league match, before this tie even started animating.
+  useEffect(() => {
+    if (skipAll) setPhase("verdict");
+  }, [skipAll]);
+
+  // The shootout beat: hold briefly on the penalties line, then the verdict.
+  useEffect(() => {
+    if (phase !== "shootout") return;
+    const id = window.setTimeout(() => setPhase("verdict"), HALFTIME_PAUSE_MS);
+    return () => window.clearTimeout(id);
+  }, [phase]);
+
+  // Fire the cup gate exactly once, when the verdict shows.
+  useEffect(() => {
+    if (phase === "verdict" && !cupDoneFiredRef.current) {
+      cupDoneFiredRef.current = true;
+      onCupDone();
+    }
+  }, [phase, onCupDone]);
+
+  const showScore = phase !== "match"; // final score shown once the match ends
+  const showShootout = tie.shootout && phase !== "match";
+  const showVerdict = phase === "verdict";
+
   return (
-    <Panel title={roundLabel}>
-      <Box style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}>
-        <Text ta="right" size="sm">{homeName}</Text>
-        <Text px="md" size="sm" ff="monospace" fw={700}>
-          {m.result.home_goals} - {m.result.away_goals}
-          {tie.shootout && ` (${tie.shootout.homeGoals}-${tie.shootout.awayGoals} pen)`}
+    <Panel title={title}>
+      {/* The match animates only once the league pane is done (start) and we
+          haven't skipped past it. */}
+      {start && phase === "match" && !skipAll ? (
+        <MatchReveal
+          match={m}
+          skipAll={skipAll}
+          onComplete={() => setPhase(tie.shootout ? "shootout" : "verdict")}
+        />
+      ) : (
+        <Box
+          style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}
+        >
+          <Text ta="right" size="sm">
+            {homeName}
+          </Text>
+          <Text px="md" size="sm" ff="monospace" fw={700} c={showScore ? undefined : "dimmed"}>
+            {showScore ? `${m.result.home_goals} - ${m.result.away_goals}` : "×"}
+            {showShootout && ` (${tie.shootout!.homeGoals}-${tie.shootout!.awayGoals} pen)`}
+          </Text>
+          <Text ta="left" size="sm">
+            {awayName}
+          </Text>
+        </Box>
+      )}
+      {showVerdict && (
+        <Text ta="center" size="sm" mt={4} fw={700} c={won ? "phosphor.4" : "red.5"}>
+          {won ? "AVANÇOU na Copa!" : "ELIMINADO da Copa"}
         </Text>
-        <Text ta="left" size="sm">{awayName}</Text>
-      </Box>
-      <Text ta="center" size="sm" mt={4} fw={700} c={won ? "phosphor.4" : "red.5"}>
-        {won ? "AVANÇOU na Copa!" : "ELIMINADO da Copa"}
-      </Text>
+      )}
     </Panel>
   );
 }

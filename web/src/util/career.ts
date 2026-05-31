@@ -1,5 +1,5 @@
 import { run_season } from "../wasm/gandula_wasm.js";
-import { teamById } from "../teams";
+import { ALL_TEAMS, teamById } from "../teams";
 import {
   points,
   type Player,
@@ -16,7 +16,7 @@ import {
   type SeasonHistory,
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
-import { cupResultFor, freshCopa } from "./copa";
+import { buildCopa, cupResultFor } from "./copa";
 import { computeSeasonFinances, type SeasonFinances } from "./finances";
 import { evolveTeam, evolveRoster } from "./regen";
 import { userTeam } from "./roster";
@@ -167,11 +167,13 @@ function buildSeasonHistory(
     ),
     userOutcome,
     // moneyDelta is the season's full P&L (the change over the season).
-    // moneyAfter adds only the P/R bonus: tickets/salaries already accrued
-    // into manager.money per round, so career.manager.money here is the
-    // pre-bonus end-of-season balance.
+    // moneyAfter adds the BOUNDARY pieces (P/R bonus + placement prize); the
+    // per-round pieces (gate + TV + match bonuses − salaries) and the cup
+    // prize already accrued into manager.money during the season, so
+    // career.manager.money here is the pre-boundary end-of-season balance.
     moneyDelta: finances.net,
-    moneyAfter: career.manager.money + finances.prBonus,
+    moneyAfter:
+      career.manager.money + finances.prBonus + finances.placementPrize,
     // Transfer-market activity that happened during this season is
     // surfaced into history as a non-empty array; skipped markets stay
     // `undefined` so HistoryCard can short-circuit cleanly. The market
@@ -296,7 +298,10 @@ function buildNextSeason(
     transfers: [],
     // A fresh Copa bracket each season (drawn, no rounds played). The cup
     // seed derives from this season's seed, so each year's draw differs.
-    copa: freshCopa(),
+    // Seed the bracket from the NEXT season's evolved sides (composeTeam aged
+    // each club to nextYear and swapped in the user's roster), so the draw
+    // reflects the living world rather than the static registry.
+    copa: buildCopa(ALL_TEAMS.map(composeTeam)),
   };
 }
 

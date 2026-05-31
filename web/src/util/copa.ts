@@ -72,9 +72,15 @@ function rngFromSeed(seed: bigint): () => number {
  * empty (appended by playCupRound as winners resolve). Seeds by tier strength
  * (Série A strongest) via divideIntoDivisions; the 4 strongest A clubs bye,
  * the other 56 are paired strongest-vs-weakest (strength-mirror) — no PRNG, so
- * the draw is trivially reproducible. Seeding uses registry strength (stable
- * across seasons; evolved strength would drift, but the seeding ORDER is a
- * cosmetic bracket-shape choice, and stability keeps it predictable).
+ * the draw is trivially reproducible.
+ *
+ * Seeding ranks by the strength of the teams PASSED IN. Callers pass the
+ * season's EVOLVED sides (via cupTeamResolver / composeTeam), so the bracket
+ * shape reflects the aged/regen'd/transfer-aware world and shifts season to
+ * season as clubs rise and fall. Deterministic per season: evolved strength is
+ * a pure function of (registry, elapsed, seed), so a given season's draw always
+ * replays identically. (freshCopa() with no resolver — season 0 / tests — falls
+ * back to registry strength, which equals the evolved strength at elapsed 0.)
  */
 export function buildCopa(teams: Team[]): Copa {
   const [tierA, tierB, tierC] = divideIntoDivisions(teams);
@@ -281,8 +287,10 @@ export function cupTeamResolver(career: Career): (id: number) => Team {
 
 /**
  * Build the Copa for a freshly-started season: the prelim drawn, no rounds
- * played. Used by the new-career path. Bracket order is registry strength
- * (stable), so seeding is identical for a given team set.
+ * played. Used by the NEW-CAREER path (season 0), where the world hasn't aged
+ * yet — so it seeds from registry strength, which equals the evolved strength
+ * at elapsed 0. Subsequent seasons seed from evolved sides directly (career.ts
+ * buildNextSeason maps ALL_TEAMS through composeTeam into buildCopa).
  */
 export function freshCopa(): Copa {
   return buildCopa(ALL_TEAMS);
@@ -300,9 +308,12 @@ export function initCopaForSeason(career: Career): Copa {
   const userDiv = season.divisions[userDivIdx];
   const playedRounds = Math.min(userDiv.currentRoundIdx, totalRoundsOf(userDiv));
 
-  let copa = buildCopa(ALL_TEAMS);
-  const cupSeed = cupSeedFor(season);
   const resolve = cupTeamResolver(career);
+  // Seed the bracket from the season's evolved sides (resolver-mapped), so the
+  // draw reflects the aged world at this point in the career. At elapsed 0 the
+  // resolver yields the registry sides, so season 0 is unchanged.
+  let copa = buildCopa(ALL_TEAMS.map((t) => resolve(t.id)));
+  const cupSeed = cupSeedFor(season);
 
   // A cup round "has happened" if its mapped league round index is strictly
   // less than the number of league rounds already played.
