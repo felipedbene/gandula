@@ -44,6 +44,7 @@ import {
 import { advanceCareer } from "../util/career";
 import {
   computeSeasonFinances,
+  cupPrizeForAdvance,
   isManagerFired,
   roundCashDelta,
 } from "../util/finances";
@@ -224,6 +225,10 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
             { tier: 3, name: "Série C", record: recordC, currentRoundIdx: 0 },
           ],
           transfers: [],
+          // Season 0: the world hasn't aged (elapsed 0) and the user roster is
+          // still empty, so evolved seeding == registry seeding — freshCopa()'s
+          // registry draw is correct here. Later seasons seed from evolved
+          // sides (career.ts buildNextSeason).
           copa: freshCopa(),
         },
         manager: { money: STARTING_MONEY },
@@ -439,19 +444,24 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
 
     // Copa do Brasil: if this matchday hosts a cup round and it hasn't been
     // played yet, play the whole round now (the user's tie uses the live
-    // userTeam/tactics; the rest auto-sims) and advance the cup cursor. Prize
-    // money is intentionally NOT applied here — that's the E.4 handoff.
+    // userTeam/tactics; the rest auto-sims) and advance the cup cursor. The
+    // cup prize (E.4) is paid here — the guard fires exactly once per round, so
+    // it can't double-pay.
     let copa = season.copa;
+    let cupPrize = 0;
     const cupRoundIdx = COPA_ROUND_AT_LEAGUE_ROUND.indexOf(playedRound);
     if (cupRoundIdx >= 0 && copa.currentCupRoundIdx === cupRoundIdx) {
-      copa = playCupRound(
+      const nextCopa = playCupRound(
         copa,
         cupRoundIdx,
         cupTeamResolver(newCareer),
         cupSeedFor(season),
         newCareer.controlledTeamId,
       );
+      cupPrize = cupPrizeForAdvance(copa, nextCopa, newCareer.controlledTeamId);
+      copa = nextCopa;
     }
+    const cupStr = cupPrize > 0 ? ` · copa + $ ${formatMoney(cupPrize)}` : "";
 
     const advanced: Career = {
       ...newCareer,
@@ -463,7 +473,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       },
       manager: {
         ...newCareer.manager,
-        money: newCareer.manager.money + cashDelta,
+        money: newCareer.manager.money + cashDelta + cupPrize,
       },
     };
 
@@ -476,11 +486,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       if (resimCount > 0) {
         const plural = resimCount === 1 ? "" : "s";
         onStatus(
-          `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms · rodada ${userDiv.currentRoundIdx} · caixa ${cashStr}`,
+          `tática aplicada · ${teamName} · ${resimCount} partida${plural} re-simulada${plural} em ${resimMs}ms · rodada ${userDiv.currentRoundIdx} · caixa ${cashStr}${cupStr}`,
         );
       } else {
         onStatus(
-          `rodada ${userDiv.currentRoundIdx} · caixa ${cashStr} · saldo $ ${formatMoney(advanced.manager.money)}`,
+          `rodada ${userDiv.currentRoundIdx} · caixa ${cashStr}${cupStr} · saldo $ ${formatMoney(advanced.manager.money)}`,
         );
       }
       setPhase({ tag: "revealing", career: advanced });
@@ -528,8 +538,11 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         career,
         userOutcomeFromPRResult(pr),
       );
-      const balanceAfterBonus =
-        career.manager.money + projectedFinances.prBonus;
+      // Boundary money = P/R bonus + placement prize (cup prize + TV + match
+      // bonuses already accrued into manager.money during the season).
+      const boundaryDelta =
+        projectedFinances.prBonus + projectedFinances.placementPrize;
+      const balanceAfterBonus = career.manager.money + boundaryDelta;
       if (isManagerFired(balanceAfterBonus)) {
         onStatus("demitido · saldo negativo");
         setPhase({ tag: "fired", career, finalBalance: balanceAfterBonus });
@@ -550,7 +563,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
         userRoster: agedUserRoster,
         manager: {
           ...career.manager,
-          money: career.manager.money + finances.prBonus,
+          money: career.manager.money + finances.prBonus + finances.placementPrize,
         },
       };
       await saveCareer(newCareer);
@@ -1024,6 +1037,23 @@ function SeasonFinale({
             c="phosphor.4"
           />
           <FinanceRow
+            label="Cota de TV"
+            value={`+ $ ${formatMoney(finances.tvRevenue)}`}
+            c="phosphor.4"
+          />
+          <FinanceRow
+            label="Bônus de vitórias/empates"
+            value={`+ $ ${formatMoney(finances.matchBonuses)}`}
+            c="phosphor.4"
+          />
+          {finances.cupPrize > 0 && (
+            <FinanceRow
+              label="Premiação Copa do Brasil"
+              value={`+ $ ${formatMoney(finances.cupPrize)}`}
+              c="phosphor.4"
+            />
+          )}
+          <FinanceRow
             label="Salários"
             value={`− $ ${formatMoney(finances.salaries)}`}
             c="red.5"
@@ -1043,14 +1073,23 @@ function SeasonFinale({
               c="red.5"
             />
           )}
+          {finances.placementPrize > 0 && (
+            <FinanceRow
+              label="Premiação por classificação (ao avançar)"
+              value={`+ $ ${formatMoney(finances.placementPrize)}`}
+              c="phosphor.4"
+            />
+          )}
           <FinanceRow
             label="Saldo atual"
             value={`$ ${formatMoney(career.manager.money)}`}
           />
-          {finances.prBonus !== 0 && (
+          {(finances.prBonus !== 0 || finances.placementPrize > 0) && (
             <FinanceRow
               label="Saldo ao iniciar a próxima"
-              value={`$ ${formatMoney(career.manager.money + finances.prBonus)}`}
+              value={`$ ${formatMoney(
+                career.manager.money + finances.prBonus + finances.placementPrize,
+              )}`}
             />
           )}
         </Stack>

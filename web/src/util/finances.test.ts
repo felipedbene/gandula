@@ -9,16 +9,26 @@ import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import init, { run_season } from "../wasm/gandula_wasm.js";
 import {
+  CUP_CHAMPION_BONUS,
+  CUP_PRIZE_BY_ROUND,
+  DRAW_BONUS,
   MANAGER_FIRING_FLOOR,
+  PLACEMENT_TIER_MULTIPLIER,
   PROMOTION_BONUS,
   RELEGATION_PENALTY,
   SALARY_PER_PLAYER_STRENGTH,
   TICKET_REVENUE_PER_STRENGTH,
+  TV_DEAL_BY_TIER,
+  WIN_BONUS,
   computeSeasonFinances,
+  cupPrizeForAdvance,
   homeTicketForRound,
   isManagerFired,
+  matchBonusForRound,
+  placementPrizeFor,
   roundCashDelta,
   salarySliceForRound,
+  tvIncomeForRound,
 } from "./finances";
 import { divideIntoDivisions, pickStarterTeam, avgStrength } from "./divisions";
 import { advanceCareer } from "./career";
@@ -323,14 +333,21 @@ describe("computeSeasonFinances — prBonus", () => {
 });
 
 describe("computeSeasonFinances — net + determinism", () => {
-  it("net = ticketRevenue - salaries + prBonus", () => {
+  it("net sums all the line items", () => {
+    const expectNet = (f: ReturnType<typeof computeSeasonFinances>) =>
+      expect(f.net).toBe(
+        f.ticketRevenue +
+          f.tvRevenue +
+          f.matchBonuses -
+          f.salaries +
+          f.cupPrize +
+          f.placementPrize +
+          f.prBonus,
+      );
     const career = makeFinishedCareer(1998n);
-    const finP = computeSeasonFinances(career, "promoted");
-    expect(finP.net).toBe(finP.ticketRevenue - finP.salaries + finP.prBonus);
-    const finS = computeSeasonFinances(career, "stayed");
-    expect(finS.net).toBe(finS.ticketRevenue - finS.salaries + finS.prBonus);
-    const finR = computeSeasonFinances(career, "relegated");
-    expect(finR.net).toBe(finR.ticketRevenue - finR.salaries + finR.prBonus);
+    expectNet(computeSeasonFinances(career, "promoted"));
+    expectNet(computeSeasonFinances(career, "stayed"));
+    expectNet(computeSeasonFinances(career, "relegated"));
   });
 
   it("same career + same outcome ⇒ same finances (deterministic)", () => {
@@ -380,22 +397,139 @@ describe("per-round finances", () => {
     expect(sum).toBe(computeSeasonFinances(career, "stayed").salaries);
   });
 
-  it("roundCashDelta = home ticket − salary slice, every round", () => {
+  it("roundCashDelta = home ticket + TV + match bonus − salary slice, every round", () => {
     const career = makeFinishedCareer(1998n);
     const total = userRounds(career);
     for (let r = 0; r < total; r++) {
       expect(roundCashDelta(career, r)).toBe(
-        homeTicketForRound(career, r) - salarySliceForRound(career, r),
+        homeTicketForRound(career, r) +
+          tvIncomeForRound(career, r) +
+          matchBonusForRound(career, r) -
+          salarySliceForRound(career, r),
       );
     }
   });
 
-  it("per-round deltas sum to the season net minus the P/R bonus", () => {
+  it("TV slices sum EXACTLY to the season TV revenue (fair rounding)", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += tvIncomeForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").tvRevenue);
+  });
+
+  it("match bonuses per round sum to the season matchBonuses", () => {
+    const career = makeFinishedCareer(1998n);
+    const total = userRounds(career);
+    let sum = 0;
+    for (let r = 0; r < total; r++) sum += matchBonusForRound(career, r);
+    expect(sum).toBe(computeSeasonFinances(career, "stayed").matchBonuses);
+  });
+
+  it("per-round deltas sum to the season net minus the boundary/cup pieces", () => {
+    // Per-round pieces = gate + TV + match bonuses − salaries.
+    // net additionally includes cupPrize (banked on cup matchdays, not via
+    // roundCashDelta in this fixture's fresh copa → 0) + placementPrize +
+    // prBonus (boundary).
     const career = makeFinishedCareer(1998n);
     const total = userRounds(career);
     let sum = 0;
     for (let r = 0; r < total; r++) sum += roundCashDelta(career, r);
     const fin = computeSeasonFinances(career, "stayed");
-    expect(sum).toBe(fin.net - fin.prBonus);
+    expect(sum).toBe(fin.net - fin.cupPrize - fin.placementPrize - fin.prBonus);
+  });
+});
+
+describe("E.4 revenue levers", () => {
+  it("TV revenue is the user tier's deal (Série C for a fresh career)", () => {
+    const career = makeFinishedCareer(1998n);
+    const fin = computeSeasonFinances(career, "stayed");
+    expect(fin.tvRevenue).toBe(TV_DEAL_BY_TIER[3]); // user starts in Série C
+  });
+
+  it("match bonus is WIN/DRAW/0 by the user's result", () => {
+    expect(WIN_BONUS).toBeGreaterThan(DRAW_BONUS);
+    expect(DRAW_BONUS).toBeGreaterThan(0);
+  });
+
+  it("placement prize: champion >> mid-table, and ≥cutoff pays nothing", () => {
+    // Build a fixture where we can force the user's standings position by
+    // swapping the controlledTeamId to a known standings slot.
+    const career = makeFinishedCareer(1998n);
+    const idx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const standings = career.currentSeason.divisions[idx].record.standings;
+    const champId = standings[0].team_id;
+    const lastId = standings[standings.length - 1].team_id;
+
+    const asChamp = { ...career, controlledTeamId: champId };
+    const asLast = { ...career, controlledTeamId: lastId };
+    expect(placementPrizeFor(asChamp)).toBeGreaterThan(0);
+    expect(placementPrizeFor(asLast)).toBe(0); // 20th ≥ cutoff 12 → 0
+  });
+
+  it("placement prize scales by tier (same position pays more higher up)", () => {
+    const career = makeFinishedCareer(1998n);
+    // Champion of each tier; placement base is the same, multiplier differs.
+    const champOf = (tier: 1 | 2 | 3) => {
+      const div = career.currentSeason.divisions.find((d) => d.tier === tier)!;
+      return { ...career, controlledTeamId: div.record.standings[0].team_id };
+    };
+    const a = placementPrizeFor(champOf(1));
+    const b = placementPrizeFor(champOf(2));
+    const c = placementPrizeFor(champOf(3));
+    expect(a).toBeGreaterThan(b);
+    expect(b).toBeGreaterThan(c);
+    // Ratio tracks the tier multipliers.
+    expect(a / c).toBeCloseTo(
+      PLACEMENT_TIER_MULTIPLIER[1] / PLACEMENT_TIER_MULTIPLIER[3],
+      1,
+    );
+  });
+
+  it("the new model pays a careful Série C club more than the old model", () => {
+    const career = makeFinishedCareer(1998n);
+    const fin = computeSeasonFinances(career, "stayed");
+    // Old model was: ticketRevenue − salaries + prBonus.
+    const oldNet = fin.ticketRevenue - fin.salaries + fin.prBonus;
+    expect(fin.net).toBeGreaterThan(oldNet);
+    // The TV floor alone (Série C) covers a chunk of the wage bill, so a
+    // mid-table C season should be net positive (dents the 91% firing).
+    expect(fin.net).toBeGreaterThan(0);
+    expect(fin.tvRevenue).toBeGreaterThan(0);
+  });
+
+  it("cup prize: pays the round just reached, + champion bonus on the final win", () => {
+    const userId = 13;
+    const finalRound = {
+      name: "final" as const,
+      ties: [
+        { homeId: userId, awayId: 99, played: true, winnerId: userId },
+      ],
+    };
+    const base = {
+      rounds: [
+        { name: "prelim" as const, ties: [] },
+        { name: "r32" as const, ties: [] },
+        { name: "r16" as const, ties: [] },
+        { name: "qf" as const, ties: [] },
+        { name: "sf" as const, ties: [] },
+        finalRound,
+      ],
+    };
+    const prevCopa = { ...base, currentCupRoundIdx: 5, championId: undefined };
+    const nextCopa = { ...base, currentCupRoundIdx: 6, championId: userId };
+    const prize = cupPrizeForAdvance(prevCopa, nextCopa, userId);
+    expect(prize).toBe(CUP_PRIZE_BY_ROUND.final + CUP_CHAMPION_BONUS);
+
+    // A non-champion who merely reached the final gets the final prize only.
+    const loser = cupPrizeForAdvance(
+      { ...base, currentCupRoundIdx: 5, championId: undefined },
+      { ...base, currentCupRoundIdx: 6, championId: 99 },
+      userId,
+    );
+    expect(loser).toBe(CUP_PRIZE_BY_ROUND.final);
   });
 });

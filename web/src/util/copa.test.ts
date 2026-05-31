@@ -76,6 +76,37 @@ describe("buildCopa", () => {
     // Byes should all be Série A (top-20-strength) clubs.
     expect(new Set(byeIds).size).toBe(4);
   });
+
+  it("seeds by evolved strength: a far-future world reshapes the draw", () => {
+    // Evolving the whole world by several seasons ages/regens clubs, so the
+    // strength ranking — and thus the bye set — should differ from the registry
+    // draw for at least one seed. (It's not guaranteed for every seed, so we
+    // probe a few.) Still deterministic per (elapsed, seed).
+    const byeSet = (copa: Copa) =>
+      new Set(copa.rounds[0].ties.filter((t) => t.bye).map((t) => t.homeId));
+    const registryByes = byeSet(buildCopa(ALL_TEAMS));
+
+    const evolvedFor = (seed: bigint) =>
+      buildCopa(ALL_TEAMS.map((t) => evolveTeam(t, 8, seed)));
+    const seeds = [1998n, 2026n, 42n, 7n];
+    const differs = seeds.some(
+      (s) =>
+        JSON.stringify([...byeSet(evolvedFor(s))].sort()) !==
+        JSON.stringify([...registryByes].sort()),
+    );
+    expect(differs).toBe(true);
+
+    // Deterministic for a fixed (elapsed, seed).
+    expect(evolvedFor(1998n)).toEqual(evolvedFor(1998n));
+  });
+
+  it("at elapsed 0 evolved seeding equals the registry draw", () => {
+    // evolveTeam at elapsed 0 is identity (regen guard), so seeding the bracket
+    // from elapsed-0 evolved sides must match the plain registry draw — this is
+    // why season 0 / freshCopa() can use ALL_TEAMS directly.
+    const evolved0 = buildCopa(ALL_TEAMS.map((t) => evolveTeam(t, 0, 1998n)));
+    expect(evolved0).toEqual(buildCopa(ALL_TEAMS));
+  });
 });
 
 describe("seededShootout", () => {

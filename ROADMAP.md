@@ -61,6 +61,21 @@ agent to take more table-climbing risk (RL "FIO 1") just bankrupted it with **no
 title gain**. So: solvency is a real, learnable skill, and the title is gated by
 squad _means_ (and the money to buy them), not by playing more aggressively.
 
+**First slice shipped** (the title flywheel + cup prize + TV floor): the economy
+now has, beyond the home gate + P/R bonus —
+(1) a **TV-deal floor keyed to division** (`TV_DEAL_BY_TIER` A=4M/B=1.5M/C=600k,
+sliced per round), so a careful Série C club is cash-positive before the gate —
+this attacks the 91% firing; (2) a **per-match win/draw bonus** (40k/12k);
+(3) a **per-position placement prize** (champion 2.5M decaying to 0 by 12th,
+tier-scaled 1.0/0.4/0.15) — the compounding title flywheel; (4) **Copa prize
+money** (per round reached + 1.2M champion bonus), paying what E.3 structured.
+All derived from existing v7 state → **no schema bump**. Numbers are illustrative
+and centralized in `finances.ts`, to be **re-measured + re-tuned by gandula-rl
+(E.6)** — that re-measurement is the immediate next step. Still open below:
+starting-money knob (b.3), the player-controlled build-vs-buy levers
+(b.4–b.7: stadium / fanbase / marketing / sponsorship / momentum), and the
+richer SoFIFA market (E.4.c).
+
 - [ ] **E.4.a — Balance pass / difficulty tiers** · _M, core_
   Decide intent: if greedy-broke-91% is too punishing, loosen per-round accrual
   / starting cash; if intended, keep it but make solvency teachable (E.5).
@@ -71,13 +86,12 @@ squad _means_ (and the money to buy them), not by playing more aggressively.
   home games only) and the only standings-linked money is the step-function
   promotion bonus (500k) / relegation penalty (200k) — nothing rewards results
   _within_ a division. Add money so squad-building compounds:
-  - [ ] **E.4.b.1 — Per-match prize** · _S, core_ — win/draw bonus on top of the
-    gate. Also softens the survival economy (greedy is fired 91%), so it must be
-    re-measured, not assumed (→ E.6).
-  - [ ] **E.4.b.2 — Per-position prize** · _S, core_ — end-of-season payout
-    scaled by final placement (champion ≫ mid-table). The flywheel that can
-    actually break the title ceiling: finish high → more cash → buy stronger
-    (E.4.c) → finish higher.
+  - [x] **E.4.b.1 — Per-match prize** · _S, core_ — **Shipped** (WIN_BONUS 40k /
+    DRAW_BONUS 12k, accrued per round). Re-measure via E.6.
+  - [x] **E.4.b.2 — Per-position prize** · _S, core_ — **Shipped** (placement
+    prize, champion 2.5M decaying to 0 by 12th, tier-scaled, at the boundary).
+    The flywheel that can break the title ceiling: finish high → more cash → buy
+    stronger (E.4.c) → finish higher.
   - [ ] **E.4.b.3 — More starting money** · _S, core_ — raise `STARTING_MONEY`
     (currently 1M). Cheapest knob and the fastest A/B, but a _one-time_ bump: it
     eases early survival / promotion more than the title (it doesn't compound the
