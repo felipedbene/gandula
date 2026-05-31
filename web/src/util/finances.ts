@@ -273,6 +273,68 @@ export function tvIncomeForRound(career: Career, roundIdx: number): number {
   );
 }
 
+// ─── E.4.b.6 — sponsorship (recurring revenue floor) ─────────────────────
+//
+// A passive, recurring income scaled by tier + fanbase + last-season placement.
+// Unlike the gate it isn't gated by home/away or capacity, so it's a floor that
+// directly eases the firing economy. It reads the fanbase substrate (so b.5
+// marketing compounds into it) and rewards sustained success (another flywheel
+// input). Sliced per round like TV. Numbers illustrative + gandula-rl-tunable.
+
+/** Season-total sponsorship floor by tier. Série C (~200k) stacks with the
+ *  600k TV floor to cover much of a baseline wage bill; Série A (1.2M) is a
+ *  meaningful floor but below TV so the gate/prizes still dominate at the top. */
+export const SPONSORSHIP_BASE_BY_TIER: Record<1 | 2 | 3, number> = {
+  1: 1_200_000,
+  2: 500_000,
+  3: 200_000,
+};
+/** Sponsorship per supporter — growing the fanbase (b.5) compounds into the
+ *  floor (a 10k-fanbase C club +40k, a 70k-fanbase A club +280k). */
+export const SPONSORSHIP_FANBASE_COEF = 4;
+/** Last-season placement bonus: BONUS × ((PIVOT − lastPos)/PIVOT) — champion ≫
+ *  mid, ~0 by 10th, negative below (the total is floored at 0). New careers
+ *  (no prior season) get 0. */
+export const SPONSORSHIP_PLACEMENT_BONUS = 600_000;
+export const SPONSORSHIP_PLACEMENT_PIVOT = 10;
+
+/** Total sponsorship income for the current season. Pure — reads the user's
+ *  tier, current fanbase, and last season's finishing position. */
+export function sponsorshipSeasonTotal(career: Career): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const tier = season.divisions[userDivIdx].tier;
+  const last = career.seasons.at(-1);
+  const placementTerm =
+    last === undefined
+      ? 0
+      : SPONSORSHIP_PLACEMENT_BONUS *
+        ((SPONSORSHIP_PLACEMENT_PIVOT - last.userPosition) /
+          SPONSORSHIP_PLACEMENT_PIVOT);
+  return Math.max(
+    0,
+    Math.round(
+      SPONSORSHIP_BASE_BY_TIER[tier] +
+        career.manager.fanbase * SPONSORSHIP_FANBASE_COEF +
+        placementTerm,
+    ),
+  );
+}
+
+/** Sponsorship slice for `roundIdx` — the season total sliced with the same
+ *  fair-rounding as TV/wages, so slices sum to the exact total. Accrues every
+ *  round (a floor, not home/away-gated). */
+export function sponsorshipForRound(career: Career, roundIdx: number): number {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const total = totalRoundsOf(season.divisions[userDivIdx]);
+  if (total <= 0) return 0;
+  const s = sponsorshipSeasonTotal(career);
+  return (
+    Math.round((s * (roundIdx + 1)) / total) - Math.round((s * roundIdx) / total)
+  );
+}
+
 /** Per-match win/draw bonus for the user's match in `roundIdx`: WIN_BONUS on a
  *  win, DRAW_BONUS on a draw, 0 on a loss/bye. */
 export function matchBonusForRound(career: Career, roundIdx: number): number {
@@ -406,14 +468,15 @@ export function salarySliceForRound(career: Career, roundIdx: number): number {
   );
 }
 
-/** Net cash for playing `roundIdx`: home gate (if mandante) + TV slice + the
- *  win/draw bonus, minus the wage slice. Used to move `manager.money` each
- *  round. (Cup prize and the placement prize land elsewhere — on the cup
- *  matchday and at the season boundary respectively.) */
+/** Net cash for playing `roundIdx`: home gate (if mandante) + TV slice +
+ *  sponsorship slice + the win/draw bonus, minus the wage slice. Used to move
+ *  `manager.money` each round. (Cup prize and the placement prize land
+ *  elsewhere — on the cup matchday and at the season boundary respectively.) */
 export function roundCashDelta(career: Career, roundIdx: number): number {
   return (
     homeTicketForRound(career, roundIdx) +
     tvIncomeForRound(career, roundIdx) +
+    sponsorshipForRound(career, roundIdx) +
     matchBonusForRound(career, roundIdx) -
     salarySliceForRound(career, roundIdx)
   );
@@ -430,6 +493,9 @@ export type SeasonFinances = {
   /** Season-total TV money (TV_DEAL_BY_TIER for the user's tier). Banked
    *  per-round during the season. */
   tvRevenue: number;
+  /** Season-total sponsorship (tier + fanbase + last-season placement). Banked
+   *  per-round during the season — a floor, not home/away-gated. */
+  sponsorship: number;
   /** Σ per-match win/draw bonus. Banked per-round during the season. */
   matchBonuses: number;
   salaries: number;
@@ -513,6 +579,10 @@ export function computeSeasonFinances(
   // to exactly this).
   const tvRevenue = TV_DEAL_BY_TIER[userDiv.tier];
 
+  // Sponsorship floor (tier + fanbase + last-season placement), banked per
+  // round like TV.
+  const sponsorship = sponsorshipSeasonTotal(career);
+
   const salaries = team.roster.reduce(
     (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
     0,
@@ -536,6 +606,7 @@ export function computeSeasonFinances(
   const net =
     ticketRevenue +
     tvRevenue +
+    sponsorship +
     matchBonuses -
     salaries +
     cupPrize +
@@ -545,6 +616,7 @@ export function computeSeasonFinances(
   return {
     ticketRevenue,
     tvRevenue,
+    sponsorship,
     matchBonuses,
     salaries,
     cupPrize,

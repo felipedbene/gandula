@@ -1085,6 +1085,11 @@ function SeasonFinale({
             c="phosphor.4"
           />
           <FinanceRow
+            label="Patrocínio"
+            value={`+ $ ${formatMoney(finances.sponsorship)}`}
+            c="phosphor.4"
+          />
+          <FinanceRow
             label="Bônus de vitórias/empates"
             value={`+ $ ${formatMoney(finances.matchBonuses)}`}
             c="phosphor.4"
