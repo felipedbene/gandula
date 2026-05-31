@@ -89,12 +89,19 @@ export const STARTING_MONEY = 1_000_000;
 
 /**
  * Manager-level state that persists across the entire career, separate
- * from per-season divisions/standings. Currently just money; future
- * E.1.e adds firing (which reads money to decide), E.future may add
- * reputation, contract length, etc.
+ * from per-season divisions/standings. Cross-season because all of it
+ * carries forward untouched (or drifts slowly) at the season boundary.
  */
 export type Manager = {
   money: number;
+  /** Seats in the home stadium (E.4.b.4). The player pays to grow this; it
+   *  caps home-gate attendance (`min(demand, capacity)`). Carried forward
+   *  unchanged each season — the accumulated investment. */
+  stadiumCapacity: number;
+  /** Supporters count (E.4.b.4). Drives gate demand (and, in future, marketing
+   *  / sponsorship). Drifts slowly toward a tier+placement target each season;
+   *  first-class state so the RL policy can observe and learn to grow it. */
+  fanbase: number;
 };
 
 /**
@@ -247,7 +254,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 7;
+  schemaVersion: 8;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -292,36 +299,36 @@ async function db(): Promise<IDBPDatabase> {
 // ─── Load / save / clear / migrate (v3) ──────────────────────────────────
 
 /**
- * Result of `loadCareer`. Discriminated with three kinds:
- *   - `loaded`: a current (v6) Career was read directly.
- *   - `migratedV6`: a v6 save (no Copa) was read; the caller initializes the
- *     Copa for the current season (deterministic from the season seed) and
- *     saves the upgraded v7 career. The cup is additive, so unlike the E.2
- *     break this preserves the in-progress career.
- *   - `expandedWorld`: a pre-v6 save was found and discarded because the
- *     world expanded to three tiers (E.2). The caller should start a fresh
- *     3-tier career — there's no in-place migration.
+ * Result of `loadCareer`. Discriminated kinds:
+ *   - `loaded`: a current (v8) Career was read directly.
+ *   - `migratedV7`: a v7 save (no stadium/fanbase) — the caller seeds
+ *     `manager.stadiumCapacity`/`fanbase` from the user's tier and re-saves v8.
+ *   - `migratedV6`: a v6 save (no Copa AND no stadium) — the caller adds the
+ *     Copa, then seeds the stadium fields, re-saving v8 (a v6→v7→v8 cascade).
+ *   - `expandedWorld`: a pre-v6 save was found and discarded because the world
+ *     expanded to three tiers (E.2). The caller starts a fresh career.
  *   - `none`: empty slot.
  *
- * The v6→v7 Copa init lives in the caller (util/copa.initCopaForSeason), not
- * here, so persistence has no runtime dependency on the cup module.
+ * Both additive migrations (Copa, stadium) run in the caller (SeasonView load
+ * effect), so persistence has no runtime dependency on copa / finances.
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV7"; career: Career }
   | { kind: "migratedV6"; career: Career }
   | { kind: "expandedWorld" }
   | { kind: "none" };
 
 /**
  * Read the current career.
- *   - v7 (current): returned as-is.
- *   - v6 (pre-Copa): returned as `migratedV6` — the caller adds the Copa and
- *     re-saves. Additive, so the career is preserved.
- *   - any earlier version (v1–v5): discarded. The E.2 three-tier expansion
- *     is a hard break — a 2-tier / 17-team career can't be inflated into the
- *     60-team / 3-tier world — so the slot is cleared and the caller
- *     auto-starts a fresh career (`kind: "expandedWorld"`).
- *   - empty slot: `kind: "none"`.
+ *   - v8 (current): returned as-is.
+ *   - v7 (pre-stadium): `migratedV7` — the caller adds stadiumCapacity/fanbase
+ *     and re-saves. Additive, career preserved.
+ *   - v6 (pre-Copa): `migratedV6` — the caller adds the Copa AND the stadium
+ *     fields and re-saves v8. Additive.
+ *   - v1–v5: discarded — the E.2 three-tier expansion is a hard break
+ *     (`expandedWorld`).
+ *   - empty slot: `none`.
  */
 export async function loadCareer(): Promise<LoadCareerResult> {
   const conn = await db();
@@ -329,12 +336,16 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 7) {
+  if (candidate.schemaVersion === 8) {
     return { kind: "loaded", career: value as Career };
   }
+  if (candidate.schemaVersion === 7) {
+    // Lacks manager.stadiumCapacity/fanbase; the caller seeds them by tier.
+    return { kind: "migratedV7", career: value as unknown as Career };
+  }
   if (candidate.schemaVersion === 6) {
-    // The raw v6 lacks currentSeason.copa; the caller fills it via
-    // initCopaForSeason and re-saves as v7.
+    // Lacks both currentSeason.copa AND the stadium fields; the caller fills
+    // the Copa (initCopaForSeason) then seeds the stadium, re-saving v8.
     return { kind: "migratedV6", career: value as unknown as Career };
   }
   await conn.delete(STORE, SLOT_KEY);

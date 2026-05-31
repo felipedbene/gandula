@@ -34,10 +34,114 @@ function opponentStrength(career: Career, oppId: number): number {
   return avgStrength(onPitch);
 }
 
-/** Home ticket revenue per opponent-strength point. Tuned so a Série A
- *  home game vs a strong opponent (~65 avg) yields ~65k and a Série B
- *  match vs a typical opponent (~55 avg) yields ~55k. */
-export const TICKET_REVENUE_PER_STRENGTH = 1000;
+// ─── E.4.b.4 — stadium capacity, fanbase & the demand-driven gate ────────
+//
+// The home gate is now `min(demand, capacity) × TICKET_PRICE`, where demand
+// rises with the club's fanbase, its division, and the (evolved) opponent's
+// draw, and capacity caps a sellout. Expanding the stadium only helps once
+// demand exceeds the current seats — the build-vs-buy tension. fanbase is real
+// state that drifts toward a tier+placement target each season. All numbers
+// here are ILLUSTRATIVE and gandula-rl-tunable (E.6); calibrated so a baseline
+// Série A home game still yields ~65k (matching the old strength×1000 gate),
+// while a maxed stadium + grown fanbase in A roughly doubles it.
+
+/** Revenue per attendee. Low because attendance is now in the tens of
+ *  thousands (a 44k baseline-A crowd × 1.5 ≈ 66k, the old gate). */
+export const TICKET_PRICE = 1.5;
+
+/** Starting seats by tier on a fresh career / migration. A bigger than C. */
+export const STARTING_CAPACITY_BY_TIER: Record<1 | 2 | 3, number> = {
+  1: 45_000,
+  2: 25_000,
+  3: 12_000,
+};
+/** Starting fanbase (supporters) by tier. */
+export const STARTING_FANBASE_BY_TIER: Record<1 | 2 | 3, number> = {
+  1: 40_000,
+  2: 22_000,
+  3: 10_000,
+};
+
+/** Demand model coefficients. demand = fanbase × COEF × tierMult × oppDraw. */
+export const DEMAND_FANBASE_COEF = 1.0;
+export const DEMAND_TIER_MULT: Record<1 | 2 | 3, number> = {
+  1: 1.0,
+  2: 0.8,
+  3: 0.65,
+};
+
+/** How a stronger (evolved) opponent draws a bigger crowd. ≈1.0 at a ~55-avg
+ *  opponent, so the demand baseline matches the old gate scale. */
+function opponentDraw(strength: number): number {
+  return 0.45 + strength * 0.01;
+}
+
+/** Stadium expansion: fixed +5k seats per purchase, on a rising cost curve so
+ *  you can't trivially max it, up to a hard cap. */
+export const STADIUM_EXPANSION_STEP = 5_000;
+export const STADIUM_MAX_CAPACITY = 80_000;
+export function expansionCost(currentCapacity: number): number {
+  return 1_500_000 + currentCapacity * 80;
+}
+
+/** Fanbase drift (per season, at the boundary). Each season fanbase moves a
+ *  capped step toward a target set by the (next) tier plus a placement swing —
+ *  finishing high grows it, finishing low (or relegating) shrinks it. */
+export const FANBASE_TARGET_BY_TIER: Record<1 | 2 | 3, number> = {
+  1: 70_000,
+  2: 30_000,
+  3: 12_000,
+};
+export const FANBASE_PLACEMENT_SWING = 15_000;
+export const FANBASE_PLACEMENT_PIVOT = 10; // finish above 10th → grow, below → shrink
+export const FANBASE_MAX_STEP = 4_000; // ~4 seasons to fully grow the base
+
+/** Home-gate revenue for one home match: min(demand, capacity) × price. Shared
+ *  by the per-round and season-total paths so they stay identical (the
+ *  per-round-sums-to-season invariant). */
+function homeGateRevenue(
+  fanbase: number,
+  capacity: number,
+  tier: 1 | 2 | 3,
+  oppStrength: number,
+): number {
+  const demand =
+    fanbase * DEMAND_FANBASE_COEF * DEMAND_TIER_MULT[tier] * opponentDraw(oppStrength);
+  const attendance = Math.min(demand, capacity);
+  return Math.round(attendance * TICKET_PRICE);
+}
+
+/** Seed stadium state for a new career / migrated save from a division tier. */
+export function seedStadiumForTier(tier: 1 | 2 | 3): {
+  stadiumCapacity: number;
+  fanbase: number;
+} {
+  return {
+    stadiumCapacity: STARTING_CAPACITY_BY_TIER[tier],
+    fanbase: STARTING_FANBASE_BY_TIER[tier],
+  };
+}
+
+/**
+ * Fanbase for next season: drift the current value a capped step toward the
+ * target for `tier` (the tier the club will play in next) adjusted by where it
+ * finished (`position`, 1-based). Pure; floored at 0.
+ */
+export function nextFanbase(
+  currentFanbase: number,
+  tier: 1 | 2 | 3,
+  position: number,
+): number {
+  const placementAdj =
+    FANBASE_PLACEMENT_SWING *
+    ((FANBASE_PLACEMENT_PIVOT - position) / FANBASE_PLACEMENT_PIVOT);
+  const target = FANBASE_TARGET_BY_TIER[tier] + placementAdj;
+  const delta = Math.max(
+    -FANBASE_MAX_STEP,
+    Math.min(FANBASE_MAX_STEP, target - currentFanbase),
+  );
+  return Math.max(0, Math.round(currentFanbase + delta));
+}
 
 /** Per-player season salary per strength point of that player. With 16
  *  rostered players × ~50 avg = ~400k baseline season salary. Stronger
@@ -233,7 +337,12 @@ export function homeTicketForRound(career: Career, roundIdx: number): number {
     if (fixtures[i].round !== roundIdx) continue;
     const m = matches[i];
     if (m.home === career.controlledTeamId) {
-      return opponentStrength(career, m.away) * TICKET_REVENUE_PER_STRENGTH;
+      return homeGateRevenue(
+        career.manager.fanbase,
+        career.manager.stadiumCapacity,
+        userDiv.tier,
+        opponentStrength(career, m.away),
+      );
     }
     if (m.away === career.controlledTeamId) return 0; // away game
   }
@@ -350,8 +459,12 @@ export function computeSeasonFinances(
     const isHome = m.home === career.controlledTeamId;
     const isAway = m.away === career.controlledTeamId;
     if (isHome) {
-      ticketRevenue +=
-        opponentStrength(career, m.away) * TICKET_REVENUE_PER_STRENGTH;
+      ticketRevenue += homeGateRevenue(
+        career.manager.fanbase,
+        career.manager.stadiumCapacity,
+        userDiv.tier,
+        opponentStrength(career, m.away),
+      );
     }
     if (isHome || isAway) {
       const gf = isHome ? m.result.home_goals : m.result.away_goals;

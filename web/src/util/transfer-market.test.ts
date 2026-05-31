@@ -12,12 +12,17 @@ import {
   POOL_SIZE,
   SELL_MULTIPLIER,
   canBuy,
+  canExpand,
   canSell,
   generateFreeAgents,
   playerOverall,
   playerPrice,
   scoutReport,
 } from "./transfer-market";
+import {
+  STADIUM_MAX_CAPACITY,
+  expansionCost,
+} from "./finances";
 import {
   FIRST_YEAR,
   STARTING_MONEY,
@@ -81,7 +86,7 @@ function makeCareer(opts: {
     makePlayer(1000 + i, "MID"),
   );
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: 1,
@@ -112,7 +117,7 @@ function makeCareer(opts: {
         : {}),
       transfers: [],
     },
-    manager: { money: opts.money ?? STARTING_MONEY },
+    manager: { money: opts.money ?? STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
     userRoster: roster,
   };
 }
@@ -342,5 +347,32 @@ describe("scoutReport", () => {
     expect(r.positionAvg).toBe(0);
     expect(r.delta).toBe(0);
     expect(r.rank).toBe(1);
+  });
+});
+
+describe("canExpand (E.4.b.4 stadium)", () => {
+  it("allows expansion with enough money below the cap", () => {
+    const career = makeCareer({ rosterSize: 16, money: 5_000_000 });
+    expect(canExpand(career).ok).toBe(true);
+  });
+
+  it("blocks when money is below the expansion cost", () => {
+    const career = makeCareer({ rosterSize: 16, money: 1_000 });
+    const r = canExpand(career);
+    expect(r.ok).toBe(false);
+  });
+
+  it("blocks at the capacity cap", () => {
+    const career = makeCareer({ rosterSize: 16, money: 1_000_000_000 });
+    const maxed: Career = {
+      ...career,
+      manager: { ...career.manager, stadiumCapacity: STADIUM_MAX_CAPACITY },
+    };
+    const r = canExpand(maxed);
+    expect(r.ok).toBe(false);
+  });
+
+  it("expansionCost rises with capacity", () => {
+    expect(expansionCost(30_000)).toBeGreaterThan(expansionCost(10_000));
   });
 });

@@ -17,7 +17,7 @@ import {
 } from "../persistence";
 import { userOutcomeFromPRResult, type PRResult } from "./promotion";
 import { buildCopa, cupResultFor } from "./copa";
-import { computeSeasonFinances, type SeasonFinances } from "./finances";
+import { computeSeasonFinances, nextFanbase, type SeasonFinances } from "./finances";
 import { evolveTeam, evolveRoster } from "./regen";
 import { userTeam } from "./roster";
 
@@ -44,6 +44,9 @@ export type AdvanceResult = {
    *  it's now evolved, not merely aged.) The caller persists it as
    *  `Career.userRoster`; it's also what next season was simulated against. */
   agedUserRoster: Player[];
+  /** Fanbase for next season after the boundary drift (E.4.b.4). The caller
+   *  writes it to `manager.fanbase`. */
+  nextFanbase: number;
 };
 
 /**
@@ -109,7 +112,32 @@ export function advanceCareer(
     career.currentSeason,
     prResult,
   );
-  return { history, nextSeason, finances, agedUserRoster };
+
+  // E.4.b.4: drift the fanbase toward the target for NEXT season's tier
+  // (promotion pulls toward the higher target immediately), adjusted by where
+  // the club just finished. Capacity carries forward untouched (caller spreads
+  // the existing manager).
+  const finishedTier = history.userDivision.tier;
+  const nextTier = (
+    userOutcome === "promoted"
+      ? finishedTier - 1
+      : userOutcome === "relegated"
+        ? finishedTier + 1
+        : finishedTier
+  ) as 1 | 2 | 3;
+  const nextFanbaseValue = nextFanbase(
+    career.manager.fanbase,
+    nextTier,
+    history.userPosition,
+  );
+
+  return {
+    history,
+    nextSeason,
+    finances,
+    agedUserRoster,
+    nextFanbase: nextFanbaseValue,
+  };
 }
 
 /**

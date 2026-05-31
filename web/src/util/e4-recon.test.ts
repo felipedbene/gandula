@@ -42,7 +42,7 @@ function newCareer(seed: bigint): Career {
   const starter = pickStarterTeam(c);
   const ss = seed ^ BigInt(FIRST_YEAR);
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,
@@ -58,7 +58,7 @@ function newCareer(seed: bigint): Career {
       transfers: [],
       copa: freshCopa(),
     },
-    manager: { money: STARTING_MONEY },
+    manager: { money: STARTING_MONEY, stadiumCapacity: 12_000, fanbase: 10_000 },
     userRoster: [],
   };
 }
@@ -104,5 +104,22 @@ describe("E.4 season money reconciliation", () => {
     );
     // Cup actually ran and its season-total reconciles with the per-matchday pay.
     expect(copa.championId).toBeDefined();
+  });
+
+  it("a bigger stadium raises the season gate (E.4.b.4 build-vs-buy payoff)", () => {
+    const base = newCareer(1998n);
+    // Force high fanbase so demand exceeds even a large stadium → capacity bites
+    // and expanding genuinely adds seats sold.
+    const small = {
+      ...base,
+      manager: { ...base.manager, fanbase: 80_000, stadiumCapacity: 12_000 },
+    };
+    const big = {
+      ...small,
+      manager: { ...small.manager, stadiumCapacity: 60_000 },
+    };
+    const gateSmall = computeSeasonFinances(small, "stayed").ticketRevenue;
+    const gateBig = computeSeasonFinances(big, "stayed").ticketRevenue;
+    expect(gateBig).toBeGreaterThan(gateSmall);
   });
 });
