@@ -183,13 +183,21 @@ richer SoFIFA market (E.4.c).
 
 ## E.6 — Tooling
 
-- [ ] **E.6 — RL eval as a balance-regression guard** · _S, core + CI_
-  Any change to the finances module re-runs greedy + the trained agent over N
-  careers and flags if firing or title rate moves past a threshold. The recent
-  economy change swung greedy from 58% → 91% fired — exactly the regression this
-  would catch. **Track `fanbase` as a reported metric** (peak/final) once it
-  exists, so the commercial levers (E.4.b.4–b.7) can be shown to actually
-  compound rather than just adding UI.
+- [~] **E.6 — RL eval as a balance-regression guard** · _S, core + CI_
+  **Measured once (manual).** The gandula-rl harness was ported to the v9 /
+  3-tier / full-economy game (3 divisions, Copa, stadium/fanbase/marketing/
+  sponsorship/form on the 115-dim obs) and re-run. **Finding:** the E.4 economy
+  decisively broke the old walls — greedy went from **91% fired / 4.7% title** to
+  **0% fired / ~23% title** (from the harder Série-C start, half the horizon). A
+  floor re-tune (TV/sponsorship/placement cut ~30–50%) barely moved it — greedy
+  income is dominated by matchday (stadium×fanbase) + match/Copa bonuses + the
+  cheap rare-elite market, not the structural floors. **Decision: accept the
+  generous, no-bankruptcy economy as the intended design** (zero firings, title
+  reachable in ~5–10 seasons) rather than chase solvency-as-skill, which would
+  need a deeper matchday/bonus rebalance. Numbers + method in
+  [gandula-rl/RESULTS.md](https://github.com/felipedbene/gandula-rl). _Still open:_
+  wiring this as an automatic **CI regression guard** (re-run on finances
+  changes, flag firing/title drift) and reporting peak/final `fanbase`.
 
 ## E.3.c — Self-play search (open)
 

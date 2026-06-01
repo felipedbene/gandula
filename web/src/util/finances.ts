@@ -268,9 +268,12 @@ export function isManagerFired(balance: number): boolean {
  *  Série A (4M) ≫ a strong-A bill, and that headroom funds compounding buys.
  *  The ~6.7 : 2.5 : 1 ratio makes climbing the pyramid the dominant lever. */
 export const TV_DEAL_BY_TIER: Record<1 | 2 | 3, number> = {
-  1: 4_000_000,
-  2: 1_500_000,
-  3: 600_000,
+  // E.6 re-tune (down): the first pass made greedy unfireable (0% fired). These
+  // floors no longer fully cover a wage bill on their own, so solvency is a
+  // skill again — a careful manager survives, a careless one can still go broke.
+  1: 3_000_000,
+  2: 900_000,
+  3: 300_000,
 };
 
 /** Per-match performance bonus. ~one home gate per win; a ~27-win title run is
@@ -283,7 +286,7 @@ export const DRAW_BONUS = 12_000;
  *  to 0 by `PLACEMENT_CUTOFF`. Survival alone (≥ cutoff) earns nothing — you
  *  must compete to capitalize. Tier-scaled below so each title up the pyramid
  *  is worth dramatically more (the climb incentive). */
-export const PLACEMENT_PRIZE_BASE = 2_500_000;
+export const PLACEMENT_PRIZE_BASE = 1_500_000; // E.6 re-tune: 2.5M → 1.5M (less windfall)
 export const PLACEMENT_CUTOFF = 12;
 export const PLACEMENT_TIER_MULTIPLIER: Record<1 | 2 | 3, number> = {
   1: 1.0,
@@ -334,13 +337,16 @@ export function tvIncomeForRound(career: Career, roundIdx: number): number {
  *  600k TV floor to cover much of a baseline wage bill; Série A (1.2M) is a
  *  meaningful floor but below TV so the gate/prizes still dominate at the top. */
 export const SPONSORSHIP_BASE_BY_TIER: Record<1 | 2 | 3, number> = {
-  1: 1_200_000,
-  2: 500_000,
-  3: 200_000,
+  // E.6 re-tune (down): trimmed alongside the TV floor so the two floors
+  // together don't make a careless manager unfireable.
+  1: 800_000,
+  2: 300_000,
+  3: 100_000,
 };
 /** Sponsorship per supporter — growing the fanbase (b.5) compounds into the
- *  floor (a 10k-fanbase C club +40k, a 70k-fanbase A club +280k). */
-export const SPONSORSHIP_FANBASE_COEF = 4;
+ *  floor (a 10k-fanbase C club +25k, a 70k-fanbase A club +175k). E.6 coef
+ *  lowered 4 → 2.5 so the fanbase flywheel is rewarding but not a windfall. */
+export const SPONSORSHIP_FANBASE_COEF = 2.5;
 /** Last-season placement bonus: BONUS × ((PIVOT − lastPos)/PIVOT) — champion ≫
  *  mid, ~0 by 10th, negative below (the total is floored at 0). New careers
  *  (no prior season) get 0. */
