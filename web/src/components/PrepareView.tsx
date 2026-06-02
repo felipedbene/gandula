@@ -15,7 +15,12 @@ import {
 } from "../persistence";
 import { teamById } from "../teams";
 import { userTeam } from "../util/roster";
-import { resimulateFromRound } from "../util/resimulate";
+import {
+  resimulateFromRound,
+  applyUserTactics,
+  liveOpponentTeam,
+} from "../util/resimulate";
+import { project_match_js } from "../wasm/gandula_wasm.js";
 import {
   COPA_ROUND_AT_LEAGUE_ROUND,
   userTieInRound,
@@ -25,6 +30,7 @@ import { formatMoney } from "../util/money";
 import { Anchor, Button, Collapse, Group, Stack, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import { TeamCrest } from "./ui/TeamCrest";
+import { ProjectionIndicators } from "./ui/ProjectionIndicators";
 import FormationPitch from "./ui/FormationPitch";
 import TacticsForm, {
   type TacticsFormState,
@@ -135,6 +141,45 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
 
   const isBye = userFixture === null;
 
+  // Live pre-match projection: expected possession + per-side pressure for the
+  // CURRENT tactics, recomputed whenever the form/lineup changes. Pure
+  // (project_match_js is RNG-free), so it's cheap to recompute inline. The
+  // opponent is composed exactly as it'll be simulated (liveOpponentTeam), so
+  // the indicators reflect the real matchup. Oriented to the user's view.
+  const projection = useMemo(() => {
+    if (!userFixture || !baseTeam) return null;
+    const m = userFixture.match;
+    const isUserHome = m.home === career.controlledTeamId;
+    const opponentId = isUserHome ? m.away : m.home;
+    try {
+      const { formation, tactics } = tacticsFormStateToOverride(current);
+      const editedUser = applyUserTactics(baseTeam, {
+        formation,
+        tactics,
+        starting_xi: currentLineup.starting_xi,
+        bench: currentLineup.bench,
+      });
+      const opponent = liveOpponentTeam(career, opponentId);
+      const home = isUserHome ? editedUser : opponent;
+      const away = isUserHome ? opponent : editedUser;
+      const p = project_match_js(home, away) as {
+        home_possession: number;
+        home_pressure: number;
+        away_pressure: number;
+      };
+      const oppName = teamById(opponentId)?.name ?? `Time ${opponentId}`;
+      return {
+        userPossession: isUserHome ? p.home_possession : 1 - p.home_possession,
+        userPressure: isUserHome ? p.home_pressure : p.away_pressure,
+        oppPressure: isUserHome ? p.away_pressure : p.home_pressure,
+        userName: baseTeam.name,
+        oppName,
+      };
+    } catch {
+      return null;
+    }
+  }, [userFixture, baseTeam, career, current, currentLineup]);
+
   function play() {
     if (!baseTeam) {
       setError("Time controlado não encontrado.");
@@ -209,6 +254,15 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
         >
           <Stack gap="md">
             <TacticsForm state={current} onChange={setCurrent} />
+            {projection && (
+              <ProjectionIndicators
+                userPossession={projection.userPossession}
+                userPressure={projection.userPressure}
+                oppPressure={projection.oppPressure}
+                userName={projection.userName}
+                oppName={projection.oppName}
+              />
+            )}
             {baseTeam && (
               <>
                 <LineupEditor

@@ -386,6 +386,41 @@ pub(crate) fn current_strength(state: &MatchState, side: Side) -> TeamStrength {
     )
 }
 
+/// Kickoff-state strength for a team standing alone (no live `MatchState`): the
+/// starting XI at FULL stamina, with formation/mentality from the team and the
+/// opponent's pressing disrupting the midfield. This is the pre-match analogue
+/// of [`current_strength`] — same `compose` over the same per-player stats, just
+/// sourcing the XI from `team.starting_xi` and stamina from each player's base
+/// attribute (exactly what `MatchState::new` seeds at minute 0). Used by the
+/// RNG-free pre-match projection.
+pub(crate) fn kickoff_strength(
+    team: &Team,
+    opp_pressing: crate::domain::Pressing,
+) -> TeamStrength {
+    let mut effective: Vec<(Position, f64, f64, f64)> = Vec::with_capacity(11);
+    for id in team.starting_xi.iter() {
+        let Some(player) = team.lookup(*id) else {
+            continue;
+        };
+        let eff = stamina_effectiveness(player.attributes.stamina as f64);
+        let (a, m, d) = raw_player_stats(
+            player.attributes.finishing,
+            player.attributes.technique,
+            player.attributes.pace,
+            player.attributes.passing,
+            player.attributes.defending,
+            player.attributes.stamina,
+        );
+        effective.push((player.position, a * eff, m * eff, d * eff));
+    }
+    strength::compose(
+        &effective,
+        team.formation,
+        team.tactics.mentality,
+        pressing_disrupt(opp_pressing),
+    )
+}
+
 // ─── Picking players ────────────────────────────────────────────────────────
 fn pick_index_by_position(
     team: &Team,

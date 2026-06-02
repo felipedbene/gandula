@@ -6,7 +6,7 @@
 
 use gandula_core::{
     Attributes, Formation, Mentality, Player, PlayerId, Position, Pressing, Tactics, Team, TeamId,
-    Tempo, Width, project_second_half, simulate_first_half,
+    Tempo, Width, project_match, project_second_half, simulate_first_half,
 };
 
 /// Build an 11-player team (no bench needed — projection reads the XI) with a
@@ -152,5 +152,59 @@ fn possession_complements_between_sides() {
         "stronger, more-attacking home should out-pressure away: {} vs {}",
         p.home_pressure,
         p.away_pressure
+    );
+}
+
+// ─── Pre-match projection (project_match, kickoff state) ─────────────────────
+
+#[test]
+fn prematch_mirrored_teams_split_possession_evenly() {
+    let home = team("H", 1, 70, Mentality::Balanced, 70);
+    let away = team("A", 2, 70, Mentality::Balanced, 70);
+    let p = project_match(&home, &away).expect("project_match");
+    assert!(
+        (p.home_possession - 0.5).abs() < 1e-9,
+        "mirrored kickoff teams should split possession 50/50, got {}",
+        p.home_possession
+    );
+    assert!(
+        (p.home_pressure - p.away_pressure).abs() < 1e-9,
+        "mirrored kickoff teams should have equal pressure, got {} vs {}",
+        p.home_pressure,
+        p.away_pressure
+    );
+    assert!(p.home_possession >= 0.10 && p.home_possession <= 0.90);
+    assert!(p.home_pressure >= 0.0 && p.away_pressure >= 0.0);
+}
+
+#[test]
+fn prematch_more_attacking_raises_home_pressure() {
+    let away = team("A", 2, 70, Mentality::Balanced, 70);
+    let p_def = project_match(&team("H", 1, 70, Mentality::Defensive, 70), &away).unwrap();
+    let p_bal = project_match(&team("H", 1, 70, Mentality::Balanced, 70), &away).unwrap();
+    let p_att = project_match(&team("H", 1, 70, Mentality::Attacking, 70), &away).unwrap();
+    let p_vatt = project_match(&team("H", 1, 70, Mentality::VeryAttacking, 70), &away).unwrap();
+    assert!(
+        p_def.home_pressure < p_bal.home_pressure
+            && p_bal.home_pressure < p_att.home_pressure
+            && p_att.home_pressure < p_vatt.home_pressure,
+        "pre-match home_pressure must rise with attacking intent: {} {} {} {}",
+        p_def.home_pressure,
+        p_bal.home_pressure,
+        p_att.home_pressure,
+        p_vatt.home_pressure
+    );
+}
+
+#[test]
+fn prematch_stronger_team_holds_more_possession() {
+    let away = team("A", 2, 70, Mentality::Balanced, 70);
+    let weak = project_match(&team("H", 1, 70, Mentality::Balanced, 50), &away).unwrap();
+    let strong = project_match(&team("H", 1, 70, Mentality::Balanced, 95), &away).unwrap();
+    assert!(
+        strong.home_possession > weak.home_possession,
+        "stronger midfield should raise pre-match possession: {} vs {}",
+        weak.home_possession,
+        strong.home_possession
     );
 }

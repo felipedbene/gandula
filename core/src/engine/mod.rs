@@ -8,7 +8,7 @@ use crate::error::GandulaError;
 use crate::rng::MatchRng;
 
 use strength::{event_prob, possession_home, shot_prob};
-use tick::{MatchState, current_strength};
+use tick::{MatchState, current_strength, kickoff_strength};
 
 pub use tick::{HalfTimeSnapshot, PendingPenalty};
 
@@ -162,6 +162,45 @@ pub fn project_second_half(
         (1.0 - home_possession) * event_prob(away.tactics.tempo) * shot_prob(&away_str, &home_str);
 
     Ok(SecondHalfProjection {
+        home_possession,
+        home_pressure,
+        away_pressure,
+    })
+}
+
+/// Analytic, RNG-free projection of a match from the KICKOFF state — the
+/// pre-match analogue of [`project_second_half`], with no snapshot needed. Reads
+/// each side's starting XI at full stamina plus its formation/tactics; never
+/// simulates a minute or scores a goal. Suitable for recomputing live as the
+/// user edits tactics in pre-match prep.
+///
+/// Built from the SAME `possession_home` / `event_prob` / `shot_prob` helpers the
+/// live tick samples against (over `kickoff_strength` instead of the mid-match
+/// strength), so the projection can't drift from the engine.
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct MatchProjection {
+    /// Expected home possession share, in `[POSSESSION_MIN, POSSESSION_MAX]`.
+    pub home_possession: f64,
+    /// Expected home shots per minute (≥ 0).
+    pub home_pressure: f64,
+    /// Expected away shots per minute (≥ 0).
+    pub away_pressure: f64,
+}
+
+pub fn project_match(home: &Team, away: &Team) -> Result<MatchProjection, GandulaError> {
+    home.validate()?;
+    away.validate()?;
+
+    let home_str = kickoff_strength(home, away.tactics.pressing);
+    let away_str = kickoff_strength(away, home.tactics.pressing);
+
+    let home_possession = possession_home(&home_str, &away_str);
+    let home_pressure =
+        home_possession * event_prob(home.tactics.tempo) * shot_prob(&home_str, &away_str);
+    let away_pressure =
+        (1.0 - home_possession) * event_prob(away.tactics.tempo) * shot_prob(&away_str, &home_str);
+
+    Ok(MatchProjection {
         home_possession,
         home_pressure,
         away_pressure,

@@ -6,8 +6,8 @@
 //! team files).
 
 use gandula_core::{
-    HalfTimeSnapshot, League, Team, match_seed, project_second_half, simulate, simulate_first_half,
-    simulate_second_half, simulate_season,
+    HalfTimeSnapshot, League, Team, match_seed, project_match, project_second_half, simulate,
+    simulate_first_half, simulate_second_half, simulate_season,
 };
 use serde::Serialize;
 use serde_wasm_bindgen::Serializer;
@@ -88,6 +88,20 @@ pub fn project_second_half_js(
         .map_err(|e| JsError::new(&e.to_string()))?;
     proj.serialize(&bigint_serializer())
         .map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Analytic, RNG-free projection of a match from kickoff — expected possession +
+/// per-side pressure, no goals computed. `home`/`away` carry the (possibly
+/// edited) tactics to project, so JS can recompute it live in pre-match prep as
+/// the user changes tactics. Output is all f64 (no bigint).
+#[wasm_bindgen]
+pub fn project_match_js(home: JsValue, away: JsValue) -> Result<JsValue, JsError> {
+    let home: Team = serde_wasm_bindgen::from_value(home)
+        .map_err(|e| JsError::new(&format!("home: {e}")))?;
+    let away: Team = serde_wasm_bindgen::from_value(away)
+        .map_err(|e| JsError::new(&format!("away: {e}")))?;
+    let proj = project_match(&home, &away).map_err(|e| JsError::new(&e.to_string()))?;
+    serde_wasm_bindgen::to_value(&proj).map_err(|e| JsError::new(&e.to_string()))
 }
 
 /// Run a full double round-robin between the given teams. `teams` must be an
