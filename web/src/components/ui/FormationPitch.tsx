@@ -4,7 +4,7 @@ import { Box, Stack, Text } from "@mantine/core";
 import type { Player, Position, Team } from "../../types";
 import { playerOverall } from "../../util/transfer-market";
 import type { LineupState } from "../LineupEditor";
-import { applySwap, swapFromDrop } from "../../util/lineup";
+import { applySwap, swapFromDrop, formationRows } from "../../util/lineup";
 
 /**
  * A responsive portrait football pitch that renders a starting XI by grouping
@@ -25,14 +25,7 @@ import { applySwap, swapFromDrop } from "../../util/lineup";
  * endpoint is the outgoing player, the other is the incoming one.
  */
 
-const BANDS: { pos: Position; label: string }[] = [
-  { pos: "FWD", label: "ATA" },
-  { pos: "MID", label: "MEI" },
-  { pos: "DEF", label: "DEF" },
-  { pos: "GK", label: "GOL" },
-];
-
-// Two-tone dot colours per band so positions read at a glance.
+// Two-tone dot colours per position so they read at a glance.
 const BAND_COLOR: Record<Position, string> = {
   FWD: "var(--mantine-color-accent-5)",
   MID: "var(--mantine-color-ink-3)",
@@ -148,10 +141,15 @@ function PlayerDot({
 export default function FormationPitch({
   team,
   state,
+  formation,
   onChange,
 }: {
   team: Team;
   state: LineupState;
+  /** Formation that shapes the pitch rows. Defaults to the team's own
+   *  formation; the lineup editor passes the live (being-edited) one so the
+   *  board restructures as the user changes the formation dropdown. */
+  formation?: string;
   /** When provided, the pitch is interactive (tap or drag to swap). Omit for a
    *  read-only view (e.g. the opponent preview). */
   onChange?: (next: LineupState) => void;
@@ -179,13 +177,15 @@ export default function FormationPitch({
   for (const p of team.roster) playerById.set(p.id, p);
   const xiSet = new Set(state.starting_xi);
 
-  // Group the XI ids into position bands, preserving array order within each.
-  const bands = BANDS.map((b) => ({
-    ...b,
-    ids: state.starting_xi.filter(
-      (id) => playerById.get(id)?.position === b.pos,
-    ),
-  }));
+  // Lay the XI out in the chosen formation's lines (top→bottom, FWD..GK). Falls
+  // back to the team's own formation for the read-only opponent preview. Empty
+  // rows are dropped so the vertical spacing stays even.
+  const shape = formation ?? team.formation;
+  const rows = formationRows(
+    shape,
+    state.starting_xi,
+    (id) => playerById.get(id)?.position,
+  ).filter((r) => r.length > 0);
 
   /** Same-position candidates not already in the XI — the tap-swap menu. */
   function candidatesFor(playerId: number): Player[] {
@@ -325,9 +325,9 @@ export default function FormationPitch({
       >
         {/* Pitch markings (decorative). */}
         <PitchMarkings />
-        {bands.map((band) => (
+        {rows.map((rowIds, rowIdx) => (
           <Box
-            key={band.pos}
+            key={rowIdx}
             style={{
               position: "relative",
               zIndex: 1,
@@ -337,18 +337,16 @@ export default function FormationPitch({
               gap: 4,
             }}
           >
-            {band.ids.length === 0 ? null : (
-              band.ids.map((id) => (
-                <PlayerDot
-                  key={id}
-                  player={playerById.get(id)}
-                  selected={selected === id}
-                  dropTarget={dropId === id}
-                  dragging={dragging && dragId === id}
-                  handlers={handlersFor(id)}
-                />
-              ))
-            )}
+            {rowIds.map((id) => (
+              <PlayerDot
+                key={id}
+                player={playerById.get(id)}
+                selected={selected === id}
+                dropTarget={dropId === id}
+                dragging={dragging && dragId === id}
+                handlers={handlersFor(id)}
+              />
+            ))}
           </Box>
         ))}
       </Box>

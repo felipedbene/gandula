@@ -60,6 +60,70 @@ export function applySwap(
 }
 
 /**
+ * Outfield line counts per formation, ordered FRONT→BACK (forwards first,
+ * defenders last). Keyed by the engine's `Formation` tag (string-keyed to keep
+ * this util free of the domain enum import). Each sums to 10 (the GK is the
+ * implicit 11th, rendered on its own line). Mirrors the four formations the
+ * tactics form offers.
+ */
+export const FORMATION_LINES: Record<string, number[]> = {
+  F442: [2, 4, 4],
+  F433: [3, 3, 4],
+  F352: [2, 5, 3],
+  F4231: [1, 3, 2, 4],
+};
+
+// Front→back ordering of the coarse positions, so a position-sorted outfield
+// pool fills the formation's lines forwards-first.
+const POS_RANK: Record<string, number> = { FWD: 0, MID: 1, DEF: 2, GK: 3 };
+
+/**
+ * Arrange a starting XI into the chosen formation's lines for the pitch board.
+ * Returns rows TOP→BOTTOM (forwards first … defenders … then the GK row last),
+ * each row a list of player ids.
+ *
+ * The XI carries only coarse positions (GK/DEF/MID/FWD) with no stored slot, so
+ * outfielders are sorted forwards→defenders and filled greedily into the
+ * formation's line template: when the XI composition matches the formation it
+ * lands perfectly; when it doesn't, a spare player sits one line further
+ * forward and stays its true position colour — honest, not hidden. Any leftover
+ * (e.g. an XI with no template / odd composition) spills into the last outfield
+ * line so all 11 always render. Unknown formation → fall back to one line per
+ * position band (the old layout).
+ */
+export function formationRows(
+  formation: string,
+  startingXi: number[],
+  positionOf: (id: number) => string | undefined,
+): number[][] {
+  const gk = startingXi.filter((id) => positionOf(id) === "GK");
+  const outfield = startingXi.filter((id) => positionOf(id) !== "GK");
+  const template = FORMATION_LINES[formation];
+  const rows: number[][] = [];
+
+  if (template) {
+    const sorted = [...outfield].sort(
+      (a, b) => (POS_RANK[positionOf(a) ?? "GK"] ?? 9) - (POS_RANK[positionOf(b) ?? "GK"] ?? 9),
+    );
+    let i = 0;
+    for (const size of template) {
+      rows.push(sorted.slice(i, i + size));
+      i += size;
+    }
+    if (i < sorted.length && rows.length > 0) {
+      rows[rows.length - 1] = rows[rows.length - 1].concat(sorted.slice(i));
+    }
+  } else {
+    for (const pos of ["FWD", "MID", "DEF"]) {
+      rows.push(outfield.filter((id) => positionOf(id) === pos));
+    }
+  }
+
+  rows.push(gk); // GK on its own line at the back
+  return rows;
+}
+
+/**
  * Resolve a drag-and-drop gesture (source dot → target dot) into the resulting
  * lineup, or `null` if the drop isn't allowed. A drop is valid when both dots
  * share a position AND exactly one endpoint is in the XI — the XI endpoint is

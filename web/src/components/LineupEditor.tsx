@@ -32,6 +32,9 @@ export function lineupStateEquals(a: LineupState, b: LineupState): boolean {
 type LineupEditorProps = {
   team: Team;
   state: LineupState;
+  /** Live formation (being edited) — passed to the pitch so its rows restructure
+   *  as the user changes the formation dropdown. */
+  formation?: string;
   onChange: (next: LineupState) => void;
 };
 
@@ -44,7 +47,7 @@ type LineupEditorProps = {
  * State ownership: parent owns LineupState; this view is pure
  * presentational (same pattern as TacticsForm).
  */
-export default function LineupEditor({ team, state, onChange }: LineupEditorProps) {
+export default function LineupEditor({ team, state, formation, onChange }: LineupEditorProps) {
   const [expandedSlot, setExpandedSlot] = useState<number | null>(null);
 
   // Look up players by id — every slot row needs at least one lookup.
@@ -85,7 +88,7 @@ export default function LineupEditor({ team, state, onChange }: LineupEditorProp
     <Stack gap="xs">
       {/* Visual pitch — the primary editor; tapping a dot swaps via the same
           state/onChange as the list below, so they stay in sync. */}
-      <FormationPitch team={team} state={state} onChange={onChange} />
+      <FormationPitch team={team} state={state} formation={formation} onChange={onChange} />
 
       {gkCount === 0 && (
         <Text c="red.5" size="sm">
