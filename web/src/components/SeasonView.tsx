@@ -63,6 +63,7 @@ import {
   Text,
 } from "@mantine/core";
 import { Panel } from "./ui/Panel";
+import { TeamCrest } from "./ui/TeamCrest";
 import RevealRound from "./RevealRound";
 import CopaView from "./CopaView";
 import TacticsView from "./TacticsView";
@@ -1531,6 +1532,7 @@ function UserTeamSummary({
       >
         {idx + 1}º
       </Text>
+      <TeamCrest name={name} size={40} radius={8} />
       <Box style={{ flex: 1, minWidth: 0 }}>
         <Group gap="xs" align="center" wrap="nowrap">
           <Badge variant="filled" color="accent" radius="sm" size="sm">
@@ -1616,12 +1618,15 @@ function StandingsTable({
                     c={isUser ? "accent.3" : isLeader ? "accent.3" : undefined}
                     fw={isUser || isLeader ? 700 : undefined}
                   >
-                    {isUser && (
-                      <Text span c="accent.4" fw={700} mr={4}>
-                        ▸
-                      </Text>
-                    )}
-                    {teamName}
+                    <Group gap={8} wrap="nowrap" align="center">
+                      {isUser && (
+                        <Text span c="accent.4" fw={700}>
+                          ▸
+                        </Text>
+                      )}
+                      <TeamCrest name={teamName} size={20} radius={5} />
+                      <span>{teamName}</span>
+                    </Group>
                   </Table.Td>
                   <Table.Td ta="right">{s.played}</Table.Td>
                   <Table.Td ta="right" visibleFrom="sm">{s.won}</Table.Td>

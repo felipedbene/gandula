@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Badge, Card, Group, Text } from "@mantine/core";
+import { Badge, Card, Group, Stack, Text } from "@mantine/core";
 import { teamById } from "../teams";
+import { TeamCrest } from "./ui/TeamCrest";
 import type { Match, MatchEvent } from "../types";
 import { eventKindName } from "../types";
 
@@ -122,32 +123,71 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   const runningAway = visible.filter(
     (e) => eventKindName(e.kind) === "Goal" && e.side === "Away",
   ).length;
+  // Drive the scoreboard styling off who's ahead so the two goal counts read
+  // as distinct states rather than an identical, flat "1 x 0".
+  const homeLeading = runningHome > runningAway;
+  const awayLeading = runningAway > runningHome;
 
   return (
     <Card withBorder radius="md" padding={0}>
-      <Group
-        gap="md"
+      <Stack
+        gap={6}
         p="md"
-        wrap="nowrap"
         style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
       >
-        <Text fw={700} ta="right" style={{ flex: 1 }}>
-          {home.toUpperCase()}
-        </Text>
-        <Text
-          fw={800}
-          fz="xl"
-          style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}
-        >
-          {runningHome} <Text span c="dimmed">x</Text> {runningAway}
-        </Text>
-        <Text fw={700} ta="left" style={{ flex: 1 }}>
-          {away.toUpperCase()}
-        </Text>
-        <Badge variant="outline" color="accent" radius="xl">
-          {clockMinute}'
-        </Badge>
-      </Group>
+        <Group gap="sm" wrap="nowrap" align="center">
+          <Stack gap={6} align="center" style={{ flex: 1, minWidth: 0 }}>
+            <TeamCrest name={home} size={36} radius={8} />
+            <Text
+              fw={homeLeading ? 800 : 600}
+              c={homeLeading ? undefined : "dimmed"}
+              ta="center"
+              size="sm"
+              lineClamp={2}
+            >
+              {home}
+            </Text>
+          </Stack>
+          <Group gap={6} wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
+            <Text
+              fw={800}
+              fz={32}
+              c={homeLeading ? "accent.4" : awayLeading ? "dimmed" : undefined}
+              style={{ fontVariantNumeric: "tabular-nums", lineHeight: 1 }}
+            >
+              {runningHome}
+            </Text>
+            <Text span c="dimmed" fz="sm">
+              –
+            </Text>
+            <Text
+              fw={800}
+              fz={32}
+              c={awayLeading ? "accent.4" : homeLeading ? "dimmed" : undefined}
+              style={{ fontVariantNumeric: "tabular-nums", lineHeight: 1 }}
+            >
+              {runningAway}
+            </Text>
+          </Group>
+          <Stack gap={6} align="center" style={{ flex: 1, minWidth: 0 }}>
+            <TeamCrest name={away} size={36} radius={8} />
+            <Text
+              fw={awayLeading ? 800 : 600}
+              c={awayLeading ? undefined : "dimmed"}
+              ta="center"
+              size="sm"
+              lineClamp={2}
+            >
+              {away}
+            </Text>
+          </Stack>
+        </Group>
+        <Group justify="center">
+          <Badge variant="outline" color="accent" radius="xl">
+            {clockMinute}'
+          </Badge>
+        </Group>
+      </Stack>
 
       <ol
         ref={feedRef}
