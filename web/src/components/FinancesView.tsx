@@ -436,6 +436,12 @@ function DealSlot({
           ⚠ Expira ano que vem — renove numa das ofertas abaixo.
         </Text>
       )}
+      {active?.droppedAtRound !== undefined && (
+        <Text size="xs" c="red.4">
+          ⚠ Escândalo: contrato rompido na rodada {active.droppedAtRound + 1} —
+          rendendo o piso até o fim da temporada.
+        </Text>
+      )}
       {offers.map((o) => {
         const signed = active?.id === o.id;
         return (

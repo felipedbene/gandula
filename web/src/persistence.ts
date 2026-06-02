@@ -110,6 +110,12 @@ export type Deal = {
    *  club finishes worse than `maxPosition`. Carried only by the Aggressive
    *  offer (per-tier target). */
   performanceClause?: { maxPosition: number };
+  /** Set when a mid-season scandal terminated this deal at that round index.
+   *  From this round on, the slot earns the derived floor instead of the
+   *  contract — income is fair-rounded per segment so each half sums exactly.
+   *  Persisted (not recomputed) so a re-sim / F5 reproduces the same event.
+   *  Absent ⇒ the contract is in force all season. */
+  droppedAtRound?: number;
 };
 
 /**
