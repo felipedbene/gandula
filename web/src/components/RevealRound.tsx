@@ -166,7 +166,7 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
         <Card withBorder radius="md" padding="md">
           <Group justify="space-between" wrap="nowrap">
             <Text c="dimmed">Seu time descansa nesta rodada.</Text>
-            <Badge variant="outline" color="phosphor" radius="xl">
+            <Badge variant="outline" color="accent" radius="xl">
               {byeClock}'
             </Badge>
           </Group>
@@ -367,7 +367,7 @@ function CopaTieReveal({
         </Stack>
       )}
       {phase === "verdict" && (
-        <Text ta="center" size="sm" mt={4} fw={700} c={won ? "phosphor.4" : "red.5"}>
+        <Text ta="center" size="sm" mt={4} fw={700} c={won ? "accent.4" : "red.5"}>
           {won ? "AVANÇOU na Copa!" : "ELIMINADO da Copa"}
         </Text>
       )}
@@ -435,6 +435,10 @@ function OtherMatchRow({
   awayName: string;
   revealed: boolean;
 }) {
+  const hg = match.result.home_goals;
+  const ag = match.result.away_goals;
+  const homeWon = revealed && hg > ag;
+  const awayWon = revealed && ag > hg;
   return (
     <Box
       style={{
@@ -443,21 +447,29 @@ function OtherMatchRow({
         alignItems: "center",
       }}
     >
-      <Text ta="right" size="sm">
+      <Text ta="right" size="sm" c={homeWon ? undefined : "dimmed"} fw={homeWon ? 700 : 400}>
         {homeName}
       </Text>
-      <Text
-        px="md"
-        size="sm"
-        ff="monospace"
-        fw={revealed ? 700 : 400}
-        c={revealed ? undefined : "dimmed"}
-      >
-        {revealed
-          ? `${match.result.home_goals} - ${match.result.away_goals}`
-          : "×"}
+      <Text px="md" size="sm" ff="monospace" style={{ whiteSpace: "nowrap" }}>
+        {revealed ? (
+          <>
+            <Text span fw={700} c={homeWon ? "accent.4" : awayWon ? "dimmed" : undefined}>
+              {hg}
+            </Text>
+            <Text span c="dimmed">
+              {" "}-{" "}
+            </Text>
+            <Text span fw={700} c={awayWon ? "accent.4" : homeWon ? "dimmed" : undefined}>
+              {ag}
+            </Text>
+          </>
+        ) : (
+          <Text span c="dimmed">
+            ×
+          </Text>
+        )}
       </Text>
-      <Text ta="left" size="sm">
+      <Text ta="left" size="sm" c={awayWon ? undefined : "dimmed"} fw={awayWon ? 700 : 400}>
         {awayName}
       </Text>
     </Box>

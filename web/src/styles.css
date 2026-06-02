@@ -1,21 +1,48 @@
-/* The phosphor-green CRT look now lives in the Mantine theme (src/theme.ts).
-   What's left here is the bitmap font face (referenced from the theme's font
-   stack) and the blinking status-bar cursor used by Footer. */
+/* Global app shell for the modern "stadium night" look. Fonts are imported in
+   main.tsx (Fontsource); the palette lives in the Mantine theme (src/theme.ts).
+   This file owns the page background and a couple of small motion touches. */
 
-@font-face {
-  font-family: "PxPlus IBM VGA 9x16";
-  src: url("/fonts/WebPlus_IBM_VGA_9x16.woff") format("woff");
-  font-display: swap;
+:root {
+  color-scheme: dark;
 }
 
+html,
+body,
+#root {
+  background: var(--mantine-color-ink-9);
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  /* Subtle pitch-light glow behind the content, top-center. */
+  background-image: radial-gradient(
+    120% 60% at 50% -10%,
+    rgba(31, 116, 255, 0.12),
+    transparent 60%
+  );
+  background-attachment: fixed;
+}
+
+/* The status pill cursor (Footer) — a slow, calm pulse rather than the old
+   hard CRT blink. */
 .cursor {
   display: inline-block;
-  animation: blink 24s infinite;
+  animation: pulse 2s ease-in-out infinite;
 }
 
-/* Split the cycle 50/50 with hard transitions — no timing-function reliance
-   (see the original note: steps(2, start) leaves the cursor stuck hidden). */
-@keyframes blink {
-  0%, 50% { visibility: visible; }
-  50.01%, 100% { visibility: hidden; }
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    animation: none;
+  }
 }

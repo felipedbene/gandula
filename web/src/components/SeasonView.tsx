@@ -52,8 +52,18 @@ import {
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import { Button, Divider, Group, Stack, Table, Text } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Button,
+  Divider,
+  Group,
+  Stack,
+  Table,
+  Text,
+} from "@mantine/core";
 import { Panel } from "./ui/Panel";
+import { TeamCrest } from "./ui/TeamCrest";
 import RevealRound from "./RevealRound";
 import CopaView from "./CopaView";
 import TacticsView from "./TacticsView";
@@ -62,6 +72,9 @@ import { Objectives } from "./Objectives";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
+  /** Surfaces the controlled team's name to the app header (null when there's
+   *  no active career, e.g. the new-game form). */
+  onTeamName?: (name: string | null) => void;
 };
 
 /**
@@ -120,8 +133,19 @@ function randomSeed(): number {
   return Math.floor(Math.random() * 1_000_000);
 }
 
-export function SeasonView({ onStatus }: SeasonViewProps) {
+export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
+
+  // Keep the app header in sync with the controlled team. Every phase that
+  // carries a Career exposes it as phase.career; the form/loading phases don't,
+  // so we clear the name there.
+  const careerTeamName =
+    "career" in phase
+      ? teamById(phase.career.controlledTeamId)?.name ?? null
+      : null;
+  useEffect(() => {
+    onTeamName?.(careerTeamName);
+  }, [careerTeamName, onTeamName]);
 
   // The new-career form has no inputs now: the seed is generated randomly at
   // run() time and the team is assigned via pickRandomStarter — see run().
@@ -815,12 +839,12 @@ function CampeonatoEmCurso({
         <Stack gap={4}>
           {currentRoundFixtures(career, userDiv).map((row, i) => (
             <Group key={i} gap="xs" wrap="nowrap">
-              <Text span w={14} ta="center" c="phosphor.4">
+              <Text span w={14} ta="center" c="accent.4">
                 {row.isUser ? "►" : ""}
               </Text>
               <Text
                 span
-                c={row.isUser ? "phosphor.4" : undefined}
+                c={row.isUser ? "accent.4" : undefined}
                 fw={row.isUser ? 600 : undefined}
               >
                 {row.homeName} × {row.awayName}
@@ -931,7 +955,7 @@ function CopaFinaleLine({ career }: { career: Career }) {
   return (
     <Panel title={userWon ? "*** Campeão da Copa do Brasil ***" : "Copa do Brasil"}>
       {userWon ? (
-        <Text c="phosphor.4" fw={700}>
+        <Text c="accent.4" fw={700}>
           PARABÉNS! {champName} levantou a Copa do Brasil.
         </Text>
       ) : (
@@ -1038,7 +1062,7 @@ function SeasonFinale({
 
       <Panel title={isUserChamp ? "*** Campeão ***" : "Campeão"}>
         {isUserChamp ? (
-          <Text c="phosphor.4" fw={700}>
+          <Text c="accent.4" fw={700}>
             PARABÉNS! {champName} venceu o {userDiv.name}.
           </Text>
         ) : (
@@ -1077,7 +1101,7 @@ function SeasonFinale({
             </Text>
           )}
           {userStats && !isUserChamp && (
-            <Text size="sm" c="phosphor.3" fw={600}>
+            <Text size="sm" c="accent.3" fw={600}>
               Sua colocação: {userTeamName} — {userIdx + 1}º lugar,{" "}
               {points(userStats)} pts, {userStats.won}V {userStats.drawn}E{" "}
               {userStats.lost}D
@@ -1094,28 +1118,28 @@ function SeasonFinale({
           <FinanceRow
             label="Bilheteria (mandante)"
             value={`+ $ ${formatMoney(finances.ticketRevenue)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           <FinanceRow
             label="Cota de TV"
             value={`+ $ ${formatMoney(finances.tvRevenue)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           <FinanceRow
             label="Patrocínio"
             value={`+ $ ${formatMoney(finances.sponsorship)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           <FinanceRow
             label="Bônus de vitórias/empates"
             value={`+ $ ${formatMoney(finances.matchBonuses)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           {finances.cupPrize > 0 && (
             <FinanceRow
               label="Premiação Copa do Brasil"
               value={`+ $ ${formatMoney(finances.cupPrize)}`}
-              c="phosphor.4"
+              c="accent.4"
             />
           )}
           <FinanceRow
@@ -1128,7 +1152,7 @@ function SeasonFinale({
             <FinanceRow
               label="Bônus promoção (ao avançar)"
               value={`+ $ ${formatMoney(finances.prBonus)}`}
-              c="phosphor.4"
+              c="accent.4"
             />
           )}
           {finances.prBonus < 0 && (
@@ -1142,7 +1166,7 @@ function SeasonFinale({
             <FinanceRow
               label="Premiação por classificação (ao avançar)"
               value={`+ $ ${formatMoney(finances.placementPrize)}`}
-              c="phosphor.4"
+              c="accent.4"
             />
           )}
           <FinanceRow
@@ -1163,7 +1187,7 @@ function SeasonFinale({
       <Panel title="Promoção e rebaixamento">
         <Stack gap="xs">
           {prResult.userPromoted && (
-            <Text ta="center" fw={700} c="phosphor.4">
+            <Text ta="center" fw={700} c="accent.4">
               *** SEU TIME SUBIU DE DIVISÃO! ***
             </Text>
           )}
@@ -1275,7 +1299,7 @@ function MovementGroup({
             <Text
               key={s.team_id}
               size="sm"
-              c={isUser ? "phosphor.3" : undefined}
+              c={isUser ? "accent.3" : undefined}
               fw={isUser ? 700 : undefined}
             >
               {startPosition + i}º {name} ({points(s)} pts)
@@ -1382,11 +1406,11 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
         : `→ Permaneceu na ${entry.userDivision.name}`;
   const outcomeColor =
     entry.userOutcome === "promoted"
-      ? "phosphor.4"
+      ? "accent.4"
       : entry.userOutcome === "relegated"
         ? "red.5"
         : "dimmed";
-  const moneyColor = entry.moneyDelta >= 0 ? "phosphor.4" : "red.5";
+  const moneyColor = entry.moneyDelta >= 0 ? "accent.4" : "red.5";
   const moneySign = entry.moneyDelta >= 0 ? "+" : "−";
 
   return (
@@ -1472,20 +1496,86 @@ function currentRoundFixtures(
 }
 
 // ─── Shared: standings table ────────────────────────────────────────────────
+/** Summary card shown above a standings table where the user has a team, so
+ *  "this is YOU" is answered before the player even scans the rows. */
+function UserTeamSummary({
+  standings,
+  teamId,
+}: {
+  standings: TeamStats[];
+  teamId: number;
+}) {
+  const idx = standings.findIndex((s) => s.team_id === teamId);
+  if (idx < 0) return null;
+  const s = standings[idx];
+  const name = teamById(teamId)?.name ?? `Time ${teamId}`;
+  const gd = goalDifference(s);
+  return (
+    <Box
+      mb="md"
+      p="sm"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--mantine-spacing-md)",
+        borderRadius: "var(--mantine-radius-md)",
+        background: "var(--mantine-color-accent-9)",
+        borderLeft: "4px solid var(--mantine-color-accent-5)",
+      }}
+    >
+      <Text
+        ff="monospace"
+        fw={700}
+        fz={28}
+        c="accent.3"
+        style={{ lineHeight: 1, minWidth: 44, textAlign: "center" }}
+      >
+        {idx + 1}º
+      </Text>
+      <TeamCrest name={name} size={40} radius={8} />
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        <Group gap="xs" align="center" wrap="nowrap">
+          <Badge variant="filled" color="accent" radius="sm" size="sm">
+            SEU TIME
+          </Badge>
+          <Text fw={700} fz="lg" truncate>
+            {name}
+          </Text>
+        </Group>
+        <Text c="dimmed" size="sm" ff="monospace" mt={2}>
+          {points(s)} pts · {s.won}V {s.drawn}E {s.lost}D · SG{" "}
+          {gd > 0 ? `+${gd}` : gd}
+        </Text>
+      </Box>
+    </Box>
+  );
+}
+
 function StandingsTable({
   standings,
   highlightTeamId,
   title = "Classificação",
 }: {
   standings: TeamStats[];
-  /** When provided, this team gets the bright row instead of the leader. */
+  /** The user-controlled team in this table, if any. Gets the strong "YOU"
+   *  treatment (summary card + accent bar + marker) — distinct from the
+   *  subtle leader highlight used when no user team is present. */
   highlightTeamId?: number;
   title?: string;
 }) {
   return (
     <Panel title={title}>
+      {highlightTeamId !== undefined && (
+        <UserTeamSummary standings={standings} teamId={highlightTeamId} />
+      )}
       <Table.ScrollContainer minWidth={320}>
-        <Table highlightOnHover verticalSpacing={6} horizontalSpacing="sm" fz="sm">
+        <Table
+          highlightOnHover
+          verticalSpacing={6}
+          horizontalSpacing="sm"
+          fz="sm"
+          style={{ fontVariantNumeric: "tabular-nums" }}
+        >
           <Table.Thead>
             <Table.Tr>
               <Table.Th>#</Table.Th>
@@ -1504,15 +1594,39 @@ function StandingsTable({
             {standings.map((s, i) => {
               const teamName = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
               const gd = goalDifference(s);
-              const isHi =
-                highlightTeamId !== undefined
-                  ? s.team_id === highlightTeamId
-                  : i === 0;
+              // The user's row gets the strong treatment; in tables with no
+              // user team we still gently mark the leader.
+              const isUser =
+                highlightTeamId !== undefined && s.team_id === highlightTeamId;
+              const isLeader = highlightTeamId === undefined && i === 0;
               return (
-                <Table.Tr key={s.team_id} bg={isHi ? "phosphor.9" : undefined}>
+                <Table.Tr
+                  key={s.team_id}
+                  bg={isUser || isLeader ? "accent.9" : undefined}
+                  style={
+                    isUser
+                      ? {
+                          // Accent bar on the left edge = "this row is YOU".
+                          boxShadow:
+                            "inset 4px 0 0 0 var(--mantine-color-accent-5)",
+                        }
+                      : undefined
+                  }
+                >
                   <Table.Td>{i + 1}</Table.Td>
-                  <Table.Td c={isHi ? "phosphor.3" : undefined} fw={isHi ? 700 : undefined}>
-                    {teamName}
+                  <Table.Td
+                    c={isUser ? "accent.3" : isLeader ? "accent.3" : undefined}
+                    fw={isUser || isLeader ? 700 : undefined}
+                  >
+                    <Group gap={8} wrap="nowrap" align="center">
+                      {isUser && (
+                        <Text span c="accent.4" fw={700}>
+                          ▸
+                        </Text>
+                      )}
+                      <TeamCrest name={teamName} size={20} radius={5} />
+                      <span>{teamName}</span>
+                    </Group>
                   </Table.Td>
                   <Table.Td ta="right">{s.played}</Table.Td>
                   <Table.Td ta="right" visibleFrom="sm">{s.won}</Table.Td>

@@ -24,6 +24,7 @@ import { avgStrength } from "../util/divisions";
 import { formatMoney } from "../util/money";
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
+import { TeamCrest } from "./ui/TeamCrest";
 import TacticsForm, {
   type TacticsFormState,
   tacticsFormStateEquals,
@@ -252,13 +253,16 @@ function NextOpponentCard({
     <Panel title="Próximo jogo">
       <Stack gap={6}>
         <Group justify="space-between" wrap="nowrap">
-          <Text size="sm">
-            {userName}{" "}
-            <Text span c="dimmed">
-              {userVenue}
+          <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+            <TeamCrest name={userName} size={22} />
+            <Text size="sm" truncate>
+              {userName}{" "}
+              <Text span c="dimmed">
+                {userVenue}
+              </Text>
             </Text>
-          </Text>
-          <Text size="sm" c="dimmed">
+          </Group>
+          <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
             Força {userStrength}
           </Text>
         </Group>
@@ -266,13 +270,16 @@ function NextOpponentCard({
           ×
         </Text>
         <Group justify="space-between" wrap="nowrap">
-          <Text size="sm">
-            {opponentName}{" "}
-            <Text span c="dimmed">
-              {opponentVenue}
+          <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
+            <TeamCrest name={opponentName} size={22} />
+            <Text size="sm" truncate>
+              {opponentName}{" "}
+              <Text span c="dimmed">
+                {opponentVenue}
+              </Text>
             </Text>
-          </Text>
-          <Text size="sm" c="dimmed">
+          </Group>
+          <Text size="sm" c="dimmed" style={{ flexShrink: 0 }}>
             Força {opponentStrength}
           </Text>
         </Group>
@@ -319,7 +326,7 @@ function CopaBanner({ career, round }: { career: Career; round: number }) {
   const oppName = teamById(oppId)?.name ?? `Time ${oppId}`;
   return (
     <Panel title="Copa do Brasil">
-      <Text c="phosphor.4" fw={600}>
+      <Text c="accent.4" fw={600}>
         Jogo da Copa nesta rodada — vs {oppName}
       </Text>
       <Text c="dimmed" size="sm">

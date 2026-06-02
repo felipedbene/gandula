@@ -127,7 +127,7 @@ export default function LineupEditor({ team, state, onChange }: LineupEditorProp
           return (
             <div key={slotIdx}>
               <Group gap="xs" wrap="nowrap">
-                <Text span c="phosphor.4">►</Text>
+                <Text span c="accent.4">►</Text>
                 <Text span size="sm" c="dimmed">
                   {player?.position ?? "?"}
                 </Text>
