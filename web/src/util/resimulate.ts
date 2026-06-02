@@ -4,6 +4,7 @@ import { computeStandings } from "../types";
 import { teamById } from "../teams";
 import { userTeam } from "./roster";
 import { evolveTeam } from "./regen";
+import { applyRivalCoach } from "./rival-coach";
 import {
   FIRST_YEAR,
   findUserDivisionIdxInSeason,
@@ -78,13 +79,20 @@ export function resimulateFromRound(
   const userDiv = season.divisions[userDivIdx];
   const divSeed = season.seed ^ BigInt(userDiv.tier);
 
-  // Opponents the season was played against are the EVOLVED registry teams
-  // (buildNextSeason composes them as evolveTeam(registry, elapsed, seed)).
-  // Re-simulating against the static registry would diverge from season 2 on,
-  // so a re-sim with unchanged tactics wouldn't reproduce the original result.
-  // Replay the same (team, elapsed, seed) evolution; season 0 → elapsed 0 →
-  // registry unchanged. Memoized: the user faces each opponent twice.
+  // Opponents the season was played against are the EVOLVED + COACHED registry
+  // teams: buildNextSeason composes each as
+  //   applyRivalCoach(evolveTeam(registry, elapsed, seed), tier, year, seed, elapsed)
+  // (E.3.c.2). Re-simulating against the static registry — or against the merely
+  // aged team without the coach's buys/tactic — would diverge, so a re-sim with
+  // unchanged user tactics wouldn't reproduce the original result. Replay the
+  // EXACT same composition here. The coach depends only on (tier, year, seed,
+  // elapsed) — never last season's finish — precisely so this path can rebuild
+  // the identical opponent without the prior standings. Opponents are in the
+  // user's division, so their tier is `userDiv.tier`. Season 0 → elapsed 0 →
+  // registry team, but the coach still runs (year/seed drive its buys).
+  // Memoized: the user faces each opponent twice.
   const elapsed = season.year - FIRST_YEAR;
+  const tier = userDiv.tier as 1 | 2 | 3;
   const evolvedCache = new Map<number, Team>();
   const liveOpponent = (id: number): Team => {
     const cached = evolvedCache.get(id);
@@ -94,8 +102,9 @@ export function resimulateFromRound(
       throw new Error(`Opponent team ${id} not found in registry`);
     }
     const evolved = evolveTeam(base, elapsed, career.seed);
-    evolvedCache.set(id, evolved);
-    return evolved;
+    const coached = applyRivalCoach(evolved, tier, season.year, career.seed, elapsed);
+    evolvedCache.set(id, coached);
+    return coached;
   };
 
   const newMatches: Match[] = userDiv.record.matches.slice();
