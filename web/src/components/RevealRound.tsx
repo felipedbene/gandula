@@ -14,6 +14,15 @@ import MatchReveal, {
 } from "./MatchReveal";
 import UserMatchReveal from "./UserMatchReveal";
 import type { UserTactics } from "../persistence";
+import {
+  homeTicketForRound,
+  tvIncomeForRound,
+  sponsorshipForRound,
+  matchBonusForRound,
+  salarySliceForRound,
+  roundCashDelta,
+} from "../util/finances";
+import { formatMoney } from "../util/money";
 
 type RevealRoundProps = {
   career: Career;
@@ -220,6 +229,14 @@ export default function RevealRound({
         )}
       </Panel>
 
+      {/* Per-round cash ledger — breaks the net delta (shown only as a sign in
+          the status line) into its streams. Appears once the user's match has
+          revealed, so the money lands with the result. Bye rounds have no
+          ledger. */}
+      {userMatch && userDone && (
+        <RoundLedger career={career} roundIdx={revealRound} />
+      )}
+
       {isPlaying && (
         <Group justify="center">
           <Button variant="default" onClick={() => setSkipAll(true)}>
@@ -228,6 +245,70 @@ export default function RevealRound({
         </Group>
       )}
     </Stack>
+  );
+}
+
+/**
+ * The round's cash ledger: the streams that compose `roundCashDelta`, broken
+ * out line-by-line, with the net at the bottom. Each line reads the SAME pure
+ * function the per-round accrual uses (finances.ts), and the net renders
+ * `roundCashDelta` directly — never re-summed in the UI — so the breakdown can
+ * never drift from the money that actually moves. Copa prize is NOT here: it's
+ * not part of `roundCashDelta` (it lands on the cup matchday, shown separately).
+ */
+function RoundLedger({ career, roundIdx }: { career: Career; roundIdx: number }) {
+  const ticket = homeTicketForRound(career, roundIdx);
+  const tv = tvIncomeForRound(career, roundIdx);
+  const sponsorship = sponsorshipForRound(career, roundIdx);
+  const bonus = matchBonusForRound(career, roundIdx);
+  const wages = salarySliceForRound(career, roundIdx);
+  const net = roundCashDelta(career, roundIdx);
+
+  const lines: { label: string; value: number; negative?: boolean }[] = [
+    // Gate only shows on a home match (0 away/bye), matching the brief.
+    ...(ticket > 0 ? [{ label: "Bilheteria", value: ticket }] : []),
+    { label: "TV", value: tv },
+    { label: "Patrocínio", value: sponsorship },
+    { label: "Bônus", value: bonus },
+    { label: "Folha", value: wages, negative: true },
+  ];
+
+  return (
+    <Panel title="Caixa da rodada">
+      <Stack gap={4}>
+        {lines.map((l) => (
+          <Group key={l.label} justify="space-between" wrap="nowrap">
+            <Text size="sm" c="dimmed">
+              {l.label}
+            </Text>
+            <Text size="sm" ff="monospace" c={l.negative ? "red.4" : undefined}>
+              {l.negative ? "−" : "+"} $ {formatMoney(Math.abs(l.value))}
+            </Text>
+          </Group>
+        ))}
+        <Box
+          style={{
+            borderTop: "1px solid var(--mantine-color-ink-6)",
+            marginTop: 2,
+            paddingTop: 4,
+          }}
+        >
+          <Group justify="space-between" wrap="nowrap">
+            <Text size="sm" fw={700}>
+              Líquido
+            </Text>
+            <Text
+              size="sm"
+              fw={700}
+              ff="monospace"
+              c={net >= 0 ? "accent.4" : "red.4"}
+            >
+              {net >= 0 ? "+" : "−"} $ {formatMoney(Math.abs(net))}
+            </Text>
+          </Group>
+        </Box>
+      </Stack>
+    </Panel>
   );
 }
 
