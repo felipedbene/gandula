@@ -47,19 +47,23 @@ async function snap() {
 const base = await snap();
 log("BASE        :", JSON.stringify(base));
 
-// Change mentality → VeryAttacking.
-await page.getByLabel(/Postura/i).selectOption("VeryAttacking");
-await page.waitForTimeout(400);
-const afterMent = await snap();
-log("after PostMax:", JSON.stringify(afterMent));
-log("  projection changed?", JSON.stringify(base.bars) !== JSON.stringify(afterMent.bars) || base.possText !== afterMent.possText);
+async function change(label, value) {
+  const before = await snap();
+  await page.getByLabel(label).selectOption(value);
+  await page.waitForTimeout(350);
+  const after = await snap();
+  const moved =
+    JSON.stringify(before.bars) !== JSON.stringify(after.bars) ||
+    before.possText !== after.possText ||
+    JSON.stringify(before.rowShape) !== JSON.stringify(after.rowShape);
+  log(`${label}=${value}: board moved? ${moved}  bars ${JSON.stringify(before.bars)}→${JSON.stringify(after.bars)}  shape ${JSON.stringify(before.rowShape)}→${JSON.stringify(after.rowShape)}`);
+}
 
-// Change formation → F352 (3-5-2, very different shape).
-await page.getByLabel(/Formação/i).selectOption("F352");
-await page.waitForTimeout(400);
-const afterForm = await snap();
-log("after F352  :", JSON.stringify(afterForm));
-log("  pitch shape changed?", JSON.stringify(afterMent.rowShape) !== JSON.stringify(afterForm.rowShape));
+await change(/Postura/i, "VeryAttacking");   // mentality
+await change(/Ritmo/i, "Fast");              // tempo  (asymmetric → should move userBar)
+await change(/Marcação/i, "High");           // pressing (disrupts opp midfield → should move possession)
+await change(/Amplitude/i, "Wide");          // width  (shot quality)
+await change(/Formação/i, "F352");           // formation (should restructure pitch if formation-aware)
 
 log("page errors:", errors.length ? errors : "none");
 await browser.close();

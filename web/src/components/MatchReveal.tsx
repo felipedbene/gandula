@@ -210,14 +210,18 @@ export default function MatchReveal({
       <Stack
         gap={6}
         p="md"
-        style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}
+        style={{ 
+          background: "linear-gradient(180deg, rgba(31, 116, 255, 0.15) 0%, rgba(0,0,0,0) 100%)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.15)",
+          clipPath: "polygon(0 0, 100% 0, 100% 85%, 95% 100%, 5% 100%, 0 85%)"
+        }}
       >
         <Group gap="sm" wrap="nowrap" align="center">
           <Stack gap={6} align="center" style={{ flex: 1, minWidth: 0 }}>
-            <TeamCrest name={home} size={36} radius={8} />
+            <TeamCrest name={home} size={42} radius={8} />
             <Text
               fw={homeLeading ? 800 : 600}
-              c={homeLeading ? undefined : "dimmed"}
+              c={homeLeading ? "white" : "dimmed"}
               ta="center"
               size="sm"
               lineClamp={2}
@@ -225,7 +229,7 @@ export default function MatchReveal({
               {home}
             </Text>
           </Stack>
-          <Group gap={6} wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
+          <Group gap={12} wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
             {/* key={score} remounts the number when its side scores, which
                 re-fires the goal-pulse CSS animation. Guarded at >0 so 0-0
                 doesn't pulse on first paint. */}
@@ -233,31 +237,39 @@ export default function MatchReveal({
               key={`home-${runningHome}`}
               className={runningHome > 0 ? "goal-pulse" : undefined}
               fw={800}
-              fz={32}
-              c={homeLeading ? "accent.4" : awayLeading ? "dimmed" : undefined}
-              style={{ fontVariantNumeric: "tabular-nums", lineHeight: 1 }}
+              fz={40}
+              c={homeLeading ? "accent.4" : awayLeading ? "dimmed" : "white"}
+              style={{ 
+                fontVariantNumeric: "tabular-nums", 
+                lineHeight: 1,
+                textShadow: homeLeading ? "0 0 20px rgba(31, 116, 255, 0.8)" : "none"
+              }}
             >
               {runningHome}
             </Text>
-            <Text span c="dimmed" fz="sm">
+            <Text span c="dimmed" fz="xl" opacity={0.5}>
               –
             </Text>
             <Text
               key={`away-${runningAway}`}
               className={runningAway > 0 ? "goal-pulse" : undefined}
               fw={800}
-              fz={32}
-              c={awayLeading ? "accent.4" : homeLeading ? "dimmed" : undefined}
-              style={{ fontVariantNumeric: "tabular-nums", lineHeight: 1 }}
+              fz={40}
+              c={awayLeading ? "accent.4" : homeLeading ? "dimmed" : "white"}
+              style={{ 
+                fontVariantNumeric: "tabular-nums", 
+                lineHeight: 1,
+                textShadow: awayLeading ? "0 0 20px rgba(31, 116, 255, 0.8)" : "none"
+              }}
             >
               {runningAway}
             </Text>
           </Group>
           <Stack gap={6} align="center" style={{ flex: 1, minWidth: 0 }}>
-            <TeamCrest name={away} size={36} radius={8} />
+            <TeamCrest name={away} size={42} radius={8} />
             <Text
               fw={awayLeading ? 800 : 600}
-              c={awayLeading ? undefined : "dimmed"}
+              c={awayLeading ? "white" : "dimmed"}
               ta="center"
               size="sm"
               lineClamp={2}
@@ -266,8 +278,8 @@ export default function MatchReveal({
             </Text>
           </Stack>
         </Group>
-        <Group justify="center">
-          <Badge variant="outline" color="accent" radius="xl">
+        <Group justify="center" mt={4}>
+          <Badge variant="filled" color="dark.8" radius="xs" style={{ border: "1px solid rgba(255,255,255,0.2)", textShadow: "0 0 8px rgba(255,255,255,0.5)" }}>
             {clockMinute}'
           </Badge>
         </Group>
@@ -303,7 +315,7 @@ function EventRow({ event }: { event: MatchEvent }) {
   const rest = m ? m[2] : event.text;
 
   return (
-    <li style={{ padding: "6px 16px" }}>
+    <li className="feed-item" style={{ padding: "6px 16px" }}>
       <Group
         gap="xs"
         wrap="nowrap"

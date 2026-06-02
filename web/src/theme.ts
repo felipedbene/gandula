@@ -17,17 +17,18 @@ const accent: MantineColorsTuple = [
 
 // Neutral ink ramp: app background (9) → card surfaces (8/7) → text (0/1).
 // Replaces the old green-on-black with a calmer, modern "stadium night" dark.
+// Ultra-deep space dark ramp for maximum contrast
 const ink: MantineColorsTuple = [
   "#f4f6f7",
-  "#e4e8ea",
-  "#c5cccf",
-  "#9aa4a9",
-  "#717c82",
-  "#525c61",
-  "#3b4347",
-  "#272d30",
-  "#181d20",
-  "#0e1214",
+  "#d6dbde",
+  "#a2aeb5",
+  "#6b7a84",
+  "#4d5a62",
+  "#343d43",
+  "#21282c",
+  "#14181a",
+  "#0a0c0d", // base cards
+  "#050608", // app background
 ];
 
 const sans = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
