@@ -312,15 +312,17 @@ repo secret. To deploy by hand instead, run `npm run deploy` from `web/`.
 Versioning is driven by **conventional commits** via
 [release-please](https://github.com/googleapis/release-please)
 (`.github/workflows/release-please.yml`). On every push to `main` it maintains a
-single **"Release vX.Y.Z" PR** that bumps the version (`fix:` → patch, `feat:` →
-minor, `feat!:`/`BREAKING CHANGE` → major), updates the version files, and writes
-`CHANGELOG.md`. Merging that PR tags the release. The Cargo workspace
-(core/cli/wasm) and the web package are kept in lockstep (linked-versions). The
-version surfaces in the UI footer via `__APP_VERSION__` (read from
-`web/package.json`).
+single **"Release vX.Y.Z" PR** that bumps the **web package** version (`fix:` →
+patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE` → major), updates
+`web/package.json` + its lockfile, and writes `CHANGELOG.md`. Merging that PR
+tags the release. `web/package.json` is the canonical version — it surfaces in
+the UI footer via `__APP_VERSION__`.
 
-To bump by hand instead — or to re-sync the four version files if they ever
-drift — run `./scripts/bump-version.sh <patch|minor|major|X.Y.Z>`.
+The Cargo workspace (core/cli/wasm) version is internal (the crates aren't
+published; the engine is consumed as wasm), so release-please leaves it alone.
+To keep it in lockstep — or to re-sync all four version files if they ever drift
+— run `./scripts/bump-version.sh <patch|minor|major|X.Y.Z>`, which updates
+`Cargo.toml`, `web/package.json`, and both lockfiles in one shot.
 
 ## What's next
 
