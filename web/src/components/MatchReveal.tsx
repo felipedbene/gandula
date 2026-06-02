@@ -153,7 +153,7 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
                 re-fires the goal-pulse CSS animation. Guarded at >0 so 0-0
                 doesn't pulse on first paint. */}
             <Text
-              key={runningHome}
+              key={`home-${runningHome}`}
               className={runningHome > 0 ? "goal-pulse" : undefined}
               fw={800}
               fz={32}
@@ -166,7 +166,7 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
               –
             </Text>
             <Text
-              key={runningAway}
+              key={`away-${runningAway}`}
               className={runningAway > 0 ? "goal-pulse" : undefined}
               fw={800}
               fz={32}
