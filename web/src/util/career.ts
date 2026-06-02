@@ -1,5 +1,5 @@
 import { run_season } from "../wasm/gandula_wasm.js";
-import { ALL_TEAMS, teamById } from "../teams";
+import { teamById } from "../teams";
 import {
   points,
   type Player,
@@ -24,6 +24,7 @@ import {
   type SeasonFinances,
 } from "./finances";
 import { evolveTeam, evolveRoster } from "./regen";
+import { applyRivalCoach } from "./rival-coach";
 import { userTeam } from "./roster";
 
 /**
@@ -268,25 +269,36 @@ function buildNextSeason(
   // (already-aged) userTeam view; the user refreshes via the market.
   const userTeamWithRoster = userTeam(career);
   const elapsed = current.year + 1 - FIRST_YEAR;
-  const composeTeam = (t: Team): Team =>
-    t.id === career.controlledTeamId
-      ? userTeamWithRoster
-      : evolveTeam(t, elapsed, career.seed);
+
+  // E.3.c.2: opponents are now policy-distilled "coaches". After the registry
+  // re-evolution (aging/regen), each opponent gets the per-tier distilled
+  // tactic + a stateless transfer budget and buys squad upgrades, so the league
+  // genuinely strengthens rather than only aging. The user's club is untouched
+  // (they shop the market themself). The coach depends only on (nextTier, year,
+  // seed, elapsed) — NOT last season's finish — so the re-simulation path can
+  // reconstruct the identical coached opponent (see resimulate.ts `liveOpponent`).
+  const composeTeam = (t: Team, nextTier: 1 | 2 | 3): Team => {
+    if (t.id === career.controlledTeamId) return userTeamWithRoster;
+    const evolved = evolveTeam(t, elapsed, career.seed);
+    return applyRivalCoach(evolved, nextTier, current.year + 1, career.seed, elapsed);
+  };
 
   // Recompose one tier: survivors (current standings minus everyone leaving)
   // in finishing order, then the incoming teams. Resolves ids to Team records
-  // and applies composeTeam so the user/opponent evolution flows through.
+  // and applies composeTeam (with the destination tier) so the user/opponent
+  // evolution + coaching flows through.
   const recompose = (
     oldDiv: Division,
     leaving: TeamStats[],
     incoming: TeamStats[],
+    nextTier: 1 | 2 | 3,
   ): Team[] => {
     const leavingIds = new Set(leaving.map((s) => s.team_id));
     const survivors = oldDiv.record.standings.filter(
       (s) => !leavingIds.has(s.team_id),
     );
     const teams = [...survivors, ...incoming].map((s) =>
-      composeTeam(mustGetTeam(s.team_id)),
+      composeTeam(mustGetTeam(s.team_id), nextTier),
     );
     // Invariant: tier size unchanged. Mismatch means PRResult was malformed
     // or standings were missing teams. The middle tier (3-way shuffle) is the
@@ -303,16 +315,19 @@ function buildNextSeason(
     tierAOld,
     prResult.relegatedAtoB,
     prResult.promotedBtoA,
+    1,
   );
   const tierBTeams = recompose(
     tierBOld,
     [...prResult.promotedBtoA, ...prResult.relegatedBtoC],
     [...prResult.relegatedAtoB, ...prResult.promotedCtoB],
+    2,
   );
   const tierCTeams = recompose(
     tierCOld,
     prResult.promotedCtoB,
     prResult.relegatedBtoC,
+    3,
   );
 
   const nextYear = current.year + 1;
@@ -339,10 +354,11 @@ function buildNextSeason(
     transfers: [],
     // A fresh Copa bracket each season (drawn, no rounds played). The cup
     // seed derives from this season's seed, so each year's draw differs.
-    // Seed the bracket from the NEXT season's evolved sides (composeTeam aged
-    // each club to nextYear and swapped in the user's roster), so the draw
-    // reflects the living world rather than the static registry.
-    copa: buildCopa(ALL_TEAMS.map(composeTeam)),
+    // Seed the bracket from the NEXT season's composed sides (the three tiers
+    // above already aged each club to nextYear, applied the rival coach, and
+    // swapped in the user's roster), so the draw reflects the living, coached
+    // world rather than the static registry.
+    copa: buildCopa([...tierATeams, ...tierBTeams, ...tierCTeams]),
   };
 }
 

@@ -203,23 +203,34 @@ richer SoFIFA market (E.4.c).
 
 E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
 
-- [ ] **E.3.c — Self-play search** · _L, core + training_
+- [~] **E.3.c — Self-play search** · _L, core + training_
   Tune configs by simulated fitness (win rate), persist the winners. The
   research-y endgame; benefits from the now-richer E.2 world.
 
-  _Reframed by gandula-rl._ A reactive MaskablePPO policy already trains on this
-  engine and, from a random Série B club, **survives 99.7%** of careers and
-  **promotes ~89%** (20-season horizon). The heuristic manager, by contrast, is
-  **fired in 91–99%** of careers under the current economy — it is not a
-  credible rival. So the research path is less "search the `ManagerConfig` space
-  from scratch" and more "borrow the policy that already works":
-  - [ ] **E.3.c.1 — Policy-driven rivals** · _L, core + training_ — drive rival
-    transfer/tactic choices from the trained policy (or its value head) instead
-    of the greedy heuristic.
-  - [ ] **E.3.c.2 — Distill policy → `ManagerConfig`** · _M, core_ — if running a
-    net per rival in-browser is too heavy, distill the learned behavior (spend
-    ratio vs. wage bill, cash-buffer target) back into the E.3.a/b config knobs,
-    so per-club styles become _learned_ rather than authored.
+  _Reframed by gandula-rl, then DELIVERED via distillation._ A reactive
+  MaskablePPO policy trains on this engine; the policy of record
+  (`gandula-rl/models/maskppo_reshaped_probe`) reaches Série A in **98%** of
+  careers and wins the title in **11%**, never fired. Rather than search the
+  `ManagerConfig` space from scratch, we borrowed that policy:
+  - [x] **E.3.c.1 / E.3.c.2 — Policy-distilled rivals** · _M, web_ — **shipped.**
+    A probe (`gandula-rl/distill_probe.py`) ran the policy over 500 careers and
+    distilled its per-tier behaviour to `gandula-rl/distill/rival_policy.json`
+    (modal tactic + buy pattern). Those numbers are transcribed into
+    `web/src/util/rival-coach.ts`, and `career.ts` `composeTeam` now applies the
+    coach to every opponent each season (after aging/regen): a per-tier distilled
+    **tactic** + a **stateless per-season transfer budget** → buy best-affordable
+    squad upgrades. Rivals genuinely strengthen (~+2–3 avg overall vs aging-only)
+    instead of only decaying. **Key architecture decision:** the policy learned
+    season-level tactics + transfers, but the Rust `ManagerConfig` only governs
+    in-match subs — so the distillation target is the **TS season-build path**,
+    not the core. **No Rust/wasm change, no schema bump.** Budget depends only on
+    (tier, seed, club, year) — never last season's finish — so the re-sim path
+    (`resimulate.ts`) reconstructs the identical coached opponent and determinism
+    holds. Season 0 stays the authored registry baseline (coach is a no-op at
+    yearOffset 0).
+  - Remaining (optional): rival **sells** (the probe showed sells were only
+    roster-cap trims, not strategy — deferred); a title-stronger policy to
+    distill (the current one consolidates in Série A — see gandula-rl RESULTS.md).
 
 ## Polish (small, slot in anytime)
 
@@ -245,8 +256,9 @@ Active, in priority order:
    **E.4.b.5 marketing** (demand) → **E.4.b.6 sponsorship** (floor) →
    **E.4.b.7 momentum** (bounded form multiplier). Player-controlled,
    compounding; the build-vs-buy depth layer.
-8. **E.3.c.1 — policy-driven rivals** — credible opponents via the gandula-rl policy.
-9. _Then:_ E.3.c.2 distillation, E.5.b objectives, Polish.
+8. ~~**E.3.c.1/E.3.c.2 — policy-distilled rivals**~~ ✓ shipped — credible
+   opponents via the distilled gandula-rl policy (tactics + buy).
+9. _Then:_ E.5.b objectives, Polish, (optional) a title-stronger policy to re-distill.
 
 Dependencies: E.4.a should land before the other E.4 levers + E.6, since the
 balance decision sets their targets. Self-play ← `Manager`-trait extraction +
