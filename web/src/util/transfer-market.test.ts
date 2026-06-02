@@ -20,10 +20,16 @@ import {
   playerOverall,
   playerPrice,
   scoutReport,
+  applyTransferAction,
+  reverseTransferAction,
+  type TransferAction,
 } from "./transfer-market";
 import {
   MARKETING_MOMENTUM_MAX,
   STADIUM_MAX_CAPACITY,
+  STADIUM_EXPANSION_STEP,
+  CAMPAIGN_FANBASE,
+  MARKETING_MOMENTUM_PER_CAMPAIGN,
   expansionCost,
   marketingCost,
 } from "./finances";
@@ -446,5 +452,76 @@ describe("E.4.c — rare-elite free agents", () => {
       .concat(...Array.from({ length: 40 }, (_, y) => generateFreeAgents(1998n, FIRST_YEAR + y + 1)))
       .find((p) => Math.max(...Object.values(p.attributes)) > 85);
     expect(elite).toBeDefined();
+  });
+});
+
+// ─── applyTransferAction / reverseTransferAction (shared draft math) ──────────
+
+describe("applyTransferAction / reverseTransferAction", () => {
+  const newPlayer = makePlayer(9001, "FWD");
+
+  function snapshot(c: Career) {
+    return JSON.stringify({
+      money: c.manager.money,
+      cap: c.manager.stadiumCapacity,
+      fan: c.manager.fanbase,
+      mom: c.manager.marketingMomentum,
+      roster: c.userRoster.map((p) => p.id).sort((a, b) => a - b),
+      transfers: c.currentSeason.transfers.length,
+    });
+  }
+
+  const cases: { name: string; action: TransferAction }[] = [
+    {
+      name: "expandStadium",
+      action: { kind: "expandStadium", seats: STADIUM_EXPANSION_STEP, price: 2_000_000 },
+    },
+    {
+      name: "runCampaign",
+      action: {
+        kind: "runCampaign",
+        fanbase: CAMPAIGN_FANBASE,
+        momentum: MARKETING_MOMENTUM_PER_CAMPAIGN,
+        price: 800_000,
+      },
+    },
+    { name: "buy", action: { kind: "buy", player: newPlayer, price: 1_500_000 } },
+  ];
+
+  for (const { name, action } of cases) {
+    it(`apply then reverse is a round-trip for ${name}`, () => {
+      const before = makeCareerWithRealTeam({ rosterSize: 18, money: 50_000_000 });
+      const before0 = snapshot(before);
+      const after = applyTransferAction(before, action);
+      expect(snapshot(after)).not.toBe(before0); // actually changed something
+      const back = reverseTransferAction(after, action);
+      expect(snapshot(back)).toBe(before0); // and fully restored
+    });
+  }
+
+  it("expandStadium debits price and adds seats; reverse restores both", () => {
+    const c = makeCareerWithRealTeam({ rosterSize: 18, money: 10_000_000 });
+    const action: TransferAction = {
+      kind: "expandStadium",
+      seats: STADIUM_EXPANSION_STEP,
+      price: 2_460_000,
+    };
+    const a = applyTransferAction(c, action);
+    expect(a.manager.money).toBe(10_000_000 - 2_460_000);
+    expect(a.manager.stadiumCapacity).toBe(c.manager.stadiumCapacity + STADIUM_EXPANSION_STEP);
+    const r = reverseTransferAction(a, action);
+    expect(r.manager.money).toBe(c.manager.money);
+    expect(r.manager.stadiumCapacity).toBe(c.manager.stadiumCapacity);
+  });
+
+  it("buy appends a transfer record and the player; sell-equivalent reverse pops it", () => {
+    const c = makeCareerWithRealTeam({ rosterSize: 18, money: 50_000_000 });
+    const action: TransferAction = { kind: "buy", player: newPlayer, price: 1_000_000 };
+    const a = applyTransferAction(c, action);
+    expect(a.currentSeason.transfers).toHaveLength(1);
+    expect(a.userRoster.some((p) => p.id === newPlayer.id)).toBe(true);
+    const r = reverseTransferAction(a, action);
+    expect(r.currentSeason.transfers).toHaveLength(0);
+    expect(r.userRoster.some((p) => p.id === newPlayer.id)).toBe(false);
   });
 });

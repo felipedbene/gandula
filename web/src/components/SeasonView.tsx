@@ -52,6 +52,7 @@ import {
 } from "../util/finances";
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
+import FinancesView from "./FinancesView";
 import SupportView from "./SupportView";
 import {
   Badge,
@@ -105,6 +106,7 @@ type Phase =
   | { tag: "tactics"; career: Career }
   | { tag: "finale"; career: Career }
   | { tag: "history"; career: Career }
+  | { tag: "finances"; career: Career }
   | { tag: "transferMarket"; career: Career; returnTo: "running" | "finale" }
   | { tag: "fired"; career: Career; finalBalance: number }
   | { tag: "support" };
@@ -418,6 +420,25 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
 
   function backFromHistory(career: Career) {
     setPhase({ tag: "finale", career });
+  }
+
+  function openFinances(career: Career) {
+    onStatus(`finanças · saldo $ ${formatMoney(career.manager.money)}`);
+    setPhase({ tag: "finances", career });
+  }
+
+  async function closeFinances(newCareer: Career) {
+    // Stadium/marketing spends made on the Finances screen are committed here,
+    // mirroring the market's close. With no spend the career is unchanged, so
+    // the save is a harmless no-op write.
+    try {
+      await saveCareer(newCareer);
+      onStatus(`finanças · saldo $ ${formatMoney(newCareer.manager.money)}`);
+      setPhase({ tag: "running", career: newCareer });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar finanças: ${e}`);
+    }
   }
 
   function openTransferMarket(career: Career, returnTo: "running" | "finale") {
@@ -758,6 +779,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
             onViewOtherDivision={() => openOtherDivision(phase.career)}
             onViewCopa={() => openCopa(phase.career)}
             onOpenMarket={() => openTransferMarket(phase.career, "running")}
+            onOpenFinances={() => openFinances(phase.career)}
           />
         );
       case "viewOtherDivision":
@@ -822,6 +844,10 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
             career={phase.career}
             onBack={() => backFromHistory(phase.career)}
           />
+        );
+      case "finances":
+        return (
+          <FinancesView career={phase.career} onClose={closeFinances} />
         );
       case "transferMarket":
         return (
@@ -909,6 +935,7 @@ function CampeonatoEmCurso({
   onViewOtherDivision,
   onViewCopa,
   onOpenMarket,
+  onOpenFinances,
 }: {
   career: Career;
   onReset: () => void;
@@ -917,6 +944,7 @@ function CampeonatoEmCurso({
   onViewOtherDivision: () => void;
   onViewCopa: () => void;
   onOpenMarket: () => void;
+  onOpenFinances: () => void;
 }) {
   const team = teamById(career.controlledTeamId);
   const teamName = team?.name ?? `Time ${career.controlledTeamId}`;
@@ -983,6 +1011,9 @@ function CampeonatoEmCurso({
         <Button variant="default" onClick={onOpenMarket}>
           Mercado
         </Button>
+        <Button variant="default" onClick={onOpenFinances}>
+          Finanças
+        </Button>
         <Button variant="default" onClick={onViewCopa}>
           Copa
         </Button>
@@ -997,6 +1028,9 @@ function CampeonatoEmCurso({
       {/* Mobile: the secondary actions stay inline; the primary four live in
           the fixed bottom nav below. */}
       <Group justify="center" gap="sm" hiddenFrom="sm">
+        <Button variant="default" size="xs" onClick={onOpenFinances}>
+          Finanças
+        </Button>
         <Button variant="default" size="xs" onClick={onViewOtherDivision}>
           Outras divisões
         </Button>

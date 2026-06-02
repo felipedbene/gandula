@@ -175,6 +175,18 @@ export function formMultiplier(career: Career, beforeRoundIdx: number): number {
   return Math.max(FORM_MIN, Math.min(FORM_MAX, raw));
 }
 
+/** Projected attendance demand for one home match: `fanbase × coef × tierMult ×
+ *  opponentDraw`. The gate fills `min(demand, capacity)`, so when demand exceeds
+ *  capacity the club is leaving money on the table (expand to capture it). Pure;
+ *  the single source for both the gate revenue and the Finances-screen status. */
+export function matchDemand(
+  fanbase: number,
+  tier: 1 | 2 | 3,
+  oppStrength: number,
+): number {
+  return fanbase * DEMAND_FANBASE_COEF * DEMAND_TIER_MULT[tier] * opponentDraw(oppStrength);
+}
+
 /** Home-gate revenue for one home match: min(demand, capacity) × price × form.
  *  Shared by the per-round and season-total paths so they stay identical (the
  *  per-round-sums-to-season invariant). `form` defaults to 1.0. */
@@ -185,9 +197,7 @@ function homeGateRevenue(
   oppStrength: number,
   form = 1,
 ): number {
-  const demand =
-    fanbase * DEMAND_FANBASE_COEF * DEMAND_TIER_MULT[tier] * opponentDraw(oppStrength);
-  const attendance = Math.min(demand, capacity);
+  const attendance = Math.min(matchDemand(fanbase, tier, oppStrength), capacity);
   return Math.round(attendance * TICKET_PRICE * form);
 }
 
@@ -504,6 +514,44 @@ export function homeTicketForRound(career: Career, roundIdx: number): number {
 }
 
 /**
+ * The user's NEXT home match (from the current round onward) as projected
+ * attendance demand vs. the current stadium capacity — the read-only status the
+ * Finances screen shows ("lotando, expanda" vs "sobra cadeira"). Returns null
+ * when no home game remains this season. Pure; reads the same `matchDemand` the
+ * gate revenue uses, so the comparison is exact. Form is excluded (it's a gate
+ * multiplier, not a demand/seat factor).
+ */
+export function nextHomeDemand(
+  career: Career,
+): { demand: number; capacity: number; oppId: number; roundIdx: number } | null {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const { fixtures, matches } = userDiv.record;
+  // Scan rounds from where the season currently sits forward, in round order.
+  const total = totalRoundsOf(userDiv);
+  for (let round = userDiv.currentRoundIdx; round < total; round++) {
+    for (let i = 0; i < fixtures.length; i++) {
+      if (fixtures[i].round !== round) continue;
+      const m = matches[i];
+      if (m.home === career.controlledTeamId) {
+        return {
+          demand: matchDemand(
+            career.manager.fanbase,
+            userDiv.tier,
+            opponentStrength(career, m.away),
+          ),
+          capacity: career.manager.stadiumCapacity,
+          oppId: m.away,
+          roundIdx: round,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * The wage bill, paid in equal per-round slices across the season. Fair
  * rounding — `round(S·(r+1)/T) − round(S·r/T)` — so the slices sum to the
  * exact season salary S with no drift (money stays integer and the per-round
@@ -536,6 +584,54 @@ export function roundCashDelta(career: Career, roundIdx: number): number {
     matchBonusForRound(career, roundIdx) -
     salarySliceForRound(career, roundIdx)
   );
+}
+
+/** Season-to-date cash ledger: the per-round revenue/cost streams summed over
+ *  the rounds ALREADY PLAYED in the user's division ([0, currentRoundIdx)).
+ *  Each line reuses the same per-round helper that moves the money, and `net`
+ *  equals Σ roundCashDelta over those rounds — so the breakdown can't drift
+ *  from the cash that actually accrued. Cup prize and the end-of-season
+ *  placement / P/R prize are NOT included (they land elsewhere / aren't known
+ *  mid-season). Pure. */
+export type SeasonLedger = {
+  /** Rounds counted (the played rounds whose cash has accrued). */
+  rounds: number;
+  ticket: number;
+  tv: number;
+  sponsorship: number;
+  bonus: number;
+  /** Wages paid (positive; the subtraction lives in `net`). */
+  wages: number;
+  net: number;
+};
+
+export function seasonToDateLedger(career: Career): SeasonLedger {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const played = Math.min(userDiv.currentRoundIdx, totalRoundsOf(userDiv));
+
+  let ticket = 0;
+  let tv = 0;
+  let sponsorship = 0;
+  let bonus = 0;
+  let wages = 0;
+  for (let r = 0; r < played; r++) {
+    ticket += homeTicketForRound(career, r);
+    tv += tvIncomeForRound(career, r);
+    sponsorship += sponsorshipForRound(career, r);
+    bonus += matchBonusForRound(career, r);
+    wages += salarySliceForRound(career, r);
+  }
+  return {
+    rounds: played,
+    ticket,
+    tv,
+    sponsorship,
+    bonus,
+    wages,
+    net: ticket + tv + sponsorship + bonus - wages,
+  };
 }
 
 /**

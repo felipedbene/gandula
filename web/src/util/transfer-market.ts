@@ -6,7 +6,7 @@ import {
   MARKETING_MOMENTUM_MAX,
   STADIUM_MAX_CAPACITY,
 } from "./finances";
-import { FIRST_YEAR, type Career } from "../persistence";
+import { FIRST_YEAR, type Career, type TransferRecord } from "../persistence";
 import type { Attributes, Player, Position } from "../types";
 
 // ─── Pool composition + ID layout ─────────────────────────────────────────
@@ -343,6 +343,144 @@ export type TransferAction =
   | { kind: "sell"; player: Player; price: number }
   | { kind: "expandStadium"; seats: number; price: number }
   | { kind: "runCampaign"; fanbase: number; momentum: number; price: number };
+
+/** The roster the working career currently presents — the lazy-init the views
+ *  used inline: `userRoster` once populated, else the registry default. Pure. */
+function workingRoster(career: Career): Player[] {
+  return career.userRoster.length === 0
+    ? userTeam(career).roster.slice()
+    : career.userRoster.slice();
+}
+
+/**
+ * Apply a reversible transfer/commercial action to a career, returning the next
+ * career. The single source of truth for the money + manager-state + roster +
+ * transfer-history math, shared by the transfer market (buy/sell) and the
+ * Finances screen (expandStadium/runCampaign) so the two can't drift. Pure;
+ * callers are responsible for the `can*` gate before applying.
+ *
+ * `expandStadium`/`runCampaign` touch only `manager` (no TransferRecord — they
+ * aren't player moves). `buy`/`sell` move money, the roster, and append a
+ * TransferRecord; a sold player is lazy-pruned from `userTactics.bench`.
+ */
+export function applyTransferAction(career: Career, action: TransferAction): Career {
+  switch (action.kind) {
+    case "expandStadium":
+      return {
+        ...career,
+        manager: {
+          ...career.manager,
+          money: career.manager.money - action.price,
+          stadiumCapacity: career.manager.stadiumCapacity + action.seats,
+        },
+      };
+    case "runCampaign":
+      return {
+        ...career,
+        manager: {
+          ...career.manager,
+          money: career.manager.money - action.price,
+          fanbase: career.manager.fanbase + action.fanbase,
+          marketingMomentum: career.manager.marketingMomentum + action.momentum,
+        },
+      };
+    case "buy": {
+      const record: TransferRecord = {
+        kind: "buy",
+        playerName: action.player.name,
+        position: action.player.position,
+        price: action.price,
+      };
+      return {
+        ...career,
+        manager: { ...career.manager, money: career.manager.money - action.price },
+        userRoster: [...workingRoster(career), action.player],
+        currentSeason: {
+          ...career.currentSeason,
+          transfers: [...career.currentSeason.transfers, record],
+        },
+      };
+    }
+    case "sell": {
+      const record: TransferRecord = {
+        kind: "sell",
+        playerName: action.player.name,
+        position: action.player.position,
+        price: action.price,
+      };
+      // Lazy-prune the sold id from the bench; the XI is hard-blocked by canSell.
+      let userTactics = career.currentSeason.userTactics;
+      if (userTactics?.bench.includes(action.player.id)) {
+        userTactics = {
+          ...userTactics,
+          bench: userTactics.bench.filter((id) => id !== action.player.id),
+        };
+      }
+      return {
+        ...career,
+        manager: { ...career.manager, money: career.manager.money + action.price },
+        userRoster: workingRoster(career).filter((p) => p.id !== action.player.id),
+        currentSeason: {
+          ...career.currentSeason,
+          transfers: [...career.currentSeason.transfers, record],
+          userTactics,
+        },
+      };
+    }
+  }
+}
+
+/**
+ * Reverse the LAST-applied action (the undo). Inverse of
+ * [`applyTransferAction`] for money/roster/manager state and pops the trailing
+ * TransferRecord for buy/sell. The bench lazy-prune on a sell is intentionally
+ * NOT restored: re-adding the player to the roster doesn't put them back on the
+ * bench (same as a freshly bought player arriving outside the bench) — the user
+ * re-slots via BenchEditor. Pure.
+ */
+export function reverseTransferAction(career: Career, action: TransferAction): Career {
+  switch (action.kind) {
+    case "expandStadium":
+      return {
+        ...career,
+        manager: {
+          ...career.manager,
+          money: career.manager.money + action.price,
+          stadiumCapacity: career.manager.stadiumCapacity - action.seats,
+        },
+      };
+    case "runCampaign":
+      return {
+        ...career,
+        manager: {
+          ...career.manager,
+          money: career.manager.money + action.price,
+          fanbase: career.manager.fanbase - action.fanbase,
+          marketingMomentum: career.manager.marketingMomentum - action.momentum,
+        },
+      };
+    case "buy":
+      return {
+        ...career,
+        manager: { ...career.manager, money: career.manager.money + action.price },
+        userRoster: workingRoster(career).filter((p) => p.id !== action.player.id),
+        currentSeason: {
+          ...career.currentSeason,
+          transfers: career.currentSeason.transfers.slice(0, -1),
+        },
+      };
+    case "sell":
+      return {
+        ...career,
+        manager: { ...career.manager, money: career.manager.money - action.price },
+        userRoster: [...workingRoster(career), action.player],
+        currentSeason: {
+          ...career.currentSeason,
+          transfers: career.currentSeason.transfers.slice(0, -1),
+        },
+      };
+  }
+}
 
 /** Whether the club can expand the stadium right now (E.4.b.4): below the cap
  *  and enough cash for the next +STEP increment. */

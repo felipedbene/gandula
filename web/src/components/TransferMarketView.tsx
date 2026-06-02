@@ -3,25 +3,18 @@ import { userTeam } from "../util/roster";
 import {
   MAX_ROSTER,
   canBuy,
-  canExpand,
-  canMarket,
   canSell,
   generateFreeAgents,
   playerPrice,
   scoutReport,
+  applyTransferAction,
+  reverseTransferAction,
   type ScoutReport,
   type TransferAction,
 } from "../util/transfer-market";
-import {
-  CAMPAIGN_FANBASE,
-  MARKETING_MOMENTUM_PER_CAMPAIGN,
-  STADIUM_EXPANSION_STEP,
-  expansionCost,
-  marketingCost,
-  projectSeasonRunway,
-} from "../util/finances";
+import { projectSeasonRunway } from "../util/finances";
 import { formatMoney } from "../util/money";
-import type { Career, TransferRecord } from "../persistence";
+import type { Career } from "../persistence";
 import type { Player } from "../types";
 import { Button, Group, Progress, SimpleGrid, Stack, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
@@ -62,7 +55,11 @@ export default function TransferMarketView({
   onClose,
 }: TransferMarketViewProps) {
   const [working, setWorking] = useState<Career>(career);
-  const [actions, setActions] = useState<TransferAction[]>([]);
+  // The market now only buys/sells players; stadium + marketing spends moved to
+  // the Finances screen. Narrow to the player-action subset so undo is exhaustive.
+  const [actions, setActions] = useState<
+    Extract<TransferAction, { kind: "buy" } | { kind: "sell" }>[]
+  >([]);
   // Which free agent's scout report is expanded (id), or null.
   const [expandedAgent, setExpandedAgent] = useState<number | null>(null);
 
@@ -83,183 +80,26 @@ export default function TransferMarketView({
     return pool.filter((p) => !rosterIds.has(p.id));
   }, [pool, team]);
 
-  /** Lazy-init the working roster from the registry team on first
-   *  transaction. After the first buy/sell, working.userRoster is
-   *  always populated (and stays populated across undos — see briefing
-   *  decision: skipping the "non-empty content-equal to registry"
-   *  optimisation; userTeam fallback is functionally identical). */
-  function currentRosterCopy(): Player[] {
-    return working.userRoster.length === 0
-      ? team.roster.slice()
-      : working.userRoster.slice();
-  }
-
   function buy(player: Player) {
     const price = playerPrice(player, "buy");
-    const check = canBuy(working, price);
-    if (!check.ok) return;
-
-    const newRoster = [...currentRosterCopy(), player];
-    const newTransfers: TransferRecord[] = [
-      ...working.currentSeason.transfers,
-      { kind: "buy", playerName: player.name, position: player.position, price },
-    ];
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-      },
-      userRoster: newRoster,
-      currentSeason: {
-        ...working.currentSeason,
-        transfers: newTransfers,
-      },
-    });
-    setActions([...actions, { kind: "buy", player, price }]);
+    if (!canBuy(working, price).ok) return;
+    const action = { kind: "buy" as const, player, price };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
   }
 
   function sell(player: Player) {
     const price = playerPrice(player, "sell");
-    const check = canSell(working, player.id);
-    if (!check.ok) return;
-
-    const newRoster = currentRosterCopy().filter((p) => p.id !== player.id);
-
-    // Lazy-prune userTactics.bench if the sold id is there. XI is
-    // hard-blocked by canSell so we never need to mutate it.
-    let newUserTactics = working.currentSeason.userTactics;
-    if (newUserTactics?.bench.includes(player.id)) {
-      newUserTactics = {
-        ...newUserTactics,
-        bench: newUserTactics.bench.filter((id) => id !== player.id),
-      };
-    }
-
-    const newTransfers: TransferRecord[] = [
-      ...working.currentSeason.transfers,
-      { kind: "sell", playerName: player.name, position: player.position, price },
-    ];
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money + price,
-      },
-      userRoster: newRoster,
-      currentSeason: {
-        ...working.currentSeason,
-        transfers: newTransfers,
-        userTactics: newUserTactics,
-      },
-    });
-    setActions([...actions, { kind: "sell", player, price }]);
-  }
-
-  // E.4.b.4: pay to add a fixed block of seats. Debits money, raises capacity;
-  // reversible like buy/sell. Not a TransferRecord (no player) — purely a
-  // manager-state spend, so it doesn't appear in the season's transfer history.
-  function expandStadium() {
-    const check = canExpand(working);
-    if (!check.ok) return;
-    const price = expansionCost(working.manager.stadiumCapacity);
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-        stadiumCapacity: working.manager.stadiumCapacity + STADIUM_EXPANSION_STEP,
-      },
-    });
-    setActions([
-      ...actions,
-      { kind: "expandStadium", seats: STADIUM_EXPANSION_STEP, price },
-    ]);
-  }
-
-  // E.4.b.5: run a marketing campaign. Adds fanbase now AND raises the decaying
-  // marketingMomentum the seasonal drift target reads, so the boost persists a
-  // few seasons. Reversible; purely a manager-state spend.
-  function runCampaign() {
-    const check = canMarket(working);
-    if (!check.ok) return;
-    const price = marketingCost(working.manager.marketingMomentum);
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-        fanbase: working.manager.fanbase + CAMPAIGN_FANBASE,
-        marketingMomentum:
-          working.manager.marketingMomentum + MARKETING_MOMENTUM_PER_CAMPAIGN,
-      },
-    });
-    setActions([
-      ...actions,
-      {
-        kind: "runCampaign",
-        fanbase: CAMPAIGN_FANBASE,
-        momentum: MARKETING_MOMENTUM_PER_CAMPAIGN,
-        price,
-      },
-    ]);
+    if (!canSell(working, player.id).ok) return;
+    const action = { kind: "sell" as const, player, price };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
   }
 
   function undoLast() {
-    if (actions.length === 0) return;
     const last = actions[actions.length - 1];
-
-    if (last.kind === "expandStadium") {
-      setWorking({
-        ...working,
-        manager: {
-          ...working.manager,
-          money: working.manager.money + last.price,
-          stadiumCapacity: working.manager.stadiumCapacity - last.seats,
-        },
-      });
-      setActions(actions.slice(0, -1));
-      return;
-    }
-
-    if (last.kind === "runCampaign") {
-      setWorking({
-        ...working,
-        manager: {
-          ...working.manager,
-          money: working.manager.money + last.price,
-          fanbase: working.manager.fanbase - last.fanbase,
-          marketingMomentum: working.manager.marketingMomentum - last.momentum,
-        },
-      });
-      setActions(actions.slice(0, -1));
-      return;
-    }
-
-    const baseRoster = currentRosterCopy();
-    const newRoster =
-      last.kind === "buy"
-        ? baseRoster.filter((p) => p.id !== last.player.id)
-        : [...baseRoster, last.player];
-    const moneyDelta = last.kind === "buy" ? last.price : -last.price;
-    // The lazy-prune of userTactics.bench on a sell is intentionally
-    // NOT reversed here: re-adding the player to the roster on undo
-    // doesn't put them back on the bench. Simpler than nesting undo
-    // state, and consistent with how a freshly bought player also
-    // arrives outside the bench — user uses BenchEditor to slot
-    // anyone into bench from the broader roster.
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money + moneyDelta,
-      },
-      userRoster: newRoster,
-      currentSeason: {
-        ...working.currentSeason,
-        transfers: working.currentSeason.transfers.slice(0, -1),
-      },
-    });
+    if (!last) return;
+    setWorking(reverseTransferAction(working, last));
     setActions(actions.slice(0, -1));
   }
 
@@ -316,63 +156,6 @@ export default function TransferMarketView({
           </Panel>
         );
       })()}
-
-      <Panel title="Estádio, torcida & marketing">
-        <Stack gap={4}>
-          <Group justify="space-between" wrap="nowrap">
-            <Text size="sm">Capacidade do estádio</Text>
-            <Text size="sm" ff="monospace">
-              {formatMoney(working.manager.stadiumCapacity)} lugares
-            </Text>
-          </Group>
-          <Group justify="space-between" wrap="nowrap">
-            <Text size="sm">Torcida</Text>
-            <Text size="sm" ff="monospace">
-              {formatMoney(working.manager.fanbase)} torcedores
-            </Text>
-          </Group>
-          {(() => {
-            const check = canExpand(working);
-            const cost = expansionCost(working.manager.stadiumCapacity);
-            return (
-              <Group justify="space-between" wrap="nowrap" mt={4}>
-                <Text c="dimmed" size="xs">
-                  Ampliar aumenta a bilheteria de todos os jogos em casa.
-                </Text>
-                <Button
-                  size="xs"
-                  variant="default"
-                  disabled={!check.ok}
-                  title={check.ok ? undefined : check.reason}
-                  onClick={expandStadium}
-                >
-                  Ampliar +{formatMoney(STADIUM_EXPANSION_STEP)} · $ {formatMoney(cost)}
-                </Button>
-              </Group>
-            );
-          })()}
-          {(() => {
-            const check = canMarket(working);
-            const cost = marketingCost(working.manager.marketingMomentum);
-            return (
-              <Group justify="space-between" wrap="nowrap">
-                <Text c="dimmed" size="xs">
-                  Campanha de marketing aumenta a torcida (e dura algumas temporadas).
-                </Text>
-                <Button
-                  size="xs"
-                  variant="default"
-                  disabled={!check.ok}
-                  title={check.ok ? undefined : check.reason}
-                  onClick={runCampaign}
-                >
-                  Campanha +{formatMoney(CAMPAIGN_FANBASE)} · $ {formatMoney(cost)}
-                </Button>
-              </Group>
-            );
-          })()}
-        </Stack>
-      </Panel>
 
       <Panel title={`Jogadores disponíveis (${availableAgents.length})`}>
         <Stack gap={2}>
