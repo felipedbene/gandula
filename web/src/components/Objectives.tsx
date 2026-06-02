@@ -4,13 +4,13 @@ import { objectivesFor, userPositionIn, type ObjectiveStatus } from "../util/obj
 import type { TeamStats } from "../types";
 
 /** Status → glyph + colour, matching the match-feed/scout colour language
- *  (phosphor green = good, yellow = watch, red = danger). */
+ *  (accent blue = good, yellow = watch, red = danger). */
 function statusStyle(s: ObjectiveStatus): { glyph: string; color: string } {
   switch (s) {
     case "met":
-      return { glyph: "★", color: "phosphor.4" };
+      return { glyph: "★", color: "accent.4" };
     case "onTrack":
-      return { glyph: "▸", color: "phosphor.4" };
+      return { glyph: "▸", color: "accent.4" };
     case "atRisk":
       return { glyph: "!", color: "yellow.5" };
     case "missed":
@@ -55,7 +55,7 @@ export function Objectives({
               >
                 {g.label}
               </Text>
-              <Text span size="sm" c={color === "phosphor.4" ? "dimmed" : color}>
+              <Text span size="sm" c={color === "accent.4" ? "dimmed" : color}>
                 {g.detail}
               </Text>
             </Group>

@@ -94,13 +94,13 @@ function TieRow({ tie, userId }: { tie: CupTie; userId: number }) {
     <Box
       style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}
     >
-      <Text ta="right" size="sm" fw={homeWon ? 700 : 400} c={isUser ? "phosphor.3" : undefined}>
+      <Text ta="right" size="sm" fw={homeWon ? 700 : 400} c={isUser ? "accent.3" : undefined}>
         {homeName}
       </Text>
       <Text px="md" size="sm" ff="monospace" c={tie.played ? undefined : "dimmed"}>
         {score}
       </Text>
-      <Text ta="left" size="sm" fw={awayWon ? 700 : 400} c={isUser ? "phosphor.3" : undefined}>
+      <Text ta="left" size="sm" fw={awayWon ? 700 : 400} c={isUser ? "accent.3" : undefined}>
         {awayName}
       </Text>
     </Box>

@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import init from "./wasm/gandula_wasm.js";
-import { Container, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Container,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { Footer } from "./components/Footer";
 import { SeasonView } from "./components/SeasonView";
 
@@ -18,32 +27,57 @@ export function App() {
   }, []);
 
   return (
-    <Container size="sm" py="lg">
-      <Stack gap="md">
-        <Group justify="space-between" align="baseline">
-          <Title order={1} c="phosphor.4" style={{ letterSpacing: "0.12em" }}>
-            GANDULA
-          </Title>
-          <Text c="dimmed" size="sm">
-            v{__APP_VERSION__}
-          </Text>
-        </Group>
-        <Text c="dimmed" size="sm">
-          Simulador de futebol em texto
-        </Text>
+    <>
+      <Box
+        component="header"
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          backdropFilter: "blur(8px)",
+          background: "rgba(14, 18, 20, 0.8)",
+          borderBottom: "1px solid var(--mantine-color-ink-7)",
+        }}
+      >
+        <Container size="sm" py="sm">
+          <Group justify="space-between" align="center">
+            <Group gap="xs" align="center">
+              <Title
+                order={1}
+                fz={{ base: "h3", sm: "h2" }}
+                style={{ letterSpacing: "-0.02em" }}
+              >
+                Gandula
+              </Title>
+              <Badge variant="light" color="accent" radius="sm" size="sm">
+                BETA
+              </Badge>
+            </Group>
+            <Text c="dimmed" size="xs" ff="monospace">
+              v{__APP_VERSION__}
+            </Text>
+          </Group>
+        </Container>
+      </Box>
 
-        {error ? (
-          <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
-            {error}
-          </Text>
-        ) : !ready ? (
-          <Text c="dimmed">Carregando engine…</Text>
-        ) : (
-          <SeasonView onStatus={setStatus} />
-        )}
+      <Container size="sm" py="lg" pb={80}>
+        <Stack gap="md">
+          {error ? (
+            <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
+              {error}
+            </Text>
+          ) : !ready ? (
+            <Group gap="sm" py="xl" justify="center">
+              <Loader size="sm" color="accent" />
+              <Text c="dimmed">Carregando engine…</Text>
+            </Group>
+          ) : (
+            <SeasonView onStatus={setStatus} />
+          )}
 
-        <Footer status={status} />
-      </Stack>
-    </Container>
+          <Footer status={status} />
+        </Stack>
+      </Container>
+    </>
   );
 }

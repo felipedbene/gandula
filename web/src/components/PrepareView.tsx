@@ -319,7 +319,7 @@ function CopaBanner({ career, round }: { career: Career; round: number }) {
   const oppName = teamById(oppId)?.name ?? `Time ${oppId}`;
   return (
     <Panel title="Copa do Brasil">
-      <Text c="phosphor.4" fw={600}>
+      <Text c="accent.4" fw={600}>
         Jogo da Copa nesta rodada — vs {oppName}
       </Text>
       <Text c="dimmed" size="sm">

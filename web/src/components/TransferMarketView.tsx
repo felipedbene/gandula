@@ -303,7 +303,7 @@ export default function TransferMarketView({
               </Group>
               <Group justify="space-between" wrap="nowrap">
                 <Text size="sm">Saldo projetado no fim da temporada</Text>
-                <Text size="sm" ff="monospace" fw={700} c={ok ? "phosphor.4" : "red.5"}>
+                <Text size="sm" ff="monospace" fw={700} c={ok ? "accent.4" : "red.5"}>
                   $ {formatMoney(r.projectedEndBalance)}
                 </Text>
               </Group>
@@ -560,7 +560,7 @@ function ScoutPanel({
               <Text size="xs" c="dimmed" w={30}>
                 {label}
               </Text>
-              <Progress value={v} color="phosphor" size="sm" style={{ flex: 1 }} />
+              <Progress value={v} color="accent" size="sm" style={{ flex: 1 }} />
               <Text
                 size="xs"
                 w={22}
@@ -580,7 +580,7 @@ function ScoutPanel({
         </Text>
         {report.samePositionCount > 0 ? (
           <>
-            <Text size="sm" c={report.delta >= 0 ? "phosphor.4" : "red.5"}>
+            <Text size="sm" c={report.delta >= 0 ? "accent.4" : "red.5"}>
               vs seus {player.position}: {report.delta >= 0 ? "+" : "−"}
               {Math.abs(report.delta)}
             </Text>

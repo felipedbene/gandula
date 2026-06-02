@@ -815,12 +815,12 @@ function CampeonatoEmCurso({
         <Stack gap={4}>
           {currentRoundFixtures(career, userDiv).map((row, i) => (
             <Group key={i} gap="xs" wrap="nowrap">
-              <Text span w={14} ta="center" c="phosphor.4">
+              <Text span w={14} ta="center" c="accent.4">
                 {row.isUser ? "►" : ""}
               </Text>
               <Text
                 span
-                c={row.isUser ? "phosphor.4" : undefined}
+                c={row.isUser ? "accent.4" : undefined}
                 fw={row.isUser ? 600 : undefined}
               >
                 {row.homeName} × {row.awayName}
@@ -931,7 +931,7 @@ function CopaFinaleLine({ career }: { career: Career }) {
   return (
     <Panel title={userWon ? "*** Campeão da Copa do Brasil ***" : "Copa do Brasil"}>
       {userWon ? (
-        <Text c="phosphor.4" fw={700}>
+        <Text c="accent.4" fw={700}>
           PARABÉNS! {champName} levantou a Copa do Brasil.
         </Text>
       ) : (
@@ -1038,7 +1038,7 @@ function SeasonFinale({
 
       <Panel title={isUserChamp ? "*** Campeão ***" : "Campeão"}>
         {isUserChamp ? (
-          <Text c="phosphor.4" fw={700}>
+          <Text c="accent.4" fw={700}>
             PARABÉNS! {champName} venceu o {userDiv.name}.
           </Text>
         ) : (
@@ -1077,7 +1077,7 @@ function SeasonFinale({
             </Text>
           )}
           {userStats && !isUserChamp && (
-            <Text size="sm" c="phosphor.3" fw={600}>
+            <Text size="sm" c="accent.3" fw={600}>
               Sua colocação: {userTeamName} — {userIdx + 1}º lugar,{" "}
               {points(userStats)} pts, {userStats.won}V {userStats.drawn}E{" "}
               {userStats.lost}D
@@ -1094,28 +1094,28 @@ function SeasonFinale({
           <FinanceRow
             label="Bilheteria (mandante)"
             value={`+ $ ${formatMoney(finances.ticketRevenue)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           <FinanceRow
             label="Cota de TV"
             value={`+ $ ${formatMoney(finances.tvRevenue)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           <FinanceRow
             label="Patrocínio"
             value={`+ $ ${formatMoney(finances.sponsorship)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           <FinanceRow
             label="Bônus de vitórias/empates"
             value={`+ $ ${formatMoney(finances.matchBonuses)}`}
-            c="phosphor.4"
+            c="accent.4"
           />
           {finances.cupPrize > 0 && (
             <FinanceRow
               label="Premiação Copa do Brasil"
               value={`+ $ ${formatMoney(finances.cupPrize)}`}
-              c="phosphor.4"
+              c="accent.4"
             />
           )}
           <FinanceRow
@@ -1128,7 +1128,7 @@ function SeasonFinale({
             <FinanceRow
               label="Bônus promoção (ao avançar)"
               value={`+ $ ${formatMoney(finances.prBonus)}`}
-              c="phosphor.4"
+              c="accent.4"
             />
           )}
           {finances.prBonus < 0 && (
@@ -1142,7 +1142,7 @@ function SeasonFinale({
             <FinanceRow
               label="Premiação por classificação (ao avançar)"
               value={`+ $ ${formatMoney(finances.placementPrize)}`}
-              c="phosphor.4"
+              c="accent.4"
             />
           )}
           <FinanceRow
@@ -1163,7 +1163,7 @@ function SeasonFinale({
       <Panel title="Promoção e rebaixamento">
         <Stack gap="xs">
           {prResult.userPromoted && (
-            <Text ta="center" fw={700} c="phosphor.4">
+            <Text ta="center" fw={700} c="accent.4">
               *** SEU TIME SUBIU DE DIVISÃO! ***
             </Text>
           )}
@@ -1275,7 +1275,7 @@ function MovementGroup({
             <Text
               key={s.team_id}
               size="sm"
-              c={isUser ? "phosphor.3" : undefined}
+              c={isUser ? "accent.3" : undefined}
               fw={isUser ? 700 : undefined}
             >
               {startPosition + i}º {name} ({points(s)} pts)
@@ -1382,11 +1382,11 @@ function HistoryCard({ entry }: { entry: SeasonHistory }) {
         : `→ Permaneceu na ${entry.userDivision.name}`;
   const outcomeColor =
     entry.userOutcome === "promoted"
-      ? "phosphor.4"
+      ? "accent.4"
       : entry.userOutcome === "relegated"
         ? "red.5"
         : "dimmed";
-  const moneyColor = entry.moneyDelta >= 0 ? "phosphor.4" : "red.5";
+  const moneyColor = entry.moneyDelta >= 0 ? "accent.4" : "red.5";
   const moneySign = entry.moneyDelta >= 0 ? "+" : "−";
 
   return (
@@ -1485,7 +1485,13 @@ function StandingsTable({
   return (
     <Panel title={title}>
       <Table.ScrollContainer minWidth={320}>
-        <Table highlightOnHover verticalSpacing={6} horizontalSpacing="sm" fz="sm">
+        <Table
+          highlightOnHover
+          verticalSpacing={6}
+          horizontalSpacing="sm"
+          fz="sm"
+          style={{ fontVariantNumeric: "tabular-nums" }}
+        >
           <Table.Thead>
             <Table.Tr>
               <Table.Th>#</Table.Th>
@@ -1509,9 +1515,9 @@ function StandingsTable({
                   ? s.team_id === highlightTeamId
                   : i === 0;
               return (
-                <Table.Tr key={s.team_id} bg={isHi ? "phosphor.9" : undefined}>
+                <Table.Tr key={s.team_id} bg={isHi ? "accent.9" : undefined}>
                   <Table.Td>{i + 1}</Table.Td>
-                  <Table.Td c={isHi ? "phosphor.3" : undefined} fw={isHi ? 700 : undefined}>
+                  <Table.Td c={isHi ? "accent.3" : undefined} fw={isHi ? 700 : undefined}>
                     {teamName}
                   </Table.Td>
                   <Table.Td ta="right">{s.played}</Table.Td>

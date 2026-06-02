@@ -144,7 +144,7 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
         <Text fw={700} ta="left" style={{ flex: 1 }}>
           {away.toUpperCase()}
         </Text>
-        <Badge variant="outline" color="phosphor" radius="xl">
+        <Badge variant="outline" color="accent" radius="xl">
           {clockMinute}'
         </Badge>
       </Group>
@@ -259,11 +259,11 @@ function eventStyle(k: string): {
 } {
   switch (k) {
     case "Goal":
-      return { c: "phosphor.4", fw: 700, big: true };
+      return { c: "accent.4", fw: 700, big: true };
     case "RedCard":
       return { c: "red.5", fw: 700, big: true };
     case "PenaltyAwarded":
-      return { c: "phosphor.4", fw: 700, big: true };
+      return { c: "accent.4", fw: 700, big: true };
     case "PenaltyMissed":
       return { c: "red.5", fw: 700 };
     case "YellowCard":

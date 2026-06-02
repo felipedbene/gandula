@@ -14,15 +14,20 @@ export function Panel({
   children?: ReactNode;
 }) {
   return (
-    <Card withBorder radius="md" padding="md">
+    <Card
+      radius="md"
+      padding="md"
+      bg="ink.8"
+      style={{ border: "1px solid var(--mantine-color-ink-7)" }}
+    >
       {title !== undefined && (
         <Text
           tt="uppercase"
           c="dimmed"
-          fw={700}
+          fw={600}
           size="xs"
           mb="sm"
-          style={{ letterSpacing: "0.06em" }}
+          style={{ letterSpacing: "0.08em" }}
         >
           {title}
         </Text>

@@ -92,7 +92,7 @@ export default function BenchEditor({ team, state, onChange }: BenchEditorProps)
           const player = playerById.get(playerId);
           return (
             <Group key={slotIdx} gap="xs" wrap="nowrap">
-              <Text span c="phosphor.4">►</Text>
+              <Text span c="accent.4">►</Text>
               <Text span size="sm" c="dimmed">
                 {player?.position ?? "?"}
               </Text>

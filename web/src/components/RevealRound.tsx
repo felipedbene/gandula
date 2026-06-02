@@ -166,7 +166,7 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
         <Card withBorder radius="md" padding="md">
           <Group justify="space-between" wrap="nowrap">
             <Text c="dimmed">Seu time descansa nesta rodada.</Text>
-            <Badge variant="outline" color="phosphor" radius="xl">
+            <Badge variant="outline" color="accent" radius="xl">
               {byeClock}'
             </Badge>
           </Group>
@@ -367,7 +367,7 @@ function CopaTieReveal({
         </Stack>
       )}
       {phase === "verdict" && (
-        <Text ta="center" size="sm" mt={4} fw={700} c={won ? "phosphor.4" : "red.5"}>
+        <Text ta="center" size="sm" mt={4} fw={700} c={won ? "accent.4" : "red.5"}>
           {won ? "AVANÇOU na Copa!" : "ELIMINADO da Copa"}
         </Text>
       )}
