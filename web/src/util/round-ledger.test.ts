@@ -17,6 +17,7 @@ import {
   matchBonusForRound,
   salarySliceForRound,
   roundCashDelta,
+  seasonToDateLedger,
 } from "./finances";
 import { divideIntoDivisions, pickStarterTeam } from "./divisions";
 import {
@@ -146,5 +147,49 @@ describe("round ledger (anti-drift)", () => {
         expect(gate).toBe(0); // away or bye → no gate line rendered
       }
     }
+  });
+});
+
+describe("seasonToDateLedger (anti-drift)", () => {
+  // Set the user's division to a mid-season round so there's a non-trivial
+  // played prefix to accumulate.
+  function midSeason(seed: bigint, round: number): Career {
+    const c = makeFinishedCareer(seed);
+    const idx = findUserDivisionIdxInSeason(c.currentSeason, c.controlledTeamId);
+    c.currentSeason.divisions[idx].currentRoundIdx = round;
+    return c;
+  }
+
+  it("net == Σ roundCashDelta over played rounds, and lines sum to net", () => {
+    for (const seed of [1998n, 7n, 2026n]) {
+      const career = midSeason(seed, 12);
+      const ledger = seasonToDateLedger(career);
+      let expectedNet = 0;
+      for (let r = 0; r < 12; r++) expectedNet += roundCashDelta(career, r);
+      expect(ledger.rounds).toBe(12);
+      expect(ledger.net).toBe(expectedNet);
+      expect(
+        ledger.ticket + ledger.tv + ledger.sponsorship + ledger.bonus - ledger.wages,
+      ).toBe(ledger.net);
+    }
+  });
+
+  it("is empty (zeros) before any round is played", () => {
+    const career = midSeason(1998n, 0);
+    const ledger = seasonToDateLedger(career);
+    expect(ledger.rounds).toBe(0);
+    expect(ledger.net).toBe(0);
+    expect(ledger.ticket + ledger.tv + ledger.sponsorship + ledger.bonus + ledger.wages).toBe(0);
+  });
+
+  it("accumulates monotonically as more rounds are played", () => {
+    const early = seasonToDateLedger(midSeason(1998n, 5));
+    const late = seasonToDateLedger(midSeason(1998n, 20));
+    expect(late.rounds).toBeGreaterThan(early.rounds);
+    // Revenue lines never shrink with more played rounds (TV/sponsorship/wages
+    // accrue every round; tickets/bonus are non-negative additions).
+    expect(late.tv).toBeGreaterThan(early.tv);
+    expect(late.wages).toBeGreaterThan(early.wages);
+    expect(late.ticket).toBeGreaterThanOrEqual(early.ticket);
   });
 });

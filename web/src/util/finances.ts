@@ -586,6 +586,54 @@ export function roundCashDelta(career: Career, roundIdx: number): number {
   );
 }
 
+/** Season-to-date cash ledger: the per-round revenue/cost streams summed over
+ *  the rounds ALREADY PLAYED in the user's division ([0, currentRoundIdx)).
+ *  Each line reuses the same per-round helper that moves the money, and `net`
+ *  equals Σ roundCashDelta over those rounds — so the breakdown can't drift
+ *  from the cash that actually accrued. Cup prize and the end-of-season
+ *  placement / P/R prize are NOT included (they land elsewhere / aren't known
+ *  mid-season). Pure. */
+export type SeasonLedger = {
+  /** Rounds counted (the played rounds whose cash has accrued). */
+  rounds: number;
+  ticket: number;
+  tv: number;
+  sponsorship: number;
+  bonus: number;
+  /** Wages paid (positive; the subtraction lives in `net`). */
+  wages: number;
+  net: number;
+};
+
+export function seasonToDateLedger(career: Career): SeasonLedger {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const played = Math.min(userDiv.currentRoundIdx, totalRoundsOf(userDiv));
+
+  let ticket = 0;
+  let tv = 0;
+  let sponsorship = 0;
+  let bonus = 0;
+  let wages = 0;
+  for (let r = 0; r < played; r++) {
+    ticket += homeTicketForRound(career, r);
+    tv += tvIncomeForRound(career, r);
+    sponsorship += sponsorshipForRound(career, r);
+    bonus += matchBonusForRound(career, r);
+    wages += salarySliceForRound(career, r);
+  }
+  return {
+    rounds: played,
+    ticket,
+    tv,
+    sponsorship,
+    bonus,
+    wages,
+    net: ticket + tv + sponsorship + bonus - wages,
+  };
+}
+
 /**
  * Cash-runway projection (E.5.a) — answers "can I afford this squad across the
  * REST of the season?" from where the season currently sits. Sums the per-round

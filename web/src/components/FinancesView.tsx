@@ -8,6 +8,7 @@ import {
   marketingCost,
   tvIncomeForRound,
   sponsorshipForRound,
+  seasonToDateLedger,
   TV_DEAL_BY_TIER,
   CAMPAIGN_FANBASE,
   STADIUM_EXPANSION_STEP,
@@ -106,6 +107,9 @@ export default function FinancesView({
   const tvPerRound = tvIncomeForRound(working, round);
   const sponsorshipPerRound = sponsorshipForRound(working, round);
 
+  // Season-to-date ledger: the 5 streams summed over rounds already played.
+  const ledger = seasonToDateLedger(working);
+
   return (
     <Stack gap="md">
       <Text c="dimmed" size="sm">
@@ -148,6 +152,60 @@ export default function FinancesView({
               : "⚠ Risco de ficar no vermelho antes do fim da temporada — segure os gastos."}
           </Text>
         </Stack>
+      </Panel>
+
+      <Panel
+        title={`Caixa da temporada${ledger.rounds > 0 ? ` (${ledger.rounds} rodada${ledger.rounds === 1 ? "" : "s"})` : ""}`}
+      >
+        {ledger.rounds === 0 ? (
+          <Text c="dimmed" size="sm">
+            Nenhuma rodada jogada ainda nesta temporada.
+          </Text>
+        ) : (
+          <Stack gap={4}>
+            {([
+              ["Bilheteria", ledger.ticket, false],
+              ["TV", ledger.tv, false],
+              ["Patrocínio", ledger.sponsorship, false],
+              ["Bônus", ledger.bonus, false],
+              ["Folha", ledger.wages, true],
+            ] as const).map(([label, value, negative]) => (
+              <Group key={label} justify="space-between" wrap="nowrap">
+                <Text size="sm" c="dimmed">
+                  {label}
+                </Text>
+                <Text size="sm" ff="monospace" c={negative ? "red.4" : undefined}>
+                  {negative ? "−" : "+"} $ {formatMoney(Math.abs(value))}
+                </Text>
+              </Group>
+            ))}
+            <Group
+              justify="space-between"
+              wrap="nowrap"
+              style={{
+                borderTop: "1px solid var(--mantine-color-ink-6)",
+                marginTop: 2,
+                paddingTop: 4,
+              }}
+            >
+              <Text size="sm" fw={700}>
+                Líquido
+              </Text>
+              <Text
+                size="sm"
+                fw={700}
+                ff="monospace"
+                c={ledger.net >= 0 ? "accent.4" : "red.4"}
+              >
+                {ledger.net >= 0 ? "+" : "−"} $ {formatMoney(Math.abs(ledger.net))}
+              </Text>
+            </Group>
+            <Text size="xs" c="dimmed" mt={2}>
+              Acumulado das rodadas já jogadas (sem copa nem premiação de
+              classificação).
+            </Text>
+          </Stack>
+        )}
       </Panel>
 
       <Panel title="Receitas recorrentes">
