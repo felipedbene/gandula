@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Button, Group, Progress, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { project_second_half_js } from "../wasm/gandula_wasm.js";
 import type { Team } from "../types";
 import type { UserTactics } from "../persistence";
 import { applyUserTactics, applyRivalHalftime } from "../util/resimulate";
 import { Panel } from "./ui/Panel";
 import { TeamCrest } from "./ui/TeamCrest";
+import { ProjectionIndicators } from "./ui/ProjectionIndicators";
 import TacticsForm, {
   type TacticsFormState,
   tacticsFormStateToOverride,
@@ -103,12 +104,6 @@ export default function HalftimePanel({
       : projection.home_pressure
     : 0;
 
-  // Normalize the two pressures into bar widths relative to the larger one, so
-  // the bars are comparable without exposing the raw per-minute rate.
-  const maxPressure = Math.max(userPressure, oppPressure, 1e-9);
-  const userBar = Math.round((userPressure / maxPressure) * 100);
-  const oppBar = Math.round((oppPressure / maxPressure) * 100);
-
   const userName = baseUserTeam.name;
   const oppName = opponentTeam.name;
 
@@ -138,30 +133,13 @@ export default function HalftimePanel({
         <TacticsForm state={form} onChange={setForm} />
 
         {/* Aggregate projection — NO projected score. */}
-        <Stack gap={6}>
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Posse projetada
-            </Text>
-            <Text size="sm" ff="monospace">
-              {Math.round(userPoss * 100)}% × {Math.round((1 - userPoss) * 100)}%
-            </Text>
-          </Group>
-          <Progress value={Math.round(userPoss * 100)} color="accent" size="lg" />
-
-          <Group justify="space-between" mt={4}>
-            <Text size="sm" c="dimmed">
-              Pressão {userName}
-            </Text>
-          </Group>
-          <Progress value={userBar} color="accent" size="md" />
-          <Group justify="space-between">
-            <Text size="sm" c="dimmed">
-              Pressão {oppName}
-            </Text>
-          </Group>
-          <Progress value={oppBar} color="red" size="md" />
-        </Stack>
+        <ProjectionIndicators
+          userPossession={userPoss}
+          userPressure={userPressure}
+          oppPressure={oppPressure}
+          userName={userName}
+          oppName={oppName}
+        />
 
         <Group justify="center">
           <Button onClick={() => onConfirm(toUserTactics(form))}>
