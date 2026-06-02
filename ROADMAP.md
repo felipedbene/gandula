@@ -4,6 +4,26 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 **L** large. Items are grouped by epic; the suggested order is at the bottom.
 **Shipped history is below the active work.**
 
+> **Status (2026-06): roadmap parked — no feature work pending.** The full arc
+> shipped — three-tier pyramid → Copa do Brasil → full economy → RL-distilled
+> rival coaches → objectives / cash-runway / two-leg cup / playback polish. The
+> handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
+> not forgotten:
+>   - **E.4.b — Title affordability**: a parent header; its children b.1–b.7 all
+>     shipped. Effectively done.
+>   - **E.3.c — Self-play `[~]`**: its outcome (policy-distilled rivals) shipped.
+>   - **E.4.a — Balance / difficulty presets**: a *design decision*, not missing
+>     code. E.6 measured the economy as no-bankruptcy / title-reachable and that
+>     was accepted as the intended difficulty; presets are a "if we want knobs"
+>     nice-to-have.
+>   - **E.6 — RL CI regression guard `[~]`**: measurement done; only the optional
+>     auto-run-on-finances-change CI wiring is open.
+>   - **E.3.c — State championship**: long-standing `DEFERRED` scope-trap.
+>
+> Optional, off-roadmap follow-ups if we ever resume: a title-stronger RL policy
+> to re-distill (rivals consolidate in Série A today), and syncing the gandula-rl
+> harness to schema v10 (a training-dynamics decision, intentionally untouched).
+
 ## The structural arc (re-sequenced)
 
 The original plan tuned the economy (E.4) on the 17-team / 2-tier world. That
