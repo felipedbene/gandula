@@ -15,10 +15,9 @@ export function Panel({
 }) {
   return (
     <Card
-      radius="md"
-      padding="md"
-      bg="ink.8"
-      style={{ border: "1px solid var(--mantine-color-ink-7)" }}
+      radius="xl"
+      padding="lg"
+      className="glass-panel"
     >
       {title !== undefined && (
         <Text

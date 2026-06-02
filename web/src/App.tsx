@@ -31,16 +31,19 @@ export function App() {
     <>
       <Box
         component="header"
+        className="glass-panel"
         style={{
           position: "sticky",
           top: 0,
           zIndex: 100,
-          backdropFilter: "blur(8px)",
-          background: "rgba(14, 18, 20, 0.8)",
-          borderBottom: "1px solid var(--mantine-color-ink-7)",
+          borderLeft: "none",
+          borderRight: "none",
+          borderTop: "none",
+          borderRadius: 0,
+          padding: "8px 0"
         }}
       >
-        <Container size="sm" py="sm">
+        <Container size="sm">
           <Group justify="space-between" align="center" wrap="nowrap">
             <Group gap="xs" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
               <Title

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Box, Stack, Text } from "@mantine/core";
 import type { Player, Position, Team } from "../../types";
 import { playerOverall } from "../../util/transfer-market";
@@ -160,6 +161,9 @@ export default function FormationPitch({
   // bookkeeping lives in `dragRef` so pointer handlers never read stale state.
   const [dragId, setDragId] = useState<number | null>(null);
   const [dropId, setDropId] = useState<number | null>(null);
+  // `dragging` flips true only once the pointer crosses the move threshold, so
+  // a plain tap never shows the ghost or dims the dot.
+  const [dragging, setDragging] = useState(false);
   const [ghost, setGhost] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{
     id: number;
@@ -232,7 +236,7 @@ export default function FormationPitch({
       suppressClickRef.current = false;
       dragRef.current = { id, startX: e.clientX, startY: e.clientY, moved: false };
       setDragId(id);
-      setGhost({ x: e.clientX, y: e.clientY });
+      // Ghost stays hidden (dragging=false) until the move threshold is crossed.
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     };
   }
@@ -242,9 +246,12 @@ export default function FormationPitch({
     if (!d) return;
     const dx = e.clientX - d.startX;
     const dy = e.clientY - d.startY;
-    if (!d.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) d.moved = true;
-    setGhost({ x: e.clientX, y: e.clientY });
+    if (!d.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) {
+      d.moved = true;
+      setDragging(true); // first real movement → reveal the ghost
+    }
     if (d.moved) {
+      setGhost({ x: e.clientX, y: e.clientY });
       const targetId = dotIdAt(e.clientX, e.clientY);
       setDropId(targetId !== null && canDrop(d.id, targetId) ? targetId : null);
     }
@@ -254,6 +261,7 @@ export default function FormationPitch({
     const d = dragRef.current;
     dragRef.current = null;
     setDragId(null);
+    setDragging(false);
     setGhost(null);
     const target = dropId;
     setDropId(null);
@@ -336,7 +344,7 @@ export default function FormationPitch({
                   player={playerById.get(id)}
                   selected={selected === id}
                   dropTarget={dropId === id}
-                  dragging={dragId === id}
+                  dragging={dragging && dragId === id}
                   handlers={handlersFor(id)}
                 />
               ))
@@ -367,7 +375,7 @@ export default function FormationPitch({
                 key={p.id}
                 player={p}
                 dropTarget={dropId === p.id}
-                dragging={dragId === p.id}
+                dragging={dragging && dragId === p.id}
                 size="sm"
                 handlers={handlersFor(p.id)}
               />
@@ -376,34 +384,43 @@ export default function FormationPitch({
         </Box>
       )}
 
-      {/* Floating drag ghost following the pointer. */}
-      {ghost && draggedPlayer && (
-        <Box
-          style={{
-            position: "fixed",
-            left: ghost.x,
-            top: ghost.y,
-            transform: "translate(-50%, -50%)",
-            zIndex: 1000,
-            pointerEvents: "none",
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            background: BAND_COLOR[draggedPlayer.position],
-            color: "var(--mantine-color-ink-9)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: 800,
-            fontSize: 13,
-            fontFamily: "var(--mantine-font-family-monospace)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-            opacity: 0.92,
-          }}
-        >
-          {playerOverall(draggedPlayer)}
-        </Box>
-      )}
+      {/* Floating drag ghost following the pointer. Portaled to <body> so its
+          `position: fixed` is anchored to the viewport — the screen wrapper
+          carries a leftover `transform` from the phase-enter animation
+          (animation-fill-mode: both), which would otherwise become the
+          containing block and offset the ghost from the cursor. */}
+      {dragging &&
+        ghost &&
+        draggedPlayer &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <Box
+            style={{
+              position: "fixed",
+              left: ghost.x,
+              top: ghost.y,
+              transform: "translate(-50%, -50%)",
+              zIndex: 1000,
+              pointerEvents: "none",
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              background: BAND_COLOR[draggedPlayer.position],
+              color: "var(--mantine-color-ink-9)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 800,
+              fontSize: 13,
+              fontFamily: "var(--mantine-font-family-monospace)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+              opacity: 0.92,
+            }}
+          >
+            {playerOverall(draggedPlayer)}
+          </Box>,
+          document.body,
+        )}
 
       {/* Interactive swap menu for the selected (tapped) player. */}
       {interactive && selected !== null && (

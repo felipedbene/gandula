@@ -206,11 +206,11 @@ export default function MatchReveal({
   const awayLeading = runningAway > runningHome;
 
   return (
-    <Card withBorder radius="md" padding={0}>
+    <Card withBorder radius="xl" padding={0} className="glass-panel">
       <Stack
         gap={6}
         p="md"
-        style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
+        style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}
       >
         <Group gap="sm" wrap="nowrap" align="center">
           <Stack gap={6} align="center" style={{ flex: 1, minWidth: 0 }}>

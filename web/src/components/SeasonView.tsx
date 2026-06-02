@@ -1237,7 +1237,7 @@ function CopaFinaleLine({ career }: { career: Career }) {
   return (
     <Panel title={userWon ? "*** Campeão da Copa do Brasil ***" : "Copa do Brasil"}>
       {userWon ? (
-        <Text c="accent.4" fw={700}>
+        <Text c="gold.5" fw={800} fz="lg">
           PARABÉNS! {champName} levantou a Copa do Brasil.
         </Text>
       ) : (
@@ -1344,7 +1344,7 @@ function SeasonFinale({
 
       <Panel title={isUserChamp ? "*** Campeão ***" : "Campeão"}>
         {isUserChamp ? (
-          <Text c="accent.4" fw={700}>
+          <Text c="gold.5" fw={800} fz="lg">
             PARABÉNS! {champName} venceu o {userDiv.name}.
           </Text>
         ) : (
@@ -1469,7 +1469,7 @@ function SeasonFinale({
       <Panel title="Promoção e rebaixamento">
         <Stack gap="xs">
           {prResult.userPromoted && (
-            <Text ta="center" fw={700} c="accent.4">
+            <Text ta="center" fw={800} fz="lg" c="gold.5">
               *** SEU TIME SUBIU DE DIVISÃO! ***
             </Text>
           )}
