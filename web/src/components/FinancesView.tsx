@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Button, Group, Stack, Text } from "@mantine/core";
-import type { Career } from "../persistence";
+import { useMemo, useState } from "react";
+import { Badge, Button, Group, Stack, Text } from "@mantine/core";
+import type { Career, Deal } from "../persistence";
 import {
   projectSeasonRunway,
   nextHomeDemand,
@@ -9,7 +9,12 @@ import {
   tvIncomeForRound,
   sponsorshipForRound,
   seasonToDateLedger,
+  tvSeasonTotal,
+  generateDealOffers,
+  type DealOffer,
   TV_DEAL_BY_TIER,
+  SPONSORSHIP_BASE_BY_TIER,
+  SPONSORSHIP_FANBASE_COEF,
   CAMPAIGN_FANBASE,
   STADIUM_EXPANSION_STEP,
   MARKETING_MOMENTUM_PER_CAMPAIGN,
@@ -102,10 +107,41 @@ export default function FinancesView({
       findUserDivisionIdxInSeason(working.currentSeason, working.controlledTeamId)
     ];
   const tier = userDiv.tier as 1 | 2 | 3;
-  const tvSeason = TV_DEAL_BY_TIER[tier];
+  const tvSeason = tvSeasonTotal(working);
   const round = Math.min(userDiv.currentRoundIdx, userDiv.record.fixtures.length);
   const tvPerRound = tvIncomeForRound(working, round);
   const sponsorshipPerRound = sponsorshipForRound(working, round);
+
+  // Negotiable deals (v12): the offer slate for NEXT season, signable now (it
+  // takes effect next season — the current season runs on the active deal /
+  // derived floor, keeping the per-round-sums-to-season invariant intact).
+  // Anchored on the current tier's floors; deterministic in (seed, nextYear).
+  const nextYear = working.currentSeason.year + 1;
+  const offers = useMemo(() => {
+    const tvFloor = TV_DEAL_BY_TIER[tier];
+    const sponsorshipFloor = Math.round(
+      SPONSORSHIP_BASE_BY_TIER[tier] +
+        working.manager.fanbase * SPONSORSHIP_FANBASE_COEF,
+    );
+    return generateDealOffers(working.seed, nextYear, tvFloor, sponsorshipFloor);
+    // seed + nextYear + tier + fanbase fully determine the slate.
+  }, [working.seed, nextYear, tier, working.manager.fanbase]);
+
+  function signDeal(slot: "tv" | "sponsorship", offer: DealOffer) {
+    // Strip the display-only `label` to store a clean Deal.
+    const { label: _label, ...deal } = offer;
+    const action: TransferAction = {
+      kind: "signDeal",
+      slot,
+      deal: deal as Deal,
+      previous: working.manager.activeDeals?.[slot],
+    };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
+  }
+
+  const activeTv = working.manager.activeDeals?.tv;
+  const activeSponsor = working.manager.activeDeals?.sponsorship;
 
   // Season-to-date ledger: the 5 streams summed over rounds already played.
   const ledger = seasonToDateLedger(working);
@@ -241,6 +277,32 @@ export default function FinancesView({
         </Stack>
       </Panel>
 
+      <Panel title={`Contratos · ofertas para ${nextYear}`}>
+        <Stack gap="sm">
+          <DealSlot
+            heading="TV"
+            active={activeTv}
+            floor={TV_DEAL_BY_TIER[tier]}
+            offers={offers.tv}
+            onSign={(o) => signDeal("tv", o)}
+          />
+          <DealSlot
+            heading="Patrocínio"
+            active={activeSponsor}
+            floor={Math.round(
+              SPONSORSHIP_BASE_BY_TIER[tier] +
+                working.manager.fanbase * SPONSORSHIP_FANBASE_COEF,
+            )}
+            offers={offers.sponsorship}
+            onSign={(o) => signDeal("sponsorship", o)}
+          />
+          <Text size="xs" c="dimmed">
+            Ofertas entram em vigor na próxima temporada. Cair de divisão
+            derruba o contrato de TV (volta ao piso da nova série).
+          </Text>
+        </Stack>
+      </Panel>
+
       <Panel title="Estádio, torcida & marketing">
         <Stack gap={4}>
           <Group justify="space-between" wrap="nowrap">
@@ -314,6 +376,69 @@ export default function FinancesView({
           Desfazer última
         </Button>
       </Group>
+    </Stack>
+  );
+}
+
+/** One contract slot (TV or sponsorship): the active deal (or the derived
+ *  floor when none is signed) + the next-season offer slate to sign from. */
+function DealSlot({
+  heading,
+  active,
+  floor,
+  offers,
+  onSign,
+}: {
+  heading: string;
+  active: Deal | undefined;
+  floor: number;
+  offers: DealOffer[];
+  onSign: (offer: DealOffer) => void;
+}) {
+  return (
+    <Stack gap={4}>
+      <Group justify="space-between" wrap="nowrap">
+        <Text size="sm" fw={700}>
+          {heading}
+        </Text>
+        {active ? (
+          <Group gap="xs" wrap="nowrap">
+            <Badge variant="light" color="accent" radius="sm" size="sm">
+              Contrato
+            </Badge>
+            <Text size="sm" ff="monospace">
+              $ {formatMoney(active.seasonAmount)}/temp · {active.termYears}t
+            </Text>
+          </Group>
+        ) : (
+          <Text size="sm" ff="monospace" c="dimmed">
+            piso $ {formatMoney(floor)}/temp
+          </Text>
+        )}
+      </Group>
+      {offers.map((o) => {
+        const signed = active?.id === o.id;
+        return (
+          <Group key={o.id} justify="space-between" wrap="nowrap">
+            <Text size="sm" c="dimmed">
+              {o.label} · {o.termYears} temporada{o.termYears === 1 ? "" : "s"}
+            </Text>
+            <Group gap="xs" wrap="nowrap">
+              <Text size="sm" ff="monospace">
+                $ {formatMoney(o.seasonAmount)}
+              </Text>
+              <Button
+                size="compact-xs"
+                variant={signed ? "filled" : "default"}
+                disabled={signed}
+                onClick={() => onSign(o)}
+              >
+                {signed ? "Assinado" : "Assinar"}
+              </Button>
+            </Group>
+          </Group>
+        );
+      })}
     </Stack>
   );
 }

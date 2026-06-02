@@ -169,7 +169,8 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
           result.kind === "migratedV7" ||
           result.kind === "migratedV8" ||
           result.kind === "migratedV9" ||
-          result.kind === "migratedV10"
+          result.kind === "migratedV10" ||
+          result.kind === "migratedV11"
         ) {
           let career = result.career;
           const migrated =
@@ -177,11 +178,14 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
             result.kind === "migratedV7" ||
             result.kind === "migratedV8" ||
             result.kind === "migratedV9" ||
-            result.kind === "migratedV10";
+            result.kind === "migratedV10" ||
+            result.kind === "migratedV11";
           if (migrated) {
-            // Additive cascade v6→v7→v8→v9→v10→v11 — progress preserved.
+            // Additive cascade v6→v7→v8→v9→v10→v11→v12 — progress preserved.
+            //   v11 lacks manager.activeDeals — optional, nothing to seed
+            //     (absent = tier-derived TV/sponsorship); just stamps v12 below.
             //   v10 lacks halftimeTactics — purely optional, nothing to seed
-            //     (absent = no half-time change); just stamps v11 below.
+            //     (absent = no half-time change); just stamps v12 below.
             //   v6 lacks the Copa (deterministic from the season seed,
             //     fast-forwarded past played cup rounds);
             //   v6 + v7 lack the stadium/fanbase fields (seeded by tier);
@@ -198,8 +202,10 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
               )
             ].tier;
             const managerFields =
-              result.kind === "migratedV10" || result.kind === "migratedV9"
-                ? career.manager // v9/v10 already have every manager field
+              result.kind === "migratedV11" ||
+              result.kind === "migratedV10" ||
+              result.kind === "migratedV9"
+                ? career.manager // v9/v10/v11 already have every manager field
                 : result.kind === "migratedV8"
                   ? { ...career.manager, marketingMomentum: 0 }
                   : { ...career.manager, ...seedStadiumForTier(userTierForSeed) };
@@ -211,7 +217,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
               result.kind === "migratedV6" || result.kind === "migratedV9";
             career = {
               ...career,
-              schemaVersion: 11,
+              schemaVersion: 12,
               currentSeason: needsCopaRebuild
                 ? { ...career.currentSeason, copa: initCopaForSeason(career) }
                 : career.currentSeason,
@@ -238,7 +244,9 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
                     ? "save v9 migrado (Copa em ida e volta)"
                     : result.kind === "migratedV10"
                       ? "save v10 migrado (tática de intervalo)"
-                      : "save carregado";
+                      : result.kind === "migratedV11"
+                        ? "save v11 migrado (contratos negociáveis)"
+                        : "save carregado";
           onStatus(
             `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
@@ -293,7 +301,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 11,
+        schemaVersion: 12,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -722,6 +730,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
         agedUserRoster,
         nextFanbase,
         nextMarketingMomentum,
+        nextActiveDeals,
       } = advanceCareer(career, pr);
       const ms = Math.round(performance.now() - start);
       const newCareer: Career = {
@@ -734,9 +743,11 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
           ...career.manager,
           money: career.manager.money + finances.prBonus + finances.placementPrize,
           // Stadium capacity carries forward via the spread; fanbase drifts and
-          // marketing momentum decays (E.4.b.4/b.5).
+          // marketing momentum decays (E.4.b.4/b.5); TV/sponsorship deals carry
+          // forward, with the TV deal dropped on relegation (v12).
           fanbase: nextFanbase,
           marketingMomentum: nextMarketingMomentum,
+          activeDeals: nextActiveDeals,
         },
       };
       await saveCareer(newCareer);

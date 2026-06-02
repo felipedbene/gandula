@@ -50,7 +50,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 11,
+    schemaVersion: 12,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -394,5 +394,53 @@ describe("advanceCareer — input immutability", () => {
       typeof v === "bigint" ? v.toString() : v,
     );
     expect(after).toBe(snapshot);
+  });
+});
+
+describe("advanceCareer — negotiable deals (v12)", () => {
+  const tvDeal = {
+    id: "tv-2026-1",
+    kind: "tv" as const,
+    seasonAmount: 4_000_000,
+    startYear: FIRST_YEAR,
+    termYears: 2,
+  };
+  const sponsorDeal = {
+    id: "sponsorship-2026-0",
+    kind: "sponsorship" as const,
+    seasonAmount: 700_000,
+    startYear: FIRST_YEAR,
+    termYears: 1,
+  };
+
+  it("carries deals forward when the user is NOT relegated (Série C user stays/promotes)", () => {
+    const career = makeFinishedCareer(1998n);
+    career.manager.activeDeals = { tv: tvDeal, sponsorship: sponsorDeal };
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    expect(pr.userRelegated).toBe(false); // bottom tier — can't be relegated
+    const { nextActiveDeals } = advanceCareer(career, pr);
+    expect(nextActiveDeals?.tv).toEqual(tvDeal);
+    expect(nextActiveDeals?.sponsorship).toEqual(sponsorDeal);
+  });
+
+  it("drops the TV deal on relegation (reverts to the new tier floor); sponsorship stays", () => {
+    // Put the controlled team at the bottom of Série B so real P/R relegates it.
+    const career = makeFinishedCareer(1998n);
+    const tierB = career.currentSeason.divisions.find((d) => d.tier === 2)!;
+    const bottomB = tierB.record.standings[tierB.record.standings.length - 1];
+    career.controlledTeamId = bottomB.team_id;
+    career.manager.activeDeals = { tv: tvDeal, sponsorship: sponsorDeal };
+
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    expect(pr.userRelegated).toBe(true);
+    const { nextActiveDeals } = advanceCareer(career, pr);
+    expect(nextActiveDeals?.tv).toBeUndefined(); // dropped → derived floor next season
+    expect(nextActiveDeals?.sponsorship).toEqual(sponsorDeal); // sponsorship carries
   });
 });

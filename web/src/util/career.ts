@@ -12,6 +12,7 @@ import {
   findUserDivisionIdxInSeason,
   type Career,
   type Division,
+  type Manager,
   type Season,
   type SeasonHistory,
 } from "../persistence";
@@ -56,6 +57,12 @@ export type AdvanceResult = {
   /** Marketing momentum for next season after decay (E.4.b.5). The caller
    *  writes it to `manager.marketingMomentum`. */
   nextMarketingMomentum: number;
+  /** TV/sponsorship deals carried into next season (v12). On RELEGATION the TV
+   *  deal is dropped (the broadcaster won't honour the top-flight money in the
+   *  lower tier) → reverts to the new tier's derived floor; sponsorship and the
+   *  promote/stay cases carry forward. The caller writes it to
+   *  `manager.activeDeals`. */
+  nextActiveDeals: Manager["activeDeals"];
 };
 
 /**
@@ -144,6 +151,16 @@ export function advanceCareer(
   );
   const nextMomentum = nextMarketingMomentum(career.manager.marketingMomentum);
 
+  // v12: relegation drops the TV deal (the top-flight broadcaster contract
+  // doesn't follow you down) — clearing it reverts TV income to the new tier's
+  // derived floor. Sponsorship and the promote/stay cases carry the deals
+  // forward untouched. (Term expiry + performance clauses are a later slice.)
+  const currentDeals = career.manager.activeDeals;
+  const nextActiveDeals: Manager["activeDeals"] =
+    userOutcome === "relegated" && currentDeals?.tv
+      ? { ...currentDeals, tv: undefined }
+      : currentDeals;
+
   return {
     history,
     nextSeason,
@@ -151,6 +168,7 @@ export function advanceCareer(
     agedUserRoster,
     nextFanbase: nextFanbaseValue,
     nextMarketingMomentum: nextMomentum,
+    nextActiveDeals,
   };
 }
 
