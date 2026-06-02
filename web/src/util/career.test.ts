@@ -50,7 +50,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,

@@ -58,6 +58,7 @@ import RevealRound from "./RevealRound";
 import CopaView from "./CopaView";
 import TacticsView from "./TacticsView";
 import PrepareView from "./PrepareView";
+import { Objectives } from "./Objectives";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
@@ -136,24 +137,26 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
           result.kind === "loaded" ||
           result.kind === "migratedV6" ||
           result.kind === "migratedV7" ||
-          result.kind === "migratedV8"
+          result.kind === "migratedV8" ||
+          result.kind === "migratedV9"
         ) {
           let career = result.career;
           const migrated =
             result.kind === "migratedV6" ||
             result.kind === "migratedV7" ||
-            result.kind === "migratedV8";
+            result.kind === "migratedV8" ||
+            result.kind === "migratedV9";
           if (migrated) {
-            // Additive cascade v6→v7→v8→v9 — progress preserved.
+            // Additive cascade v6→v7→v8→v9→v10 — progress preserved.
             //   v6 lacks the Copa (deterministic from the season seed,
             //     fast-forwarded past played cup rounds);
             //   v6 + v7 lack the stadium/fanbase fields (seeded by tier);
-            //   v6 + v7 + v8 lack marketingMomentum (→ 0).
+            //   v6 + v7 + v8 lack marketingMomentum (→ 0);
+            //   v6 + v9 have a single-leg Copa → re-derive as two-leg (E.3.b),
+            //     a deterministic replay fast-forwarded past played cup rounds.
             // seedStadiumForTier supplies stadiumCapacity/fanbase/momentum;
-            // a v8 save already has the stadium fields, so it only needs
-            // momentum 0 added (the spread leaves its capacity/fanbase intact
-            // because we merge seed first, then override... actually merge
-            // order: keep the v8 values, add only momentum). Handle per-kind.
+            // a v8/v9 save already has the stadium fields, so v8 only needs
+            // momentum 0 added and v9 needs nothing on the manager. Per-kind:
             const userTierForSeed = career.currentSeason.divisions[
               findUserDivisionIdxInSeason(
                 career.currentSeason,
@@ -161,16 +164,22 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
               )
             ].tier;
             const managerFields =
-              result.kind === "migratedV8"
-                ? { ...career.manager, marketingMomentum: 0 }
-                : { ...career.manager, ...seedStadiumForTier(userTierForSeed) };
+              result.kind === "migratedV9"
+                ? career.manager // v9 already has every manager field
+                : result.kind === "migratedV8"
+                  ? { ...career.manager, marketingMomentum: 0 }
+                  : { ...career.manager, ...seedStadiumForTier(userTierForSeed) };
+            // v6 (no Copa) and v9 (single-leg Copa) both (re)derive the Copa;
+            // initCopaForSeason now builds two-leg ties and replays played
+            // rounds, so a mid-season v9 save keeps correct bracket progress.
+            const needsCopaRebuild =
+              result.kind === "migratedV6" || result.kind === "migratedV9";
             career = {
               ...career,
-              schemaVersion: 9,
-              currentSeason:
-                result.kind === "migratedV6"
-                  ? { ...career.currentSeason, copa: initCopaForSeason(career) }
-                  : career.currentSeason,
+              schemaVersion: 10,
+              currentSeason: needsCopaRebuild
+                ? { ...career.currentSeason, copa: initCopaForSeason(career) }
+                : career.currentSeason,
               manager: managerFields,
             };
             await saveCareer(career);
@@ -190,7 +199,9 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
                 ? "save v7 migrado (estádio + marketing)"
                 : result.kind === "migratedV8"
                   ? "save v8 migrado (marketing)"
-                  : "save carregado";
+                  : result.kind === "migratedV9"
+                    ? "save v9 migrado (Copa em ida e volta)"
+                    : "save carregado";
           onStatus(
             `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
@@ -245,7 +256,7 @@ export function SeasonView({ onStatus }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 9,
+        schemaVersion: 10,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -818,6 +829,12 @@ function CampeonatoEmCurso({
           ))}
         </Stack>
       </Panel>
+
+      <Objectives
+        tier={userDiv.tier}
+        standings={standings}
+        teamId={career.controlledTeamId}
+      />
 
       <StandingsTable
         standings={standings}

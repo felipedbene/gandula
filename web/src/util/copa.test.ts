@@ -182,6 +182,40 @@ describe("playCupRound + full bracket", () => {
     }
     expect(c.championId).toBeDefined();
   });
+
+  // E.3.b — two-leg ties.
+  it("plays every real tie over two legs and decides on aggregate", () => {
+    const c = playCupRound(buildCopa(ALL_TEAMS), 0, resolveTeam, CUP_SEED);
+    for (const tie of c.rounds[0].ties) {
+      if (tie.bye) continue;
+      // Both legs present.
+      expect(tie.match).toBeDefined();
+      expect(tie.leg2).toBeDefined();
+      // Aggregates recorded and consistent with the two legs.
+      const aggHome = tie.match!.result.home_goals + tie.leg2!.result.away_goals;
+      const aggAway = tie.match!.result.away_goals + tie.leg2!.result.home_goals;
+      expect(tie.aggHome).toBe(aggHome);
+      expect(tie.aggAway).toBe(aggAway);
+      // Winner is one of the two sides.
+      expect([tie.homeId, tie.awayId]).toContain(tie.winnerId);
+      // A shootout only when aggregate AND away goals were level.
+      if (tie.shootout) {
+        expect(aggHome).toBe(aggAway);
+      } else if (aggHome === aggAway) {
+        // level aggregate but no shootout ⇒ away-goals broke it
+        expect(tie.leg2!.result.away_goals).not.toBe(tie.match!.result.away_goals);
+      }
+    }
+  });
+
+  it("leg 2 reverses home/away (awayId hosts the return)", () => {
+    const c = playCupRound(buildCopa(ALL_TEAMS), 0, resolveTeam, CUP_SEED);
+    const tie = c.rounds[0].ties.find((t) => !t.bye)!;
+    expect(tie.match!.home).toBe(tie.homeId);
+    expect(tie.match!.away).toBe(tie.awayId);
+    expect(tie.leg2!.home).toBe(tie.awayId);
+    expect(tie.leg2!.away).toBe(tie.homeId);
+  });
 });
 
 // Builds a real season-0 career (user = weakest Série C club) at a given
@@ -194,7 +228,7 @@ function careerAtRound(roundIdx: number): Career {
   const mk = (teams: Team[], ns: bigint, name: string) =>
     run_season(teams, seasonSeed ^ ns, name) as SeasonRecord;
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,

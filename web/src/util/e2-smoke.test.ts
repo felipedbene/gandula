@@ -26,7 +26,7 @@ function newCareer(seed: bigint): Career {
   const starter = pickStarterTeam(c);
   const ss = seed ^ BigInt(FIRST_YEAR);
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,

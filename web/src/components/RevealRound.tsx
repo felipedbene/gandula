@@ -272,9 +272,11 @@ function CopaMatchday({
 }
 
 /**
- * The animated cup-tie card: a small state machine over the (already-resolved)
- * tie. `match` → MatchReveal plays the 90'; `shootout` → a brief penalties beat
- * (drawn ties only); `verdict` → AVANÇOU/ELIMINADO, then onCupDone fires.
+ * The animated TWO-LEG cup-tie card (E.3.b): a state machine over the
+ * already-resolved tie. `leg1` → MatchReveal plays leg 1 (homeId hosts);
+ * `leg2` → MatchReveal plays leg 2 (awayId hosts, sides reversed); `shootout` →
+ * a brief penalties beat (only if the aggregate + away-goals were level);
+ * `verdict` → the aggregate line + AVANÇOU/ELIMINADO, then onCupDone fires.
  */
 function CopaTieReveal({
   title,
@@ -291,17 +293,20 @@ function CopaTieReveal({
   skipAll: boolean;
   onCupDone: () => void;
 }) {
-  type Phase = "match" | "shootout" | "verdict";
-  const [phase, setPhase] = useState<Phase>("match");
+  type Phase = "leg1" | "leg2" | "shootout" | "verdict";
+  const [phase, setPhase] = useState<Phase>("leg1");
   const cupDoneFiredRef = useRef(false);
 
-  const m = tie.match!;
+  const leg1 = tie.match!;
+  const leg2 = tie.leg2; // may be absent on a (defensive) single-leg tie
   const won = tie.winnerId === userId;
   const homeName = teamById(tie.homeId)?.name ?? `Time ${tie.homeId}`;
   const awayName = teamById(tie.awayId)?.name ?? `Time ${tie.awayId}`;
+  // Aggregate from homeId's / awayId's perspective (stored on the tie).
+  const aggHome = tie.aggHome ?? leg1.result.home_goals + (leg2?.result.away_goals ?? 0);
+  const aggAway = tie.aggAway ?? leg1.result.away_goals + (leg2?.result.home_goals ?? 0);
 
-  // Skip jumps straight to the verdict (and fires the gate) — covers a "Pular"
-  // pressed during the league match, before this tie even started animating.
+  // Skip jumps straight to the verdict (and fires the gate).
   useEffect(() => {
     if (skipAll) setPhase("verdict");
   }, [skipAll]);
@@ -321,42 +326,84 @@ function CopaTieReveal({
     }
   }, [phase, onCupDone]);
 
-  const showScore = phase !== "match"; // final score shown once the match ends
-  const showShootout = tie.shootout && phase !== "match";
-  const showVerdict = phase === "verdict";
+  const afterLeg2 = () => setPhase(tie.shootout ? "shootout" : "verdict");
+  const animatingLeg1 = start && phase === "leg1" && !skipAll;
+  const animatingLeg2 = start && phase === "leg2" && !skipAll && leg2;
 
   return (
     <Panel title={title}>
-      {/* The match animates only once the league pane is done (start) and we
-          haven't skipped past it. */}
-      {start && phase === "match" && !skipAll ? (
-        <MatchReveal
-          match={m}
-          skipAll={skipAll}
-          onComplete={() => setPhase(tie.shootout ? "shootout" : "verdict")}
-        />
+      {animatingLeg1 ? (
+        <>
+          <Text size="xs" c="dimmed" mb={4}>
+            Jogo de ida — {homeName} manda
+          </Text>
+          <MatchReveal
+            match={leg1}
+            skipAll={skipAll}
+            onComplete={() => (leg2 ? setPhase("leg2") : afterLeg2())}
+          />
+        </>
+      ) : animatingLeg2 ? (
+        <>
+          <Text size="xs" c="dimmed" mb={4}>
+            Jogo de volta — {awayName} manda
+          </Text>
+          <MatchReveal match={leg2} skipAll={skipAll} onComplete={afterLeg2} />
+        </>
       ) : (
-        <Box
-          style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}
-        >
-          <Text ta="right" size="sm">
-            {homeName}
-          </Text>
-          <Text px="md" size="sm" ff="monospace" fw={700} c={showScore ? undefined : "dimmed"}>
-            {showScore ? `${m.result.home_goals} - ${m.result.away_goals}` : "×"}
-            {showShootout && ` (${tie.shootout!.homeGoals}-${tie.shootout!.awayGoals} pen)`}
-          </Text>
-          <Text ta="left" size="sm">
-            {awayName}
-          </Text>
-        </Box>
+        // Static summary once both legs are done (or on skip): both legs + agg.
+        <Stack gap={2}>
+          <LegLine label="Ida" left={homeName} right={awayName} match={leg1} />
+          {leg2 && (
+            <LegLine label="Volta" left={awayName} right={homeName} match={leg2} />
+          )}
+          {phase === "verdict" && (
+            <Text ta="center" size="sm" ff="monospace" mt={4}>
+              Agregado: {homeName} {aggHome} – {aggAway} {awayName}
+              {tie.shootout &&
+                ` · pênaltis ${tie.shootout.homeGoals}-${tie.shootout.awayGoals}`}
+            </Text>
+          )}
+        </Stack>
       )}
-      {showVerdict && (
+      {phase === "verdict" && (
         <Text ta="center" size="sm" mt={4} fw={700} c={won ? "phosphor.4" : "red.5"}>
           {won ? "AVANÇOU na Copa!" : "ELIMINADO da Copa"}
         </Text>
       )}
     </Panel>
+  );
+}
+
+/** One leg's score line in the static two-leg summary. `left` hosts. */
+function LegLine({
+  label,
+  left,
+  right,
+  match,
+}: {
+  label: string;
+  left: string;
+  right: string;
+  match: Match;
+}) {
+  return (
+    <Box
+      style={{ display: "grid", gridTemplateColumns: "auto 1fr auto 1fr", alignItems: "center", gap: 8 }}
+    >
+      <Text size="xs" c="dimmed" style={{ minWidth: 36 }}>
+        {label}
+      </Text>
+      <Text ta="right" size="sm">
+        {left}
+      </Text>
+      <Text px="sm" size="sm" ff="monospace" fw={700}>
+        {match.result.home_goals} - {match.result.away_goals}
+      </Text>
+      <Text ta="left" size="sm">
+        {right}
+      </Text>
+    </Box>
   );
 }
 

@@ -148,17 +148,31 @@ export type TransferRecord = {
 /** Penalty-shootout outcome for a drawn tie. `winnerId` ∈ {tie.homeId, awayId}. */
 export type CupShootout = { homeGoals: number; awayGoals: number; winnerId: number };
 
-/** One knockout tie. `homeId`/`awayId` are TEAM IDS. A bye tie has
- *  `bye: true` and `awayId === COPA_BYE` — `homeId` auto-advances unplayed. */
+/** One knockout tie, played over TWO LEGS (E.3.b): leg 1 at `homeId`, leg 2 at
+ *  `awayId` (sides reversed). The winner is decided on aggregate, with the
+ *  away-goals rule as the first tiebreak and a penalty shootout (on leg 2) as
+ *  the last. `homeId`/`awayId` are TEAM IDS. A bye tie has `bye: true` and
+ *  `awayId === COPA_BYE` — `homeId` auto-advances unplayed (no legs).
+ *
+ *  Schema note (v10): single-leg v9 ties are migrated by re-deriving the
+ *  season's Copa (deterministic replay), so `leg2` is always present on a
+ *  played non-bye tie from v10 on. */
 export type CupTie = {
   homeId: number;
   awayId: number;
   bye?: boolean;
   played: boolean;
-  /** Present once a non-bye tie is played. */
+  /** Leg 1 — homeId hosts. Present once a non-bye tie is played. */
   match?: Match;
-  /** Present only when `match` was a draw and a shootout decided it. */
+  /** Leg 2 — awayId hosts (sides reversed). Present once played (v10+). */
+  leg2?: Match;
+  /** Present only when the aggregate (with away goals) was level and a
+   *  shootout decided it. Shot at leg 2's venue. */
   shootout?: CupShootout;
+  /** Aggregate goals for the leg-1 home side (homeId) across both legs. */
+  aggHome?: number;
+  /** Aggregate goals for the leg-1 away side (awayId) across both legs. */
+  aggAway?: number;
   /** Set once resolved (the advancing club). */
   winnerId?: number;
 };
@@ -260,7 +274,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 9;
+  schemaVersion: 10;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -306,9 +320,11 @@ async function db(): Promise<IDBPDatabase> {
 
 /**
  * Result of `loadCareer`. Discriminated kinds:
- *   - `loaded`: a current (v9) Career was read directly.
+ *   - `loaded`: a current (v10) Career was read directly.
+ *   - `migratedV9`: a v9 save (single-leg Copa) — the caller re-derives the
+ *     current season's Copa as two-leg (deterministic) and re-saves v10.
  *   - `migratedV8`: a v8 save (no marketingMomentum) — the caller seeds it to 0
- *     and re-saves v9.
+ *     and re-saves v10.
  *   - `migratedV7`: a v7 save (no stadium/fanbase) — the caller seeds the
  *     stadium fields (+ momentum 0) from the user's tier and re-saves v9.
  *   - `migratedV6`: a v6 save (no Copa AND no stadium) — the caller adds the
@@ -323,6 +339,7 @@ async function db(): Promise<IDBPDatabase> {
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV9"; career: Career }
   | { kind: "migratedV8"; career: Career }
   | { kind: "migratedV7"; career: Career }
   | { kind: "migratedV6"; career: Career }
@@ -346,8 +363,15 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 9) {
+  if (candidate.schemaVersion === 10) {
     return { kind: "loaded", career: value as Career };
+  }
+  if (candidate.schemaVersion === 9) {
+    // Single-leg Copa ties (pre-E.3.b). The caller re-derives the current
+    // season's Copa as two-leg (initCopaForSeason, a deterministic replay) and
+    // re-saves v10. Finished-season histories are unaffected (the cup result is
+    // a round name / "champion", leg structure isn't stored there).
+    return { kind: "migratedV9", career: value as unknown as Career };
   }
   if (candidate.schemaVersion === 8) {
     // Lacks manager.marketingMomentum; the caller seeds it to 0.

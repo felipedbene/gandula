@@ -23,6 +23,25 @@ export const HALFTIME_PAUSE_MS = 1500;
  *  minute-proportional schedule, so calm stretches still pace naturally. */
 const MIN_EVENT_GAP_MS = 600;
 
+/** Per-event "linger": extra wall-clock the feed holds AFTER a big moment
+ *  before the next event lands, so goals and red cards land with weight
+ *  instead of scrolling past at the flat 220ms/min. Added to the next event's
+ *  monotonic floor (not to the highlight's own time), so the drama sits on
+ *  screen. Quiet events add nothing — the calm stretches stay calm. */
+function eventLingerMs(kind: string): number {
+  switch (kind) {
+    case "Goal":
+      return 900; // savour the goal
+    case "RedCard":
+    case "PenaltyAwarded":
+      return 650; // a beat for the drama
+    case "PenaltyMissed":
+      return 500;
+    default:
+      return 0;
+  }
+}
+
 type MatchRevealProps = {
   match: Match;
   /** Fires once when reveal completes (naturally or via skipAll). The parent
@@ -60,12 +79,16 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
     // but never closer than MIN_EVENT_GAP_MS to the previous one. Seeding
     // `prev` at -gap lets the first event keep its natural (ungapped) time.
     let prev = -MIN_EVENT_GAP_MS;
+    let linger = 0; // extra hold carried from the PREVIOUS big moment
     const timers = match.events.map((e, i) => {
       const base =
         e.minute * REVEAL_MS_PER_MIN +
         (e.minute > 45 ? HALFTIME_PAUSE_MS : 0);
-      const at = Math.max(base, prev + MIN_EVENT_GAP_MS);
+      // The previous event's linger pushes this event's earliest fire time, so
+      // a goal stays on screen before the next lance arrives.
+      const at = Math.max(base, prev + MIN_EVENT_GAP_MS + linger);
       prev = at;
+      linger = eventLingerMs(eventKindName(e.kind));
       return window.setTimeout(() => setRevealed(i + 1), at);
     });
     return () => timers.forEach(window.clearTimeout);
@@ -148,8 +171,9 @@ function EventRow({ event }: { event: MatchEvent }) {
   const k = eventKindName(event.kind);
   const isAway = event.side === "Away";
   const isWhistle = k === "HalfTime" || k === "FullTime";
-  const { c, fw, fs } = eventStyle(k);
+  const { c, fw, fs, big } = eventStyle(k);
   const glyph = eventGlyph(k);
+  const size = big ? "md" : "sm";
   const m = event.text.match(/^(\d+'?)\s+(.*)$/);
   const minute = m ? m[1] : undefined;
   const rest = m ? m[2] : event.text;
@@ -167,11 +191,11 @@ function EventRow({ event }: { event: MatchEvent }) {
           </Text>
         )}
         {glyph && (
-          <Text span size="sm" c={c}>
+          <Text span size={size} c={c}>
             {glyph}
           </Text>
         )}
-        <Text span size="sm" c={c} fw={fw} fs={fs}>
+        <Text span size={size} c={c} fw={fw} fs={fs}>
           {rest}
         </Text>
       </Group>
@@ -225,16 +249,29 @@ export function useMatchClock(
   return minute;
 }
 
-function eventStyle(k: string): { c?: string; fw?: number; fs?: "italic" } {
+/** `big` flags an event that should render a touch larger (the moments that
+ *  earn a linger above), so highlights read as highlights, not just colour. */
+function eventStyle(k: string): {
+  c?: string;
+  fw?: number;
+  fs?: "italic";
+  big?: boolean;
+} {
   switch (k) {
     case "Goal":
-      return { c: "phosphor.4", fw: 700 };
+      return { c: "phosphor.4", fw: 700, big: true };
     case "RedCard":
+      return { c: "red.5", fw: 700, big: true };
+    case "PenaltyAwarded":
+      return { c: "phosphor.4", fw: 700, big: true };
+    case "PenaltyMissed":
       return { c: "red.5", fw: 700 };
     case "YellowCard":
       return { c: "yellow.5" };
     case "Substitution":
       return { c: "blue.4", fs: "italic" };
+    case "NearMiss":
+      return { c: "dimmed", fs: "italic" };
     case "HalfTime":
     case "FullTime":
       return { c: "dimmed" };
@@ -251,8 +288,14 @@ function eventGlyph(k: string): string {
       return "██";
     case "YellowCard":
       return "▓";
+    case "PenaltyAwarded":
+      return "◎";
+    case "PenaltyMissed":
+      return "✗";
     case "Substitution":
       return "↔";
+    case "NearMiss":
+      return "·";
     case "HalfTime":
     case "FullTime":
       return "───";

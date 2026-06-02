@@ -40,7 +40,7 @@ function makeCareer(): { career: Career; starterId: number } {
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   const career: Career = {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,

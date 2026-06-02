@@ -18,6 +18,7 @@ import {
   STADIUM_EXPANSION_STEP,
   expansionCost,
   marketingCost,
+  projectSeasonRunway,
 } from "../util/finances";
 import { formatMoney } from "../util/money";
 import type { Career, TransferRecord } from "../persistence";
@@ -272,6 +273,49 @@ export default function TransferMarketView({
         {formatMoney(working.manager.money)} · ROSTER {team.roster.length}/
         {MAX_ROSTER}
       </Text>
+
+      {(() => {
+        // E.5.a — cash-runway warning. Projects the rest-of-season balance vs
+        // the wage bill so an overspend shows up BEFORE you commit. Recomputes
+        // on every buy/sell (the working career drives it). Only meaningful
+        // mid-season — at the finale there are no rounds left to project.
+        const r = projectSeasonRunway(working);
+        if (r.remainingRounds <= 0) return null;
+        const ok = !r.atRisk;
+        return (
+          <Panel title="Fôlego de caixa (resto da temporada)">
+            <Stack gap={4}>
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="sm" c="dimmed">
+                  Rodadas restantes
+                </Text>
+                <Text size="sm" ff="monospace">
+                  {r.remainingRounds}
+                </Text>
+              </Group>
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="sm" c="dimmed">
+                  Folha salarial até o fim
+                </Text>
+                <Text size="sm" ff="monospace" c="red.5">
+                  − $ {formatMoney(r.remainingWages)}
+                </Text>
+              </Group>
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="sm">Saldo projetado no fim da temporada</Text>
+                <Text size="sm" ff="monospace" fw={700} c={ok ? "phosphor.4" : "red.5"}>
+                  $ {formatMoney(r.projectedEndBalance)}
+                </Text>
+              </Group>
+              <Text size="xs" c={ok ? "dimmed" : "red.5"}>
+                {ok
+                  ? "Projeção conservadora (sem premiação de classificação nem copa). Compras pesam na folha — reavalie aqui antes de fechar."
+                  : "⚠ Risco de ficar no vermelho antes do fim da temporada — segure as compras ou venda para equilibrar a folha."}
+              </Text>
+            </Stack>
+          </Panel>
+        );
+      })()}
 
       <Panel title="Estádio, torcida & marketing">
         <Stack gap={4}>

@@ -35,9 +35,9 @@ async function writeRaw(value: unknown): Promise<void> {
   await conn.put(STORE, value, SLOT_KEY);
 }
 
-function makeV9Career(opts: { seed: bigint; controlledTeamId: number }): Career {
+function makeV10Career(opts: { seed: bigint; controlledTeamId: number }): Career {
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: "2026-01-01T00:00:00Z",
     seed: opts.seed,
     controlledTeamId: opts.controlledTeamId,
@@ -64,8 +64,8 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v9 Career is present", async () => {
-    await saveCareer(makeV9Career({ seed: 1998n, controlledTeamId: 60 }));
+  it("returns kind:'loaded' when a v10 Career is present", async () => {
+    await saveCareer(makeV10Career({ seed: 1998n, controlledTeamId: 60 }));
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
@@ -73,6 +73,39 @@ describe("loadCareer", () => {
       expect(result.career.manager.money).toBe(STARTING_MONEY);
       expect(result.career.userRoster).toEqual([]);
     }
+  });
+
+  // A v9 save (full 3-tier + copa + stadium + marketing, but SINGLE-leg cup
+  // ties) migrates forward. loadCareer returns kind:'migratedV9'; the caller
+  // re-derives the current season's Copa as two-leg (E.3.b) and re-saves v10.
+  it("returns kind:'migratedV9' for a v9 save (single-leg copa)", async () => {
+    await writeRaw({
+      schemaVersion: 9,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 1998n,
+      controlledTeamId: 60,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 1998n ^ BigInt(FIRST_YEAR),
+        divisions: [
+          { tier: 1, name: "Série A", record: {}, currentRoundIdx: 0 },
+          { tier: 2, name: "Série B", record: {}, currentRoundIdx: 0 },
+          { tier: 3, name: "Série C", record: {}, currentRoundIdx: 0 },
+        ],
+        transfers: [],
+        copa: { rounds: [], currentCupRoundIdx: 0 },
+      },
+      manager: {
+        money: STARTING_MONEY,
+        stadiumCapacity: 12_000,
+        fanbase: 10_000,
+        marketingMomentum: 0,
+      },
+      userRoster: [],
+    });
+    const result = await loadCareer();
+    expect(result.kind).toBe("migratedV9");
   });
 
   // A v6 save (3-tier world, but pre-Copa: no currentSeason.copa) is no longer

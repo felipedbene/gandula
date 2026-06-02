@@ -44,9 +44,15 @@ are exported via wasm and divisions/competitions are pure TS on top.
   **prize money is deferred to E.4** (not paid yet). Determinism: cup seed is
   its own namespace (`season.seed ^ 0xC09A`), tie seeds via `derive_match_seed`
   on a monotonic index; bracket pairing is no-PRNG strength-mirror.
-- [ ] **E.3.b — Calendar polish** · _S, web_ — the matchday-sharing model
-  shipped in E.3.a. Remaining: two-leg ties, evolved-strength seeding, a richer
-  animated cup reveal.
+- [x] **E.3.b — Calendar polish** · _S, web_ — **shipped.** Cup ties are now
+  **two-legged** (home+away, decided on aggregate → away-goals → penalty
+  shootout): `CupTie` carries `leg2`/`aggHome`/`aggAway`, `resolveTie` plays both
+  legs from distinct leg seeds, schema bumped **v9→v10** (the v9→v10 migration
+  re-derives the season's Copa as a deterministic two-leg replay). Evolved-
+  strength seeding already landed with the rivals work (`buildCopa` ranks the
+  composed/coached sides). The reveal animates both legs in sequence then shows
+  the aggregate + AVANÇOU/ELIMINADO. (Determinism + bracket invariants covered by
+  copa.test.ts.)
 - [ ] **E.3.c — State championship** · _S, web, DEFERRED_ — the scope trap (real
   Brazil has ~27 with disjoint team sets). If ever built: a short optional
   pre-season regional cup (3–4 geographic buckets, quick round-robin, small
@@ -171,15 +177,17 @@ richer SoFIFA market (E.4.c).
 
 ## E.5 — Teach solvency (where players actually lose)
 
-- [ ] **E.5.a — Cash-runway / wage-bill warning in the market** · _S, web_
-  Scout reports answer "is this player good?"; add "can I afford this _across a
-  season_?" — project season-end balance vs. the strength-scaled wage bill and
-  warn before away-heavy stretches. This is exactly the lever the RL agent
-  learned and greedy never did.
-- [ ] **E.5.b — Career objectives** · _S, web_
-  Surface the natural difficulty tiers the RL data exposes — survive a season →
-  promote (achievable) → win Série A (rare) — as explicit goals, so players see
-  titles as the frontier, not the baseline.
+- [x] **E.5.a — Cash-runway / wage-bill warning in the market** · _S, web_ —
+  **shipped.** `projectSeasonRunway` (finances.ts) sums the rest-of-season
+  per-round net (`roundCashDelta`) and surfaces a "Fôlego de caixa" panel in the
+  market: remaining rounds, wage bill to season end, projected end balance, and a
+  red overspend warning. Recomputes on every buy/sell, so the wage-bill impact
+  shows before committing. Conservative (excludes placement/cup prizes).
+- [x] **E.5.b — Career objectives** · _S, web_ — **shipped.** An "Objetivos da
+  carreira" panel in the running season shows the tier-aware goal ladder
+  (Série C/B: subir → [evitar rebaixamento] → chegar e vencer a Série A; Série A:
+  ser campeão + permanecer), with live status (met / on-track / at-risk) read off
+  the standings. Pure derivation (`objectivesFor`), no engine touch.
 
 ## E.6 — Tooling
 
@@ -234,9 +242,12 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
 
 ## Polish (small, slot in anytime)
 
-- [~] **Live playback** · _S–M, web_
-  Running match clock during the reveal landed (incl. bye rounds). Further
-  playback polish (per-event pacing tweaks, highlights) can still be layered on.
+- [x] **Live playback** · _S–M, web_ — running match clock landed earlier;
+  **per-event pacing + highlights now shipped**: the reveal lingers on big
+  moments (goals ~900ms, red cards / penalty awards ~650ms) before the next
+  lance, and goals/red cards/penalties render larger with glyphs (◎ penalty, ✗
+  miss). Purely presentational (MatchReveal.tsx) — no persistence/determinism
+  impact.
 
 ## Suggested order
 
