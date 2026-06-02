@@ -34,7 +34,7 @@ function makeCareer(): Career {
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   const tot = (r: SeasonRecord) => Math.max(...r.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 11,
+    schemaVersion: 12,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: starter.id,

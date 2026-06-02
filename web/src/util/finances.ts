@@ -9,8 +9,10 @@ import {
   type Career,
   type Copa,
   type CupRoundName,
+  type Deal,
 } from "../persistence";
 import { userTieInRound } from "./copa";
+import { mulberry32 } from "./prng";
 import type { Player } from "../types";
 
 /**
@@ -323,13 +325,23 @@ export const CUP_CHAMPION_BONUS = 1_200_000;
  *  the wage bill (`round(S·(r+1)/T) − round(S·r/T)`), so slices sum to the exact
  *  season total with no drift. Accrues EVERY round (incl. away) — it's a
  *  structural floor, not gated by home/away. */
+/** Season-total TV money: a signed deal's `seasonAmount` if one is active,
+ *  else the tier-derived floor (`TV_DEAL_BY_TIER`). Single source for both the
+ *  per-round slice and any season-total display. */
+export function tvSeasonTotal(career: Career): number {
+  const deal = career.manager.activeDeals?.tv;
+  if (deal) return deal.seasonAmount;
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  return TV_DEAL_BY_TIER[season.divisions[userDivIdx].tier];
+}
+
 export function tvIncomeForRound(career: Career, roundIdx: number): number {
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
-  const userDiv = season.divisions[userDivIdx];
-  const total = totalRoundsOf(userDiv);
+  const total = totalRoundsOf(season.divisions[userDivIdx]);
   if (total <= 0) return 0;
-  const s = TV_DEAL_BY_TIER[userDiv.tier];
+  const s = tvSeasonTotal(career);
   return (
     Math.round((s * (roundIdx + 1)) / total) - Math.round((s * roundIdx) / total)
   );
@@ -363,9 +375,12 @@ export const SPONSORSHIP_FANBASE_COEF = 2.5;
 export const SPONSORSHIP_PLACEMENT_BONUS = 600_000;
 export const SPONSORSHIP_PLACEMENT_PIVOT = 10;
 
-/** Total sponsorship income for the current season. Pure — reads the user's
- *  tier, current fanbase, and last season's finishing position. */
+/** Total sponsorship income for the current season. A signed sponsorship deal's
+ *  `seasonAmount` takes precedence; otherwise it's derived (pure) from the
+ *  user's tier, current fanbase, and last season's finishing position. */
 export function sponsorshipSeasonTotal(career: Career): number {
+  const deal = career.manager.activeDeals?.sponsorship;
+  if (deal) return deal.seasonAmount;
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const tier = season.divisions[userDivIdx].tier;
@@ -384,6 +399,76 @@ export function sponsorshipSeasonTotal(career: Career): number {
         placementTerm,
     ),
   );
+}
+
+// ─── Negotiable deal offers (v12) ────────────────────────────────────────────
+//
+// A slate of TV + sponsorship offers the user signs on the Finances screen to
+// take effect NEXT season. Deterministic from (careerSeed, year) so F5 / re-sim
+// reproduce the same offers. Each offer is anchored on the derived floor for
+// the given tier (so balance tracks the existing economy) and varied by a
+// multiplier; term lengths jitter 1..3. The "aggressive" offer pays the most
+// (a deliberate risk-vs-reward hook for the performance-clause slice later).
+
+/** Salt mnemonics keep the TV and sponsorship streams independent. */
+const TV_OFFER_SALT = 0xdea1n;
+const SPONSOR_OFFER_SALT = 0x5907n;
+
+/** Multipliers applied to the floor, one per offer shape. */
+const OFFER_SHAPES = [
+  { label: "Sólida", mult: 1.0 },
+  { label: "Agressiva", mult: 1.3 },
+  { label: "Conservadora", mult: 0.85 },
+] as const;
+
+export type DealOffer = Deal & { label: string };
+
+function offersFor(
+  kind: "tv" | "sponsorship",
+  floor: number,
+  seed: bigint,
+  year: number,
+  salt: bigint,
+): DealOffer[] {
+  const folded = seed ^ BigInt(year) ^ salt;
+  const rng = mulberry32(Number(folded & 0xffffffffn));
+  return OFFER_SHAPES.map((shape, i) => {
+    // ±8% deterministic jitter so same-shape offers vary year to year.
+    const jitter = 0.92 + rng() * 0.16;
+    const termYears = 1 + Math.floor(rng() * 3); // 1..3
+    return {
+      id: `${kind}-${year}-${i}`,
+      kind,
+      seasonAmount: Math.max(0, Math.round(floor * shape.mult * jitter)),
+      startYear: year,
+      termYears,
+      label: shape.label,
+    };
+  });
+}
+
+/**
+ * The TV + sponsorship offer slates for `year`, anchored on the floors that
+ * `year`'s tier/fanbase/placement would otherwise yield. `tvFloor` and
+ * `sponsorshipFloor` are passed in (the caller knows next season's tier and the
+ * fanbase/placement going into it) so this stays a pure function of its inputs.
+ */
+export function generateDealOffers(
+  careerSeed: bigint,
+  year: number,
+  tvFloor: number,
+  sponsorshipFloor: number,
+): { tv: DealOffer[]; sponsorship: DealOffer[] } {
+  return {
+    tv: offersFor("tv", tvFloor, careerSeed, year, TV_OFFER_SALT),
+    sponsorship: offersFor(
+      "sponsorship",
+      sponsorshipFloor,
+      careerSeed,
+      year,
+      SPONSOR_OFFER_SALT,
+    ),
+  };
 }
 
 /** Sponsorship slice for `roundIdx` — the season total sliced with the same

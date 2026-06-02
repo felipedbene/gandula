@@ -6,7 +6,12 @@ import {
   MARKETING_MOMENTUM_MAX,
   STADIUM_MAX_CAPACITY,
 } from "./finances";
-import { FIRST_YEAR, type Career, type TransferRecord } from "../persistence";
+import {
+  FIRST_YEAR,
+  type Career,
+  type Deal,
+  type TransferRecord,
+} from "../persistence";
 import type { Attributes, Player, Position } from "../types";
 
 // ─── Pool composition + ID layout ─────────────────────────────────────────
@@ -342,7 +347,11 @@ export type TransferAction =
   | { kind: "buy"; player: Player; price: number }
   | { kind: "sell"; player: Player; price: number }
   | { kind: "expandStadium"; seats: number; price: number }
-  | { kind: "runCampaign"; fanbase: number; momentum: number; price: number };
+  | { kind: "runCampaign"; fanbase: number; momentum: number; price: number }
+  // Sign a TV/sponsorship deal into the slot (takes effect next season). No
+  // money delta — the revenue accrues per round. `previous` is the deal the new
+  // one replaces (if any), captured for reverse.
+  | { kind: "signDeal"; slot: "tv" | "sponsorship"; deal: Deal; previous?: Deal };
 
 /** The roster the working career currently presents — the lazy-init the views
  *  used inline: `userRoster` once populated, else the registry default. Pure. */
@@ -427,6 +436,17 @@ export function applyTransferAction(career: Career, action: TransferAction): Car
         },
       };
     }
+    case "signDeal":
+      return {
+        ...career,
+        manager: {
+          ...career.manager,
+          activeDeals: {
+            ...career.manager.activeDeals,
+            [action.slot]: action.deal,
+          },
+        },
+      };
   }
 }
 
@@ -477,6 +497,18 @@ export function reverseTransferAction(career: Career, action: TransferAction): C
         currentSeason: {
           ...career.currentSeason,
           transfers: career.currentSeason.transfers.slice(0, -1),
+        },
+      };
+    case "signDeal":
+      return {
+        ...career,
+        manager: {
+          ...career.manager,
+          activeDeals: {
+            ...career.manager.activeDeals,
+            // Restore the deal this one replaced (undefined ⇒ slot cleared).
+            [action.slot]: action.previous,
+          },
         },
       };
   }

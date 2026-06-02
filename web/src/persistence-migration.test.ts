@@ -35,9 +35,9 @@ async function writeRaw(value: unknown): Promise<void> {
   await conn.put(STORE, value, SLOT_KEY);
 }
 
-function makeV11Career(opts: { seed: bigint; controlledTeamId: number }): Career {
+function makeV12Career(opts: { seed: bigint; controlledTeamId: number }): Career {
   return {
-    schemaVersion: 11,
+    schemaVersion: 12,
     savedAt: "2026-01-01T00:00:00Z",
     seed: opts.seed,
     controlledTeamId: opts.controlledTeamId,
@@ -64,14 +64,47 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v11 Career is present", async () => {
-    await saveCareer(makeV11Career({ seed: 1998n, controlledTeamId: 60 }));
+  it("returns kind:'loaded' when a v12 Career is present", async () => {
+    await saveCareer(makeV12Career({ seed: 1998n, controlledTeamId: 60 }));
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
       expect(result.career.controlledTeamId).toBe(60);
       expect(result.career.manager.money).toBe(STARTING_MONEY);
       expect(result.career.userRoster).toEqual([]);
+    }
+  });
+
+  // A v11 save (everything but negotiable deals) migrates forward. loadCareer
+  // returns kind:'migratedV11'; the caller just stamps v12 (manager.activeDeals
+  // is optional, absent = tier-derived TV/sponsorship — nothing to seed).
+  it("returns kind:'migratedV11' for a v11 save (no negotiable deals)", async () => {
+    await writeRaw({
+      schemaVersion: 11,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 1998n,
+      controlledTeamId: 60,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 1998n ^ BigInt(FIRST_YEAR),
+        divisions: [],
+        transfers: [],
+        copa: freshCopa(),
+      },
+      manager: {
+        money: STARTING_MONEY,
+        stadiumCapacity: 12_000,
+        fanbase: 10_000,
+        marketingMomentum: 0,
+      },
+      userRoster: [],
+    });
+    const result = await loadCareer();
+    expect(result.kind).toBe("migratedV11");
+    if (result.kind === "migratedV11") {
+      expect(result.career.controlledTeamId).toBe(60);
+      expect(result.career.manager.activeDeals).toBeUndefined();
     }
   });
 

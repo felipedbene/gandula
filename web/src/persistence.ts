@@ -89,6 +89,29 @@ export const FIRST_YEAR = 2026;
 export const STARTING_MONEY = 2_000_000;
 
 /**
+ * A negotiable TV or sponsorship contract (v12). When present in
+ * `Manager.activeDeals[slot]`, its `seasonAmount` REPLACES the tier-derived
+ * floor for that revenue stream; absent ⇒ the derived floor (the v11 model).
+ * Offers are generated deterministically per season and signed on the Finances
+ * screen to take effect from the NEXT season.
+ */
+export type Deal = {
+  /** Deterministic id, e.g. `tv-2027-1` (`${kind}-${year}-${offerIdx}`). */
+  id: string;
+  kind: "tv" | "sponsorship";
+  /** Full-season value; sliced per round by fair-rounding like the floor. */
+  seasonAmount: number;
+  /** Season the deal first takes effect (the season it was signed FOR). */
+  startYear: number;
+  /** Contract length in seasons (1..3). v1 uses the value but only drops on
+   *  relegation; expiry by term is a later slice. */
+  termYears: number;
+  /** Optional performance clause (later slice): the deal drops if the user
+   *  finishes worse than `maxPosition`. Undefined in v1 offers. */
+  performanceClause?: { maxPosition: number };
+};
+
+/**
  * Manager-level state that persists across the entire career, separate
  * from per-season divisions/standings. Cross-season because all of it
  * carries forward untouched (or drifts slowly) at the season boundary.
@@ -108,6 +131,10 @@ export type Manager = {
    *  rather than snapping back. Halves each season; 0 when no campaign is
    *  active. */
   marketingMomentum: number;
+  /** Negotiable TV / sponsorship contracts (v12+). Each slot, when present,
+   *  overrides the tier-derived income floor with its `seasonAmount`. Absent
+   *  (or whole field absent on a v11 save) ⇒ the derived floor. */
+  activeDeals?: { tv?: Deal; sponsorship?: Deal };
 };
 
 /**
@@ -281,7 +308,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 11;
+  schemaVersion: 12;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -346,6 +373,7 @@ async function db(): Promise<IDBPDatabase> {
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV11"; career: Career }
   | { kind: "migratedV10"; career: Career }
   | { kind: "migratedV9"; career: Career }
   | { kind: "migratedV8"; career: Career }
@@ -371,8 +399,14 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 11) {
+  if (candidate.schemaVersion === 12) {
     return { kind: "loaded", career: value as Career };
+  }
+  if (candidate.schemaVersion === 11) {
+    // Pre-negotiable-deals. Purely additive: `manager.activeDeals` is optional
+    // and absent means "use the tier-derived floor" — the caller just stamps
+    // v12 and re-saves. No field to seed.
+    return { kind: "migratedV11", career: value as unknown as Career };
   }
   if (candidate.schemaVersion === 10) {
     // Pre-half-time-tactics. Purely additive: `halftimeTactics` is optional and
