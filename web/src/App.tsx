@@ -17,6 +17,7 @@ export function App() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("pronto");
+  const [teamName, setTeamName] = useState<string | null>(null);
 
   useEffect(() => {
     init()
@@ -40,20 +41,31 @@ export function App() {
         }}
       >
         <Container size="sm" py="sm">
-          <Group justify="space-between" align="center">
-            <Group gap="xs" align="center">
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Group gap="xs" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
               <Title
                 order={1}
                 fz={{ base: "h3", sm: "h2" }}
-                style={{ letterSpacing: "-0.02em" }}
+                style={{ letterSpacing: "-0.02em", flexShrink: 0 }}
               >
                 Gandula
               </Title>
-              <Badge variant="light" color="accent" radius="sm" size="sm">
-                BETA
-              </Badge>
+              {teamName ? (
+                <>
+                  <Text c="dimmed" fz="lg" style={{ flexShrink: 0 }}>
+                    ·
+                  </Text>
+                  <Text c="accent.3" fw={600} fz={{ base: "sm", sm: "md" }} truncate>
+                    {teamName}
+                  </Text>
+                </>
+              ) : (
+                <Badge variant="light" color="accent" radius="sm" size="sm">
+                  BETA
+                </Badge>
+              )}
             </Group>
-            <Text c="dimmed" size="xs" ff="monospace">
+            <Text c="dimmed" size="xs" ff="monospace" style={{ flexShrink: 0 }}>
               v{__APP_VERSION__}
             </Text>
           </Group>
@@ -72,7 +84,7 @@ export function App() {
               <Text c="dimmed">Carregando engine…</Text>
             </Group>
           ) : (
-            <SeasonView onStatus={setStatus} />
+            <SeasonView onStatus={setStatus} onTeamName={setTeamName} />
           )}
 
           <Footer status={status} />

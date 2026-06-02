@@ -52,7 +52,16 @@ import {
 import { formatMoney } from "../util/money";
 import TransferMarketView from "./TransferMarketView";
 import SupportView from "./SupportView";
-import { Button, Divider, Group, Stack, Table, Text } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Button,
+  Divider,
+  Group,
+  Stack,
+  Table,
+  Text,
+} from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import RevealRound from "./RevealRound";
 import CopaView from "./CopaView";
@@ -62,6 +71,9 @@ import { Objectives } from "./Objectives";
 
 type SeasonViewProps = {
   onStatus: (msg: string) => void;
+  /** Surfaces the controlled team's name to the app header (null when there's
+   *  no active career, e.g. the new-game form). */
+  onTeamName?: (name: string | null) => void;
 };
 
 /**
@@ -120,8 +132,19 @@ function randomSeed(): number {
   return Math.floor(Math.random() * 1_000_000);
 }
 
-export function SeasonView({ onStatus }: SeasonViewProps) {
+export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
+
+  // Keep the app header in sync with the controlled team. Every phase that
+  // carries a Career exposes it as phase.career; the form/loading phases don't,
+  // so we clear the name there.
+  const careerTeamName =
+    "career" in phase
+      ? teamById(phase.career.controlledTeamId)?.name ?? null
+      : null;
+  useEffect(() => {
+    onTeamName?.(careerTeamName);
+  }, [careerTeamName, onTeamName]);
 
   // The new-career form has no inputs now: the seed is generated randomly at
   // run() time and the team is assigned via pickRandomStarter — see run().
@@ -1472,18 +1495,77 @@ function currentRoundFixtures(
 }
 
 // ─── Shared: standings table ────────────────────────────────────────────────
+/** Summary card shown above a standings table where the user has a team, so
+ *  "this is YOU" is answered before the player even scans the rows. */
+function UserTeamSummary({
+  standings,
+  teamId,
+}: {
+  standings: TeamStats[];
+  teamId: number;
+}) {
+  const idx = standings.findIndex((s) => s.team_id === teamId);
+  if (idx < 0) return null;
+  const s = standings[idx];
+  const name = teamById(teamId)?.name ?? `Time ${teamId}`;
+  const gd = goalDifference(s);
+  return (
+    <Box
+      mb="md"
+      p="sm"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--mantine-spacing-md)",
+        borderRadius: "var(--mantine-radius-md)",
+        background: "var(--mantine-color-accent-9)",
+        borderLeft: "4px solid var(--mantine-color-accent-5)",
+      }}
+    >
+      <Text
+        ff="monospace"
+        fw={700}
+        fz={28}
+        c="accent.3"
+        style={{ lineHeight: 1, minWidth: 44, textAlign: "center" }}
+      >
+        {idx + 1}º
+      </Text>
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        <Group gap="xs" align="center" wrap="nowrap">
+          <Badge variant="filled" color="accent" radius="sm" size="sm">
+            SEU TIME
+          </Badge>
+          <Text fw={700} fz="lg" truncate>
+            {name}
+          </Text>
+        </Group>
+        <Text c="dimmed" size="sm" ff="monospace" mt={2}>
+          {points(s)} pts · {s.won}V {s.drawn}E {s.lost}D · SG{" "}
+          {gd > 0 ? `+${gd}` : gd}
+        </Text>
+      </Box>
+    </Box>
+  );
+}
+
 function StandingsTable({
   standings,
   highlightTeamId,
   title = "Classificação",
 }: {
   standings: TeamStats[];
-  /** When provided, this team gets the bright row instead of the leader. */
+  /** The user-controlled team in this table, if any. Gets the strong "YOU"
+   *  treatment (summary card + accent bar + marker) — distinct from the
+   *  subtle leader highlight used when no user team is present. */
   highlightTeamId?: number;
   title?: string;
 }) {
   return (
     <Panel title={title}>
+      {highlightTeamId !== undefined && (
+        <UserTeamSummary standings={standings} teamId={highlightTeamId} />
+      )}
       <Table.ScrollContainer minWidth={320}>
         <Table
           highlightOnHover
@@ -1510,14 +1592,35 @@ function StandingsTable({
             {standings.map((s, i) => {
               const teamName = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
               const gd = goalDifference(s);
-              const isHi =
-                highlightTeamId !== undefined
-                  ? s.team_id === highlightTeamId
-                  : i === 0;
+              // The user's row gets the strong treatment; in tables with no
+              // user team we still gently mark the leader.
+              const isUser =
+                highlightTeamId !== undefined && s.team_id === highlightTeamId;
+              const isLeader = highlightTeamId === undefined && i === 0;
               return (
-                <Table.Tr key={s.team_id} bg={isHi ? "accent.9" : undefined}>
+                <Table.Tr
+                  key={s.team_id}
+                  bg={isUser || isLeader ? "accent.9" : undefined}
+                  style={
+                    isUser
+                      ? {
+                          // Accent bar on the left edge = "this row is YOU".
+                          boxShadow:
+                            "inset 4px 0 0 0 var(--mantine-color-accent-5)",
+                        }
+                      : undefined
+                  }
+                >
                   <Table.Td>{i + 1}</Table.Td>
-                  <Table.Td c={isHi ? "accent.3" : undefined} fw={isHi ? 700 : undefined}>
+                  <Table.Td
+                    c={isUser ? "accent.3" : isLeader ? "accent.3" : undefined}
+                    fw={isUser || isLeader ? 700 : undefined}
+                  >
+                    {isUser && (
+                      <Text span c="accent.4" fw={700} mr={4}>
+                        ▸
+                      </Text>
+                    )}
                     {teamName}
                   </Table.Td>
                   <Table.Td ta="right">{s.played}</Table.Td>
