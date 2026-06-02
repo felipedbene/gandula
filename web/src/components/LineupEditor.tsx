@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, Group, Stack, Text } from "@mantine/core";
 import type { Player, Team } from "../types";
 import { MAX_BENCH } from "./BenchEditor";
+import FormationPitch from "./ui/FormationPitch";
 
 /**
  * Lineup state: the 11 starting XI player IDs + the bench player IDs.
@@ -106,6 +107,10 @@ export default function LineupEditor({ team, state, onChange }: LineupEditorProp
 
   return (
     <Stack gap="xs">
+      {/* Visual pitch — the primary editor; tapping a dot swaps via the same
+          state/onChange as the list below, so they stay in sync. */}
+      <FormationPitch team={team} state={state} onChange={onChange} />
+
       {gkCount === 0 && (
         <Text c="red.5" size="sm">
           ATENÇÃO: nenhum goleiro na escalação
