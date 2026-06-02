@@ -2,13 +2,12 @@ import { useState } from "react";
 import { Button, Group, Stack, Text } from "@mantine/core";
 import type { Player, Team } from "../types";
 import type { LineupState } from "./LineupEditor";
+import { MAX_BENCH } from "../util/lineup";
 
-/** Hard upper bound on bench size — mirrors `core/src/domain/team.rs:8`
- *  (`pub const MAX_BENCH: usize = 7`). Engine validation rejects any bench
- *  longer than this, so we cap inside the UI too. Exported so LineupEditor
- *  can reuse it when deciding whether to spill a swap's outgoing player
- *  back onto the bench. */
-export const MAX_BENCH = 7;
+/** Hard upper bound on bench size — canonical home is `util/lineup.ts`
+ *  (mirrors `core/src/domain/team.rs:8`). Re-exported here for the editors
+ *  and tests that already import it from this module. */
+export { MAX_BENCH };
 
 type BenchEditorProps = {
   team: Team;
