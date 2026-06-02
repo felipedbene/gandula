@@ -11,8 +11,10 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 > team identity, state-driven scorelines, motion, mobile-native layout, formation
 > pitch), then an **analytics/finance layer**: half-time tactics with a live
 > projection (engine split into first/second half), the matching pre-match
-> projection, and a during-season **Finances screen** (cash runway, season ledger,
-> recurring TV/sponsorship, build-vs-buy levers moved out of the market). All in
+> projection, a during-season **Finances screen** (cash runway, season ledger,
+> recurring TV/sponsorship, build-vs-buy levers moved out of the market), and
+> **negotiable TV/sponsorship contracts** (sign offers; four ways to lose a deal
+> — relegation, performance clause, term expiry, mid-season scandal). All in
 > Polish below. Deferred extras: pitch drag-and-drop, a tactics board. The
 > handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
 > not forgotten:
@@ -344,6 +346,30 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
   transactional with a draft + undo + confirm. `applyTransferAction` /
   `reverseTransferAction` extracted to one pure source shared by both screens.
   All finances.ts changes are pure additions — no behaviour moved.
+- [x] **Negotiable TV & sponsorship contracts** · _M, web_ — **shipped** across
+  four slices (PRs #27/#28/#29/#30). TV + sponsorship became signable contracts
+  on top of the passive floors: `Manager.activeDeals` (schema **v11→v12**,
+  additive — absent ⇒ the derived floor) holds a `Deal { seasonAmount, startYear,
+  termYears, performanceClause?, droppedAtRound? }` per slot; `tvSeasonTotal` /
+  `sponsorshipSeasonTotal` prefer it, with per-round fair-rounding preserving the
+  sums-to-season invariant.
+  - **v1 (#27):** deterministic per-season offer slate (`generateDealOffers`:
+    Sólida 1.0× / Agressiva 1.3× / Conservadora 0.85×, term 1..3, from
+    `seed^year^salt`); `signDeal` action (shared apply/reverse, draft+undo);
+    offers take effect NEXT season so the current season is undisturbed; drop on
+    relegation (TV).
+  - **Performance clauses (#28):** the Aggressive offer carries a per-tier
+    position target (A≤6 / B≤10 / C≤12); finishing worse drops the deal at the
+    boundary. `keepDeal` evaluates triggers per slot.
+  - **Term expiry (#29):** a deal covers `[startYear, startYear+termYears-1]`
+    and lapses at the boundary past it; UI warns the season before.
+  - **Scandal (#30):** a rare (~5%/season) deterministic mid-season event
+    (`scandalStrikesAt`) sets `droppedAtRound`; income then SEGMENTS — pro-rata
+    contract before the drop, derived floor (sliced over the tail) after — each
+    segment fair-rounding clean. The only trigger that fires mid-season.
+  - The four drop triggers (relegation / clause / expiry / scandal) compose in
+    one `keepDeal` + the playRound scandal hook. Covered by deals.test.ts +
+    career.test.ts (offers deterministic, segmented sums-to-season, each trigger).
 
 ## Suggested order
 

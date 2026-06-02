@@ -203,6 +203,15 @@ goals pulse the scoreboard. Full career-mode loop:
   Líquido), the recurring TV + sponsorship floors, and the stadium/fanbase
   status (next home game's demand vs. capacity → "lotando, expanda" /
   "sobra cadeira").
+- **Negotiable TV & sponsorship contracts.** TV and sponsorship aren't only
+  passive floors — each season a deterministic slate of offers (Sólida /
+  Agressiva / Conservadora, varied terms) appears on the Finances screen; sign
+  one and its value replaces the tier floor (takes effect next season, so the
+  current season's per-round accrual is never disturbed). A deal can be **lost**
+  four ways: relegation (drops the TV deal), a failed **performance clause**
+  (the Aggressive offer's per-tier position target), **term expiry**, or a rare
+  mid-season **scandal** (income then segments to the floor pro-rata for the
+  rest of the season). All deterministic — re-sim / reload reproduces them.
 - **Build-vs-buy levers.** Spend on **stadium expansion** (more gate capacity)
   and **marketing campaigns** (grow the fanbase, with decaying momentum) — the
   compounding flywheel behind the title. Both live on the Finances screen
@@ -239,10 +248,10 @@ goals pulse the scoreboard. Full career-mode loop:
 - **History.** Past seasons collapse to compact summaries (champion, your
   position, P/R outcome, Copa run, money delta, transfers).
 
-State is a schema-versioned `Career` in IndexedDB (currently **v11**) with
+State is a schema-versioned `Career` in IndexedDB (currently **v12**) with
 additive in-place migrations — `loadCareer` cascades older saves forward
-transparently (v11 adds optional per-round half-time tactics; absent = no
-half-time change).
+transparently (v11 added per-round half-time tactics; v12 added optional
+negotiable-deal state; absent fields fall back to the prior behaviour).
 
 ### Running locally
 
@@ -293,6 +302,8 @@ drag-and-drop on the pitch and a tactics board with arrows.
 
 More recently: **half-time tactics** with a live analytic projection (engine
 split into first/second half over a serializable snapshot), the **pre-match
-projection** sharing the same indicators, and a **Finances screen** (cash
-runway, season ledger, recurring TV/sponsorship, and the build-vs-buy levers
-moved out of the transfer market).
+projection** sharing the same indicators, a **Finances screen** (cash runway,
+season ledger, recurring TV/sponsorship, and the build-vs-buy levers moved out
+of the transfer market), and **negotiable TV/sponsorship contracts** — sign
+offers, with four ways to lose a deal (relegation, performance clause, term
+expiry, mid-season scandal).
