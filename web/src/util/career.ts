@@ -11,6 +11,7 @@ import {
   FIRST_YEAR,
   findUserDivisionIdxInSeason,
   type Career,
+  type Deal,
   type Division,
   type Manager,
   type Season,
@@ -100,6 +101,25 @@ export type AdvanceResult = {
  *
  * Pure: no IDB, no mutation of inputs.
  */
+/** Whether a deal in `slot` survives into next season, given the just-finished
+ *  outcome + final position. Returns the deal to carry, or undefined if it
+ *  drops (→ derived floor). Drop triggers: relegation (TV only), or a
+ *  performance clause the club failed (`userPosition > maxPosition`, either
+ *  slot). Order doesn't matter — either trigger drops it. */
+function keepDeal(
+  deal: Deal | undefined,
+  slot: "tv" | "sponsorship",
+  userOutcome: "promoted" | "relegated" | "stayed",
+  userPosition: number,
+): Deal | undefined {
+  if (!deal) return undefined;
+  if (slot === "tv" && userOutcome === "relegated") return undefined;
+  if (deal.performanceClause && userPosition > deal.performanceClause.maxPosition) {
+    return undefined;
+  }
+  return deal;
+}
+
 export function advanceCareer(
   career: Career,
   prResult: PRResult,
@@ -151,15 +171,26 @@ export function advanceCareer(
   );
   const nextMomentum = nextMarketingMomentum(career.manager.marketingMomentum);
 
-  // v12: relegation drops the TV deal (the top-flight broadcaster contract
-  // doesn't follow you down) — clearing it reverts TV income to the new tier's
-  // derived floor. Sponsorship and the promote/stay cases carry the deals
-  // forward untouched. (Term expiry + performance clauses are a later slice.)
+  // v12: decide which deals carry into next season. Two drop triggers, per slot:
+  //   - Relegation drops the TV deal (the top-flight broadcaster contract
+  //     doesn't follow you down) — reverts TV income to the new tier's floor.
+  //   - A performance clause drops EITHER deal when the club finished worse than
+  //     the clause's `maxPosition` (the gamble on the Aggressive offer).
+  // A dropped slot becomes undefined → derived floor next season. Sponsorship
+  // and the promote/stay cases otherwise carry forward untouched.
+  // (Term expiry + scandal events are later slices.)
   const currentDeals = career.manager.activeDeals;
-  const nextActiveDeals: Manager["activeDeals"] =
-    userOutcome === "relegated" && currentDeals?.tv
-      ? { ...currentDeals, tv: undefined }
-      : currentDeals;
+  const nextActiveDeals: Manager["activeDeals"] = currentDeals
+    ? {
+        tv: keepDeal(currentDeals.tv, "tv", userOutcome, history.userPosition),
+        sponsorship: keepDeal(
+          currentDeals.sponsorship,
+          "sponsorship",
+          userOutcome,
+          history.userPosition,
+        ),
+      }
+    : currentDeals;
 
   return {
     history,

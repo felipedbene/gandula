@@ -443,4 +443,45 @@ describe("advanceCareer — negotiable deals (v12)", () => {
     expect(nextActiveDeals?.tv).toBeUndefined(); // dropped → derived floor next season
     expect(nextActiveDeals?.sponsorship).toEqual(sponsorDeal); // sponsorship carries
   });
+
+  // A sponsorship deal with a clause isolates the clause trigger (sponsorship
+  // is never relegation-dropped). Série C target is ≤12; place the user at the
+  // top (clause met) vs the bottom (clause failed) of the C standings.
+  const clauseDeal = {
+    id: "sponsorship-2026-c",
+    kind: "sponsorship" as const,
+    seasonAmount: 900_000,
+    startYear: FIRST_YEAR,
+    termYears: 2,
+    performanceClause: { maxPosition: 12 },
+  };
+
+  it("keeps a clause deal when the user meets the target (finishes ≤ maxPosition)", () => {
+    const career = makeFinishedCareer(1998n);
+    const tierC = career.currentSeason.divisions.find((d) => d.tier === 3)!;
+    career.controlledTeamId = tierC.record.standings[0].team_id; // 1st place
+    career.manager.activeDeals = { sponsorship: clauseDeal };
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const { history, nextActiveDeals } = advanceCareer(career, pr);
+    expect(history.userPosition).toBeLessThanOrEqual(12);
+    expect(nextActiveDeals?.sponsorship).toEqual(clauseDeal);
+  });
+
+  it("drops a clause deal when the user misses the target (finishes worse)", () => {
+    const career = makeFinishedCareer(1998n);
+    const tierC = career.currentSeason.divisions.find((d) => d.tier === 3)!;
+    const last = tierC.record.standings[tierC.record.standings.length - 1];
+    career.controlledTeamId = last.team_id; // bottom of Série C (20th)
+    career.manager.activeDeals = { sponsorship: clauseDeal };
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const { history, nextActiveDeals } = advanceCareer(career, pr);
+    expect(history.userPosition).toBeGreaterThan(12);
+    expect(nextActiveDeals?.sponsorship).toBeUndefined(); // clause failed → dropped
+  });
 });
