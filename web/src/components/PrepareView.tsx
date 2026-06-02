@@ -268,6 +268,7 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
                 <LineupEditor
                   team={baseTeam}
                   state={currentLineup}
+                  formation={current.formation}
                   onChange={setCurrentLineup}
                 />
                 <BenchEditor
