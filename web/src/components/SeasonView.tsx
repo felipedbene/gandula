@@ -851,7 +851,8 @@ function CampeonatoEmCurso({
   );
 
   return (
-    <Stack gap="md">
+    // Extra bottom space on mobile so the last actions clear the fixed nav.
+    <Stack gap="md" pb={{ base: 64, sm: 0 }}>
       <Text c="dimmed" size="sm">
         <Text span c="gray.0" fw={700}>
           {teamName} (Você)
@@ -890,7 +891,8 @@ function CampeonatoEmCurso({
         title={`Classificação · ${userDiv.name}`}
       />
 
-      <Group justify="center" gap="sm">
+      {/* Desktop / tablet: the full inline button row. */}
+      <Group justify="center" gap="sm" visibleFrom="sm">
         <Button onClick={onPrepare}>Avançar rodada</Button>
         <Button variant="default" onClick={onTactics}>
           Tática
@@ -908,7 +910,92 @@ function CampeonatoEmCurso({
           Nova carreira
         </Button>
       </Group>
+
+      {/* Mobile: the secondary actions stay inline; the primary four live in
+          the fixed bottom nav below. */}
+      <Group justify="center" gap="sm" hiddenFrom="sm">
+        <Button variant="default" size="xs" onClick={onViewOtherDivision}>
+          Outras divisões
+        </Button>
+        <Button variant="subtle" size="xs" color="red" onClick={onReset}>
+          Nova carreira
+        </Button>
+      </Group>
+
+      <BottomNav
+        onPrepare={onPrepare}
+        onTactics={onTactics}
+        onOpenMarket={onOpenMarket}
+        onViewCopa={onViewCopa}
+      />
     </Stack>
+  );
+}
+
+/** Fixed mobile action bar for the running phase. The four most-used actions;
+ *  the rest stay inline above. Hidden on sm+ (desktop uses the inline row). */
+function BottomNav({
+  onPrepare,
+  onTactics,
+  onOpenMarket,
+  onViewCopa,
+}: {
+  onPrepare: () => void;
+  onTactics: () => void;
+  onOpenMarket: () => void;
+  onViewCopa: () => void;
+}) {
+  const items: Array<{ label: string; icon: string; onClick: () => void; primary?: boolean }> = [
+    { label: "Avançar", icon: "▶", onClick: onPrepare, primary: true },
+    { label: "Tática", icon: "⚙", onClick: onTactics },
+    { label: "Mercado", icon: "$", onClick: onOpenMarket },
+    { label: "Copa", icon: "🏆", onClick: onViewCopa },
+  ];
+  return (
+    <Box
+      hiddenFrom="sm"
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 200,
+        display: "flex",
+        background: "rgba(14, 18, 20, 0.92)",
+        backdropFilter: "blur(8px)",
+        borderTop: "1px solid var(--mantine-color-ink-7)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
+    >
+      {items.map((it) => (
+        <Box
+          key={it.label}
+          component="button"
+          onClick={it.onClick}
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+            padding: "8px 4px",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: it.primary
+              ? "var(--mantine-color-accent-4)"
+              : "var(--mantine-color-ink-2)",
+          }}
+        >
+          <Text span fz={18} style={{ lineHeight: 1 }}>
+            {it.icon}
+          </Text>
+          <Text span fz={11} fw={it.primary ? 700 : 500}>
+            {it.label}
+          </Text>
+        </Box>
+      ))}
+    </Box>
   );
 }
 
@@ -1575,6 +1662,72 @@ function UserTeamSummary({
   );
 }
 
+/** One standings row as a card — the mobile layout (the desktop layout is the
+ *  real <Table> below). Position + crest + name on the left, points big on the
+ *  right, a compact V/E/D · SG line under the name. */
+function StandingsRowCard({
+  rank,
+  stats,
+  isUser,
+  isLeader,
+}: {
+  rank: number;
+  stats: TeamStats;
+  isUser: boolean;
+  isLeader: boolean;
+}) {
+  const teamName = teamById(stats.team_id)?.name ?? `Time ${stats.team_id}`;
+  const gd = goalDifference(stats);
+  const highlighted = isUser || isLeader;
+  return (
+    <Box
+      p="xs"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--mantine-spacing-sm)",
+        borderRadius: "var(--mantine-radius-sm)",
+        background: highlighted ? "var(--mantine-color-accent-9)" : undefined,
+        boxShadow: isUser
+          ? "inset 4px 0 0 0 var(--mantine-color-accent-5)"
+          : undefined,
+      }}
+    >
+      <Text
+        ff="monospace"
+        fw={700}
+        c={highlighted ? "accent.3" : "dimmed"}
+        style={{ minWidth: 20, textAlign: "center" }}
+      >
+        {rank}
+      </Text>
+      <TeamCrest name={teamName} size={26} radius={6} />
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        <Text fw={highlighted ? 700 : 500} c={highlighted ? "accent.3" : undefined} truncate>
+          {isUser && (
+            <Text span c="accent.4" fw={700} mr={4}>
+              ▸
+            </Text>
+          )}
+          {teamName}
+        </Text>
+        <Text c="dimmed" size="xs" ff="monospace">
+          {stats.played}J · {stats.won}V {stats.drawn}E {stats.lost}D · SG{" "}
+          {gd > 0 ? `+${gd}` : gd}
+        </Text>
+      </Box>
+      <Box style={{ textAlign: "right" }}>
+        <Text ff="monospace" fw={800} fz="lg" style={{ lineHeight: 1 }}>
+          {points(stats)}
+        </Text>
+        <Text c="dimmed" size="xs">
+          pts
+        </Text>
+      </Box>
+    </Box>
+  );
+}
+
 function StandingsTable({
   standings,
   highlightTeamId,
@@ -1587,12 +1740,36 @@ function StandingsTable({
   highlightTeamId?: number;
   title?: string;
 }) {
+  // Shared per-row classification used by both layouts.
+  const rows = standings.map((s, i) => ({
+    stats: s,
+    rank: i + 1,
+    isUser: highlightTeamId !== undefined && s.team_id === highlightTeamId,
+    // In tables with no user team we still gently mark the leader.
+    isLeader: highlightTeamId === undefined && i === 0,
+  }));
+
   return (
     <Panel title={title}>
       {highlightTeamId !== undefined && (
         <UserTeamSummary standings={standings} teamId={highlightTeamId} />
       )}
-      <Table.ScrollContainer minWidth={320}>
+
+      {/* Mobile: a card per row (no horizontal scrolling on a phone). */}
+      <Stack gap={4} hiddenFrom="sm">
+        {rows.map((r) => (
+          <StandingsRowCard
+            key={r.stats.team_id}
+            rank={r.rank}
+            stats={r.stats}
+            isUser={r.isUser}
+            isLeader={r.isLeader}
+          />
+        ))}
+      </Stack>
+
+      {/* Desktop / tablet: the full stats table. */}
+      <Table.ScrollContainer minWidth={320} visibleFrom="sm">
         <Table
           highlightOnHover
           verticalSpacing={6}
@@ -1605,24 +1782,19 @@ function StandingsTable({
               <Table.Th>#</Table.Th>
               <Table.Th>Time</Table.Th>
               <Table.Th ta="right">P</Table.Th>
-              <Table.Th ta="right" visibleFrom="sm">V</Table.Th>
-              <Table.Th ta="right" visibleFrom="sm">E</Table.Th>
-              <Table.Th ta="right" visibleFrom="sm">D</Table.Th>
-              <Table.Th ta="right" visibleFrom="sm">GP</Table.Th>
-              <Table.Th ta="right" visibleFrom="sm">GC</Table.Th>
-              <Table.Th ta="right" visibleFrom="sm">SG</Table.Th>
+              <Table.Th ta="right">V</Table.Th>
+              <Table.Th ta="right">E</Table.Th>
+              <Table.Th ta="right">D</Table.Th>
+              <Table.Th ta="right">GP</Table.Th>
+              <Table.Th ta="right">GC</Table.Th>
+              <Table.Th ta="right">SG</Table.Th>
               <Table.Th ta="right">Pts</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {standings.map((s, i) => {
+            {rows.map(({ stats: s, rank, isUser, isLeader }) => {
               const teamName = teamById(s.team_id)?.name ?? `Time ${s.team_id}`;
               const gd = goalDifference(s);
-              // The user's row gets the strong treatment; in tables with no
-              // user team we still gently mark the leader.
-              const isUser =
-                highlightTeamId !== undefined && s.team_id === highlightTeamId;
-              const isLeader = highlightTeamId === undefined && i === 0;
               return (
                 <Table.Tr
                   key={s.team_id}
@@ -1637,7 +1809,7 @@ function StandingsTable({
                       : undefined
                   }
                 >
-                  <Table.Td>{i + 1}</Table.Td>
+                  <Table.Td>{rank}</Table.Td>
                   <Table.Td
                     c={isUser ? "accent.3" : isLeader ? "accent.3" : undefined}
                     fw={isUser || isLeader ? 700 : undefined}
@@ -1653,12 +1825,12 @@ function StandingsTable({
                     </Group>
                   </Table.Td>
                   <Table.Td ta="right">{s.played}</Table.Td>
-                  <Table.Td ta="right" visibleFrom="sm">{s.won}</Table.Td>
-                  <Table.Td ta="right" visibleFrom="sm">{s.drawn}</Table.Td>
-                  <Table.Td ta="right" visibleFrom="sm">{s.lost}</Table.Td>
-                  <Table.Td ta="right" visibleFrom="sm">{s.goals_for}</Table.Td>
-                  <Table.Td ta="right" visibleFrom="sm">{s.goals_against}</Table.Td>
-                  <Table.Td ta="right" visibleFrom="sm">{gd > 0 ? `+${gd}` : gd}</Table.Td>
+                  <Table.Td ta="right">{s.won}</Table.Td>
+                  <Table.Td ta="right">{s.drawn}</Table.Td>
+                  <Table.Td ta="right">{s.lost}</Table.Td>
+                  <Table.Td ta="right">{s.goals_for}</Table.Td>
+                  <Table.Td ta="right">{s.goals_against}</Table.Td>
+                  <Table.Td ta="right">{gd > 0 ? `+${gd}` : gd}</Table.Td>
                   <Table.Td ta="right" fw={700}>{points(s)}</Table.Td>
                 </Table.Tr>
               );
