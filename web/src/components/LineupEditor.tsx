@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Group, Stack, Text } from "@mantine/core";
 import type { Player, Team } from "../types";
-import { MAX_BENCH } from "./BenchEditor";
+import { applySwap } from "../util/lineup";
 import FormationPitch from "./ui/FormationPitch";
 
 /**
@@ -61,35 +61,11 @@ export default function LineupEditor({ team, state, onChange }: LineupEditorProp
     setExpandedSlot((prev) => (prev === slotIdx ? null : slotIdx));
   }
 
-  /**
-   * Swap-perfect substitution: XI[slotIdx] ⇄ incomingId.
-   *
-   * - Incoming came from the bench → outgoing takes its exact bench slot.
-   *   Bench size and order both preserved.
-   * - Incoming came from outside the bench (D.1.f path, surfaced when the
-   *   user REMOVERs a player off the bench and then picks them back into
-   *   the XI from "outside"):
-   *     - If the bench has room (< MAX_BENCH), outgoing is appended to the
-   *       end so the user doesn't lose the player they had on the field.
-   *     - If the bench is full, outgoing leaves the team silently — the
-   *       rare-but-real case where the user has deliberately built up a
-   *       full bench and the only thing to give up is the XI slot.
-   */
+  /** Swap-perfect substitution: XI[slotIdx] ⇄ incomingId. Bench bookkeeping
+   *  (outgoing takes incoming's bench slot, or spills to the end / leaves a
+   *  full bench) lives in the shared `applySwap` — see util/lineup.ts. */
   function swap(slotIdx: number, incomingId: number) {
-    const outgoingId = state.starting_xi[slotIdx];
-    const newXI = state.starting_xi.slice();
-    newXI[slotIdx] = incomingId;
-
-    const newBench = state.bench.slice();
-    const benchIdx = newBench.indexOf(incomingId);
-    if (benchIdx >= 0) {
-      newBench[benchIdx] = outgoingId;
-    } else if (newBench.length < MAX_BENCH) {
-      newBench.push(outgoingId);
-    }
-    // else: bench full and incoming from outside → outgoing leaves silently.
-
-    onChange({ starting_xi: newXI, bench: newBench });
+    onChange(applySwap(state, state.starting_xi[slotIdx], incomingId));
     setExpandedSlot(null);
   }
 

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Box, Stack, Text } from "@mantine/core";
 import type { Player, Position, Team } from "../../types";
 import { playerOverall } from "../../util/transfer-market";
 import type { LineupState } from "../LineupEditor";
-import { MAX_BENCH } from "../BenchEditor";
+import { applySwap, swapFromDrop } from "../../util/lineup";
 
 /**
  * A responsive portrait football pitch that renders a starting XI by grouping
@@ -14,8 +14,14 @@ import { MAX_BENCH } from "../BenchEditor";
  * desktop.
  *
  * Read-only by default (used for the opponent preview). When `onChange` is
- * given it's interactive: tap a player to reveal same-position candidates and
- * pick one to swap (swap-perfect, mirroring LineupEditor.swap).
+ * given it's interactive, with two ways to make the same swap-perfect
+ * substitution (both route through `applySwap`):
+ *   - **Tap** a dot to reveal same-position candidates, then pick one.
+ *   - **Drag** a dot onto a same-position dot — including the bench rail shown
+ *     below the pitch. Pointer-events based, so it works with both mouse and
+ *     touch (the app is mobile-native; native HTML5 drag doesn't fire on touch).
+ * A valid drop is same-position with exactly one endpoint in the XI; the XI
+ * endpoint is the outgoing player, the other is the incoming one.
  */
 
 const BANDS: { pos: Position; label: string }[] = [
@@ -33,23 +39,48 @@ const BAND_COLOR: Record<Position, string> = {
   GK: "var(--mantine-color-yellow-6)",
 };
 
+// Movement past this many px before pointerup counts as a drag, not a tap.
+const DRAG_THRESHOLD_PX = 6;
+
+type DotHandlers = {
+  onClick?: () => void;
+  onPointerDown?: (e: React.PointerEvent) => void;
+  onPointerMove?: (e: React.PointerEvent) => void;
+  onPointerUp?: (e: React.PointerEvent) => void;
+};
+
 function PlayerDot({
   player,
   selected,
-  onClick,
+  dropTarget,
+  dragging,
+  size = "md",
+  handlers,
 }: {
   player: Player | undefined;
-  selected: boolean;
-  onClick?: () => void;
+  selected?: boolean;
+  /** Highlighted as the current valid drop target during a drag. */
+  dropTarget?: boolean;
+  /** This dot is the one being dragged (dimmed; the ghost shows the live one). */
+  dragging?: boolean;
+  size?: "md" | "sm";
+  handlers?: DotHandlers;
 }) {
   const ovr = player ? playerOverall(player) : "?";
   const name = player?.name ?? "—";
   // Short label: surname (last token) keeps the pitch legible.
   const short = name.split(/\s+/).slice(-1)[0];
+  const interactive = !!handlers?.onClick || !!handlers?.onPointerDown;
+  const dim = size === "sm" ? 26 : 30;
   return (
     <Box
-      component={onClick ? "button" : "div"}
-      onClick={onClick}
+      component={interactive ? "button" : "div"}
+      type={interactive ? "button" : undefined}
+      onClick={handlers?.onClick}
+      onPointerDown={handlers?.onPointerDown}
+      onPointerMove={handlers?.onPointerMove}
+      onPointerUp={handlers?.onPointerUp}
+      data-dot-id={player?.id}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -58,16 +89,20 @@ function PlayerDot({
         background: "transparent",
         border: "none",
         padding: 0,
-        cursor: onClick ? "pointer" : "default",
+        cursor: interactive ? (handlers?.onPointerDown ? "grab" : "pointer") : "default",
         flex: "0 1 auto",
         minWidth: 0,
         maxWidth: 72,
+        // Stop the browser from scrolling/selecting mid-drag on touch.
+        touchAction: handlers?.onPointerDown ? "none" : undefined,
+        userSelect: "none",
+        opacity: dragging ? 0.35 : 1,
       }}
     >
       <Box
         style={{
-          width: 30,
-          height: 30,
+          width: dim,
+          height: dim,
           borderRadius: "50%",
           background: player
             ? BAND_COLOR[player.position]
@@ -77,18 +112,22 @@ function PlayerDot({
           alignItems: "center",
           justifyContent: "center",
           fontWeight: 800,
-          fontSize: 12,
+          fontSize: size === "sm" ? 11 : 12,
           fontFamily: "var(--mantine-font-family-monospace)",
-          boxShadow: selected
-            ? "0 0 0 3px var(--mantine-color-accent-4)"
-            : "0 1px 3px rgba(0,0,0,0.4)",
-          transition: "box-shadow 120ms ease",
+          boxShadow: dropTarget
+            ? "0 0 0 3px var(--mantine-color-teal-4)"
+            : selected
+              ? "0 0 0 3px var(--mantine-color-accent-4)"
+              : "0 1px 3px rgba(0,0,0,0.4)",
+          transform: dropTarget ? "scale(1.12)" : "none",
+          transition: "box-shadow 120ms ease, transform 120ms ease",
+          pointerEvents: "none", // let the parent button own the gesture
         }}
       >
         {ovr}
       </Box>
       <Text
-        fz={10}
+        fz={size === "sm" ? 9 : 10}
         fw={600}
         c="white"
         truncate
@@ -96,6 +135,7 @@ function PlayerDot({
           maxWidth: 64,
           textShadow: "0 1px 2px rgba(0,0,0,0.9)",
           lineHeight: 1.1,
+          pointerEvents: "none",
         }}
       >
         {short}
@@ -111,15 +151,29 @@ export default function FormationPitch({
 }: {
   team: Team;
   state: LineupState;
-  /** When provided, the pitch is interactive (tap to swap). Omit for a
+  /** When provided, the pitch is interactive (tap or drag to swap). Omit for a
    *  read-only view (e.g. the opponent preview). */
   onChange?: (next: LineupState) => void;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
+  // Drag view-state (drives the ghost + highlight); the authoritative gesture
+  // bookkeeping lives in `dragRef` so pointer handlers never read stale state.
+  const [dragId, setDragId] = useState<number | null>(null);
+  const [dropId, setDropId] = useState<number | null>(null);
+  const [ghost, setGhost] = useState<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<{
+    id: number;
+    startX: number;
+    startY: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClickRef = useRef(false);
+
   const interactive = !!onChange;
 
   const playerById = new Map<number, Player>();
   for (const p of team.roster) playerById.set(p.id, p);
+  const xiSet = new Set(state.starting_xi);
 
   // Group the XI ids into position bands, preserving array order within each.
   const bands = BANDS.map((b) => ({
@@ -129,33 +183,117 @@ export default function FormationPitch({
     ),
   }));
 
-  /** Same-position candidates not already in the XI — the swap menu. */
+  /** Same-position candidates not already in the XI — the tap-swap menu. */
   function candidatesFor(playerId: number): Player[] {
     const cur = playerById.get(playerId);
     if (!cur) return [];
-    const xiSet = new Set(state.starting_xi);
     return team.roster.filter(
       (p) => p.position === cur.position && !xiSet.has(p.id),
     );
   }
 
-  // Swap-perfect: mirrors LineupEditor.swap so the two editors agree.
-  function swap(outgoingId: number, incomingId: number) {
+  const positionOf = (id: number) => playerById.get(id)?.position;
+
+  /** Whether a source→target drop is allowed (drives the hover highlight). */
+  function canDrop(sourceId: number, targetId: number): boolean {
+    return swapFromDrop(state, positionOf, sourceId, targetId) !== null;
+  }
+
+  /** Commit the swap implied by a source→target drop (the shared rule lives in
+   *  swapFromDrop). */
+  function commitDrop(sourceId: number, targetId: number) {
+    const next = onChange && swapFromDrop(state, positionOf, sourceId, targetId);
+    if (next) {
+      onChange!(next);
+      setSelected(null);
+    }
+  }
+
+  /** Tap-pick: the selected dot is in the XI, the candidate replaces it. */
+  function commitPick(outgoingId: number, incomingId: number) {
     if (!onChange) return;
-    const slotIdx = state.starting_xi.indexOf(outgoingId);
-    if (slotIdx < 0) return;
-    const newXI = state.starting_xi.slice();
-    newXI[slotIdx] = incomingId;
-    const newBench = state.bench.slice();
-    const benchIdx = newBench.indexOf(incomingId);
-    if (benchIdx >= 0) newBench[benchIdx] = outgoingId;
-    else if (newBench.length < MAX_BENCH) newBench.push(outgoingId);
-    onChange({ starting_xi: newXI, bench: newBench });
+    onChange(applySwap(state, outgoingId, incomingId));
     setSelected(null);
+  }
+
+  // ----- Pointer drag-and-drop -------------------------------------------
+  function dotIdAt(x: number, y: number): number | null {
+    const el = document.elementFromPoint(x, y);
+    const dot = el?.closest<HTMLElement>("[data-dot-id]");
+    const raw = dot?.getAttribute("data-dot-id");
+    return raw ? Number(raw) : null;
+  }
+
+  function onDotPointerDown(id: number) {
+    return (e: React.PointerEvent) => {
+      if (!interactive || e.button !== 0) return;
+      // Clear any stale suppress from a prior drag that ended without a
+      // trailing click, so this gesture's tap (if it's a tap) isn't eaten.
+      suppressClickRef.current = false;
+      dragRef.current = { id, startX: e.clientX, startY: e.clientY, moved: false };
+      setDragId(id);
+      setGhost({ x: e.clientX, y: e.clientY });
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    };
+  }
+
+  function onDotPointerMove(e: React.PointerEvent) {
+    const d = dragRef.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) d.moved = true;
+    setGhost({ x: e.clientX, y: e.clientY });
+    if (d.moved) {
+      const targetId = dotIdAt(e.clientX, e.clientY);
+      setDropId(targetId !== null && canDrop(d.id, targetId) ? targetId : null);
+    }
+  }
+
+  function onDotPointerUp() {
+    const d = dragRef.current;
+    dragRef.current = null;
+    setDragId(null);
+    setGhost(null);
+    const target = dropId;
+    setDropId(null);
+    if (!d) return;
+    if (d.moved) {
+      // A real drag: suppress the click that browsers fire after pointerup.
+      suppressClickRef.current = true;
+      if (target !== null) commitDrop(d.id, target);
+    }
+  }
+
+  function onDotClick(id: number) {
+    return () => {
+      if (suppressClickRef.current) {
+        suppressClickRef.current = false;
+        return; // this "click" was the tail of a drag
+      }
+      setSelected((p) => (p === id ? null : id));
+    };
+  }
+
+  function handlersFor(id: number): DotHandlers | undefined {
+    if (!interactive) return undefined;
+    return {
+      onClick: onDotClick(id),
+      onPointerDown: onDotPointerDown(id),
+      onPointerMove: onDotPointerMove,
+      onPointerUp: onDotPointerUp,
+    };
   }
 
   const selectedCandidates =
     selected !== null ? candidatesFor(selected) : [];
+
+  // Bench players that are real roster members (interactive rail only).
+  const benchPlayers = interactive
+    ? state.bench.map((id) => playerById.get(id)).filter((p): p is Player => !!p)
+    : [];
+
+  const draggedPlayer = dragId !== null ? playerById.get(dragId) : undefined;
 
   return (
     <Stack gap="xs">
@@ -197,11 +335,9 @@ export default function FormationPitch({
                   key={id}
                   player={playerById.get(id)}
                   selected={selected === id}
-                  onClick={
-                    interactive
-                      ? () => setSelected((p) => (p === id ? null : id))
-                      : undefined
-                  }
+                  dropTarget={dropId === id}
+                  dragging={dragId === id}
+                  handlers={handlersFor(id)}
                 />
               ))
             )}
@@ -209,7 +345,67 @@ export default function FormationPitch({
         ))}
       </Box>
 
-      {/* Interactive swap menu for the selected player. */}
+      {/* Bench rail — the other half of the drag target surface. */}
+      {interactive && benchPlayers.length > 0 && (
+        <Box>
+          <Text size="xs" c="dimmed" mb={2}>
+            Banco · arraste para escalar
+          </Text>
+          <Box
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 6,
+              padding: "8px 6px",
+              borderRadius: "var(--mantine-radius-sm)",
+              background: "var(--mantine-color-ink-8)",
+              border: "1px solid var(--mantine-color-ink-7)",
+            }}
+          >
+            {benchPlayers.map((p) => (
+              <PlayerDot
+                key={p.id}
+                player={p}
+                dropTarget={dropId === p.id}
+                dragging={dragId === p.id}
+                size="sm"
+                handlers={handlersFor(p.id)}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
+
+      {/* Floating drag ghost following the pointer. */}
+      {ghost && draggedPlayer && (
+        <Box
+          style={{
+            position: "fixed",
+            left: ghost.x,
+            top: ghost.y,
+            transform: "translate(-50%, -50%)",
+            zIndex: 1000,
+            pointerEvents: "none",
+            width: 34,
+            height: 34,
+            borderRadius: "50%",
+            background: BAND_COLOR[draggedPlayer.position],
+            color: "var(--mantine-color-ink-9)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 800,
+            fontSize: 13,
+            fontFamily: "var(--mantine-font-family-monospace)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+            opacity: 0.92,
+          }}
+        >
+          {playerOverall(draggedPlayer)}
+        </Box>
+      )}
+
+      {/* Interactive swap menu for the selected (tapped) player. */}
       {interactive && selected !== null && (
         <Box
           p="xs"
@@ -233,7 +429,8 @@ export default function FormationPitch({
                 <Box
                   key={c.id}
                   component="button"
-                  onClick={() => swap(selected, c.id)}
+                  type="button"
+                  onClick={() => commitPick(selected, c.id)}
                   style={{
                     display: "flex",
                     alignItems: "center",

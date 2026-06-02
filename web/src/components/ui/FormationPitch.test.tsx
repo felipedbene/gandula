@@ -16,12 +16,32 @@ function fullState(): LineupState {
 }
 
 describe("FormationPitch", () => {
-  it("renders one tappable dot per XI player when interactive", () => {
-    render(
-      <FormationPitch team={team} state={fullState()} onChange={() => {}} />,
+  it("renders a tappable dot per XI player + bench player when interactive", () => {
+    const state = fullState();
+    const { container } = render(
+      <FormationPitch team={team} state={state} onChange={() => {}} />,
     );
-    // Each dot is a button; there are exactly 11 in the XI.
-    expect(screen.getAllByRole("button")).toHaveLength(11);
+    // Each dot (XI on the pitch + bench rail) carries data-dot-id.
+    const dots = container.querySelectorAll("[data-dot-id]");
+    expect(dots).toHaveLength(state.starting_xi.length + state.bench.length);
+    // Exactly 11 of them are the XI dots.
+    const xiSet = new Set(state.starting_xi.map(String));
+    const xiDots = [...dots].filter((d) =>
+      xiSet.has(d.getAttribute("data-dot-id")!),
+    );
+    expect(xiDots).toHaveLength(11);
+  });
+
+  it("shows the bench rail only when interactive (with a bench)", () => {
+    const state = fullState();
+    expect(state.bench.length).toBeGreaterThan(0); // guard the assertion below
+    const { rerender } = render(
+      <FormationPitch team={team} state={state} onChange={() => {}} />,
+    );
+    expect(screen.getByText(/Banco · arraste/i)).toBeInTheDocument();
+    // Read-only: no rail.
+    rerender(<FormationPitch team={team} state={state} />);
+    expect(screen.queryByText(/Banco · arraste/i)).not.toBeInTheDocument();
   });
 
   it("is read-only (no buttons) when onChange is omitted", () => {
@@ -44,11 +64,10 @@ describe("FormationPitch", () => {
     render(
       <FormationPitch team={team} state={state} onChange={() => {}} />,
     );
-    // The dot's accessible text is the overall + surname.
-    const surname = target.name.split(/\s+/).slice(-1)[0];
+    // Target the exact XI dot by id (bench-rail dots share role/text).
     const dot = screen
       .getAllByRole("button")
-      .find((b) => b.textContent?.includes(surname))!;
+      .find((b) => b.getAttribute("data-dot-id") === String(target.id))!;
     fireEvent.click(dot);
     expect(screen.getByText(/Trocar .* por:/i)).toBeInTheDocument();
   });
@@ -68,14 +87,16 @@ describe("FormationPitch", () => {
     const onChange = vi.fn();
     render(<FormationPitch team={team} state={initial} onChange={onChange} />);
 
-    const surname = outgoing.name.split(/\s+/).slice(-1)[0];
     fireEvent.click(
-      screen.getAllByRole("button").find((b) => b.textContent?.includes(surname))!,
+      screen
+        .getAllByRole("button")
+        .find((b) => b.getAttribute("data-dot-id") === String(outgoing.id))!,
     );
-    // Candidate rows are buttons in the menu; click the one for `incoming`.
+    // Candidate rows are the non-dot buttons in the menu; click `incoming`'s.
     const ovr = String(playerOverall(incoming));
     const candidateBtn = screen
       .getAllByRole("button")
+      .filter((b) => !b.hasAttribute("data-dot-id"))
       .find((b) => b.textContent?.includes(incoming.name) && b.textContent?.includes(ovr))!;
     fireEvent.click(candidateBtn);
 
