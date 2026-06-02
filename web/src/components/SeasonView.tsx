@@ -427,9 +427,18 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
     setPhase({ tag: "finances", career });
   }
 
-  function backFromFinances(career: Career) {
-    // Read-only screen — nothing was mutated, so we hand the SAME career back.
-    setPhase({ tag: "running", career });
+  async function closeFinances(newCareer: Career) {
+    // Stadium/marketing spends made on the Finances screen are committed here,
+    // mirroring the market's close. With no spend the career is unchanged, so
+    // the save is a harmless no-op write.
+    try {
+      await saveCareer(newCareer);
+      onStatus(`finanças · saldo $ ${formatMoney(newCareer.manager.money)}`);
+      setPhase({ tag: "running", career: newCareer });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar finanças: ${e}`);
+    }
   }
 
   function openTransferMarket(career: Career, returnTo: "running" | "finale") {
@@ -838,10 +847,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
         );
       case "finances":
         return (
-          <FinancesView
-            career={phase.career}
-            onBack={() => backFromFinances(phase.career)}
-          />
+          <FinancesView career={phase.career} onClose={closeFinances} />
         );
       case "transferMarket":
         return (

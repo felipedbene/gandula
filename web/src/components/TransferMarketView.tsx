@@ -3,8 +3,6 @@ import { userTeam } from "../util/roster";
 import {
   MAX_ROSTER,
   canBuy,
-  canExpand,
-  canMarket,
   canSell,
   generateFreeAgents,
   playerPrice,
@@ -12,14 +10,7 @@ import {
   type ScoutReport,
   type TransferAction,
 } from "../util/transfer-market";
-import {
-  CAMPAIGN_FANBASE,
-  MARKETING_MOMENTUM_PER_CAMPAIGN,
-  STADIUM_EXPANSION_STEP,
-  expansionCost,
-  marketingCost,
-  projectSeasonRunway,
-} from "../util/finances";
+import { projectSeasonRunway } from "../util/finances";
 import { formatMoney } from "../util/money";
 import type { Career, TransferRecord } from "../persistence";
 import type { Player } from "../types";
@@ -62,7 +53,11 @@ export default function TransferMarketView({
   onClose,
 }: TransferMarketViewProps) {
   const [working, setWorking] = useState<Career>(career);
-  const [actions, setActions] = useState<TransferAction[]>([]);
+  // The market now only buys/sells players; stadium + marketing spends moved to
+  // the Finances screen. Narrow to the player-action subset so undo is exhaustive.
+  const [actions, setActions] = useState<
+    Extract<TransferAction, { kind: "buy" } | { kind: "sell" }>[]
+  >([]);
   // Which free agent's scout report is expanded (id), or null.
   const [expandedAgent, setExpandedAgent] = useState<number | null>(null);
 
@@ -156,85 +151,9 @@ export default function TransferMarketView({
     setActions([...actions, { kind: "sell", player, price }]);
   }
 
-  // E.4.b.4: pay to add a fixed block of seats. Debits money, raises capacity;
-  // reversible like buy/sell. Not a TransferRecord (no player) — purely a
-  // manager-state spend, so it doesn't appear in the season's transfer history.
-  function expandStadium() {
-    const check = canExpand(working);
-    if (!check.ok) return;
-    const price = expansionCost(working.manager.stadiumCapacity);
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-        stadiumCapacity: working.manager.stadiumCapacity + STADIUM_EXPANSION_STEP,
-      },
-    });
-    setActions([
-      ...actions,
-      { kind: "expandStadium", seats: STADIUM_EXPANSION_STEP, price },
-    ]);
-  }
-
-  // E.4.b.5: run a marketing campaign. Adds fanbase now AND raises the decaying
-  // marketingMomentum the seasonal drift target reads, so the boost persists a
-  // few seasons. Reversible; purely a manager-state spend.
-  function runCampaign() {
-    const check = canMarket(working);
-    if (!check.ok) return;
-    const price = marketingCost(working.manager.marketingMomentum);
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-        fanbase: working.manager.fanbase + CAMPAIGN_FANBASE,
-        marketingMomentum:
-          working.manager.marketingMomentum + MARKETING_MOMENTUM_PER_CAMPAIGN,
-      },
-    });
-    setActions([
-      ...actions,
-      {
-        kind: "runCampaign",
-        fanbase: CAMPAIGN_FANBASE,
-        momentum: MARKETING_MOMENTUM_PER_CAMPAIGN,
-        price,
-      },
-    ]);
-  }
-
   function undoLast() {
     if (actions.length === 0) return;
     const last = actions[actions.length - 1];
-
-    if (last.kind === "expandStadium") {
-      setWorking({
-        ...working,
-        manager: {
-          ...working.manager,
-          money: working.manager.money + last.price,
-          stadiumCapacity: working.manager.stadiumCapacity - last.seats,
-        },
-      });
-      setActions(actions.slice(0, -1));
-      return;
-    }
-
-    if (last.kind === "runCampaign") {
-      setWorking({
-        ...working,
-        manager: {
-          ...working.manager,
-          money: working.manager.money + last.price,
-          fanbase: working.manager.fanbase - last.fanbase,
-          marketingMomentum: working.manager.marketingMomentum - last.momentum,
-        },
-      });
-      setActions(actions.slice(0, -1));
-      return;
-    }
 
     const baseRoster = currentRosterCopy();
     const newRoster =
@@ -316,63 +235,6 @@ export default function TransferMarketView({
           </Panel>
         );
       })()}
-
-      <Panel title="Estádio, torcida & marketing">
-        <Stack gap={4}>
-          <Group justify="space-between" wrap="nowrap">
-            <Text size="sm">Capacidade do estádio</Text>
-            <Text size="sm" ff="monospace">
-              {formatMoney(working.manager.stadiumCapacity)} lugares
-            </Text>
-          </Group>
-          <Group justify="space-between" wrap="nowrap">
-            <Text size="sm">Torcida</Text>
-            <Text size="sm" ff="monospace">
-              {formatMoney(working.manager.fanbase)} torcedores
-            </Text>
-          </Group>
-          {(() => {
-            const check = canExpand(working);
-            const cost = expansionCost(working.manager.stadiumCapacity);
-            return (
-              <Group justify="space-between" wrap="nowrap" mt={4}>
-                <Text c="dimmed" size="xs">
-                  Ampliar aumenta a bilheteria de todos os jogos em casa.
-                </Text>
-                <Button
-                  size="xs"
-                  variant="default"
-                  disabled={!check.ok}
-                  title={check.ok ? undefined : check.reason}
-                  onClick={expandStadium}
-                >
-                  Ampliar +{formatMoney(STADIUM_EXPANSION_STEP)} · $ {formatMoney(cost)}
-                </Button>
-              </Group>
-            );
-          })()}
-          {(() => {
-            const check = canMarket(working);
-            const cost = marketingCost(working.manager.marketingMomentum);
-            return (
-              <Group justify="space-between" wrap="nowrap">
-                <Text c="dimmed" size="xs">
-                  Campanha de marketing aumenta a torcida (e dura algumas temporadas).
-                </Text>
-                <Button
-                  size="xs"
-                  variant="default"
-                  disabled={!check.ok}
-                  title={check.ok ? undefined : check.reason}
-                  onClick={runCampaign}
-                >
-                  Campanha +{formatMoney(CAMPAIGN_FANBASE)} · $ {formatMoney(cost)}
-                </Button>
-              </Group>
-            );
-          })()}
-        </Stack>
-      </Panel>
 
       <Panel title={`Jogadores disponíveis (${availableAgents.length})`}>
         <Stack gap={2}>
