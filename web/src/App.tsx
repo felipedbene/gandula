@@ -25,7 +25,7 @@ export function App() {
             GANDULA
           </Title>
           <Text c="dimmed" size="sm">
-            v0.6
+            v{__APP_VERSION__}
           </Text>
         </Group>
         <Text c="dimmed" size="sm">
