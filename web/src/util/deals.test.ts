@@ -134,13 +134,13 @@ describe("deal income (invariant preserved)", () => {
 
 describe("generateDealOffers (deterministic)", () => {
   it("same (seed, year, floors) ⇒ identical offers", () => {
-    const a = generateDealOffers(1998n, 2027, 600_000, 200_000);
-    const b = generateDealOffers(1998n, 2027, 600_000, 200_000);
+    const a = generateDealOffers(1998n, 2027, 3, 600_000, 200_000);
+    const b = generateDealOffers(1998n, 2027, 3, 600_000, 200_000);
     expect(a).toEqual(b);
   });
 
   it("returns 3 TV + 3 sponsorship offers anchored on the floors", () => {
-    const o = generateDealOffers(1998n, 2027, 600_000, 200_000);
+    const o = generateDealOffers(1998n, 2027, 3, 600_000, 200_000);
     expect(o.tv).toHaveLength(3);
     expect(o.sponsorship).toHaveLength(3);
     // The aggressive offer pays more than the conservative one.
@@ -154,8 +154,8 @@ describe("generateDealOffers (deterministic)", () => {
   });
 
   it("different years produce different slates", () => {
-    const y0 = generateDealOffers(1998n, 2027, 600_000, 200_000);
-    const y1 = generateDealOffers(1998n, 2028, 600_000, 200_000);
+    const y0 = generateDealOffers(1998n, 2027, 3, 600_000, 200_000);
+    const y1 = generateDealOffers(1998n, 2028, 3, 600_000, 200_000);
     expect(y0).not.toEqual(y1);
   });
 });
@@ -201,5 +201,32 @@ describe("signDeal apply/reverse", () => {
     });
     expect(after.manager.activeDeals?.tv).toEqual(tvDeal);
     expect(after.manager.activeDeals?.sponsorship).toEqual(sponsorDeal);
+  });
+});
+
+describe("performance clauses on offers", () => {
+  it("only the Aggressive offer carries a clause, with the per-tier target", () => {
+    for (const [tier, max] of [
+      [1, 6],
+      [2, 10],
+      [3, 12],
+    ] as const) {
+      const o = generateDealOffers(1998n, 2027, tier, 600_000, 200_000);
+      const withClause = o.tv.filter((d) => d.performanceClause);
+      expect(withClause).toHaveLength(1);
+      expect(withClause[0].label).toBe("Agressiva");
+      expect(withClause[0].performanceClause?.maxPosition).toBe(max);
+      expect(
+        o.sponsorship.find((d) => d.performanceClause)?.performanceClause
+          ?.maxPosition,
+      ).toBe(max);
+    }
+  });
+
+  it("the clause-bearing offer is the highest-paying one (risk vs reward)", () => {
+    const o = generateDealOffers(1998n, 2027, 1, 3_000_000, 800_000);
+    const clauseOffer = o.tv.find((d) => d.performanceClause)!;
+    const maxAmt = Math.max(...o.tv.map((d) => d.seasonAmount));
+    expect(clauseOffer.seasonAmount).toBe(maxAmt);
   });
 });

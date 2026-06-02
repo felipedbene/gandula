@@ -414,18 +414,30 @@ export function sponsorshipSeasonTotal(career: Career): number {
 const TV_OFFER_SALT = 0xdea1n;
 const SPONSOR_OFFER_SALT = 0x5907n;
 
-/** Multipliers applied to the floor, one per offer shape. */
+/** Multipliers applied to the floor, one per offer shape. The Aggressive offer
+ *  pays the most but carries a per-tier performance clause (see below). */
 const OFFER_SHAPES = [
-  { label: "Sólida", mult: 1.0 },
-  { label: "Agressiva", mult: 1.3 },
-  { label: "Conservadora", mult: 0.85 },
+  { label: "Sólida", mult: 1.0, clause: false },
+  { label: "Agressiva", mult: 1.3, clause: true },
+  { label: "Conservadora", mult: 0.85, clause: false },
 ] as const;
+
+/** Final-position target for the Aggressive offer's clause, by division tier:
+ *  the pressure scales with the level — Série A demands a classification spot,
+ *  C only a comfortable mid-table. Finish WORSE than this and the deal drops at
+ *  the season boundary (advanceCareer). */
+export const CLAUSE_MAX_POSITION_BY_TIER: Record<1 | 2 | 3, number> = {
+  1: 6,
+  2: 10,
+  3: 12,
+};
 
 export type DealOffer = Deal & { label: string };
 
 function offersFor(
   kind: "tv" | "sponsorship",
   floor: number,
+  tier: 1 | 2 | 3,
   seed: bigint,
   year: number,
   salt: bigint,
@@ -443,6 +455,9 @@ function offersFor(
       startYear: year,
       termYears,
       label: shape.label,
+      ...(shape.clause
+        ? { performanceClause: { maxPosition: CLAUSE_MAX_POSITION_BY_TIER[tier] } }
+        : {}),
     };
   });
 }
@@ -452,18 +467,21 @@ function offersFor(
  * `year`'s tier/fanbase/placement would otherwise yield. `tvFloor` and
  * `sponsorshipFloor` are passed in (the caller knows next season's tier and the
  * fanbase/placement going into it) so this stays a pure function of its inputs.
+ * `tier` drives the Aggressive offer's performance-clause target.
  */
 export function generateDealOffers(
   careerSeed: bigint,
   year: number,
+  tier: 1 | 2 | 3,
   tvFloor: number,
   sponsorshipFloor: number,
 ): { tv: DealOffer[]; sponsorship: DealOffer[] } {
   return {
-    tv: offersFor("tv", tvFloor, careerSeed, year, TV_OFFER_SALT),
+    tv: offersFor("tv", tvFloor, tier, careerSeed, year, TV_OFFER_SALT),
     sponsorship: offersFor(
       "sponsorship",
       sponsorshipFloor,
+      tier,
       careerSeed,
       year,
       SPONSOR_OFFER_SALT,

@@ -123,7 +123,7 @@ export default function FinancesView({
       SPONSORSHIP_BASE_BY_TIER[tier] +
         working.manager.fanbase * SPONSORSHIP_FANBASE_COEF,
     );
-    return generateDealOffers(working.seed, nextYear, tvFloor, sponsorshipFloor);
+    return generateDealOffers(working.seed, nextYear, tier, tvFloor, sponsorshipFloor);
     // seed + nextYear + tier + fanbase fully determine the slate.
   }, [working.seed, nextYear, tier, working.manager.fanbase]);
 
@@ -416,13 +416,26 @@ function DealSlot({
           </Text>
         )}
       </Group>
+      {active?.performanceClause && (
+        <Text size="xs" c="yellow.5">
+          ⚠ Cláusula: terminar ≤ {active.performanceClause.maxPosition}º — senão o
+          contrato cai no fim da temporada.
+        </Text>
+      )}
       {offers.map((o) => {
         const signed = active?.id === o.id;
         return (
-          <Group key={o.id} justify="space-between" wrap="nowrap">
-            <Text size="sm" c="dimmed">
-              {o.label} · {o.termYears} temporada{o.termYears === 1 ? "" : "s"}
-            </Text>
+          <Group key={o.id} justify="space-between" wrap="nowrap" align="flex-start">
+            <Stack gap={0} style={{ minWidth: 0 }}>
+              <Text size="sm" c="dimmed">
+                {o.label} · {o.termYears} temporada{o.termYears === 1 ? "" : "s"}
+              </Text>
+              {o.performanceClause && (
+                <Text size="xs" c="yellow.5">
+                  meta ≤ {o.performanceClause.maxPosition}º
+                </Text>
+              )}
+            </Stack>
             <Group gap="xs" wrap="nowrap">
               <Text size="sm" ff="monospace">
                 $ {formatMoney(o.seasonAmount)}
