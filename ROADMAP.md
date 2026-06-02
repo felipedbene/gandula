@@ -4,13 +4,14 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 **L** large. Items are grouped by epic; the suggested order is at the bottom.
 **Shipped history is below the active work.**
 
-> **Status (2026-06): gameplay roadmap parked; a UI redesign is in flight.** The
-> full gameplay arc shipped — three-tier pyramid → Copa do Brasil → full economy
-> → RL-distilled rival coaches → objectives / cash-runway / two-leg cup /
-> playback polish. The current open work is **presentational only**: a modern
-> sporty dark-UI redesign (foundation + team-identity pass shipped on
-> `redesign/modern-sporty`; mobile row-cards, bottom nav and goal-pulse
-> transitions still to come — see Polish). The
+> **Status (2026-06): gameplay roadmap parked; UI redesign essentially done.**
+> The full gameplay arc shipped — three-tier pyramid → Copa do Brasil → full
+> economy → RL-distilled rival coaches → objectives / cash-runway / two-leg cup /
+> playback polish. A **presentational** modern sporty dark-UI redesign then
+> shipped on `redesign/modern-sporty` (foundation, generated crests + team
+> identity, state-driven scorelines, motion & feedback, mobile-native layout,
+> formation pitch — see Polish); only later-slice extras (pitch drag-and-drop,
+> tactics board, market radar charts) remain deferred. The
 > handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
 > not forgotten:
 >   - **E.4.b — Title affordability**: a parent header; its children b.1–b.7 all
@@ -272,21 +273,37 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
   lance, and goals/red cards/penalties render larger with glyphs (◎ penalty, ✗
   miss). Purely presentational (MatchReveal.tsx) — no persistence/determinism
   impact.
-- [x] **UI redesign — modern sporty dark UI** · _M, web_ — **shipped (foundation
-  + identity pass).** Replaced the phosphor-green CRT theme with a modern
-  "stadium night" dark theme: electric-blue accent + neutral ink ramp, rounded
-  cards, a sticky blurred header, and self-hosted **Inter** (UI) + **JetBrains
-  Mono** (tabular data) via Fontsource (latin subset, no external font request).
-  Then the "which team am I?" pass: the controlled club's name sits in the
-  header on every screen, a **"Seu time"** summary card + accent-bar/▸ row marker
-  in the standings, and (since the world carries no badge/colour data)
-  **deterministic generated crests** — a two-tone shield + distinctive initials
-  hashed from the club name (`ui/TeamCrest.tsx`), dropped into standings, the
-  scoreboard, opponent preview and other-match rows. Scorelines are now
-  state-driven (leader's goals bright accent, loser dimmed) in both the live
-  reveal and the round summary. Purely presentational — no schema/determinism
-  impact. _Still open (next slice): mobile standings as row-cards, a fixed
-  bottom action nav, and goal-pulse / phase transitions._
+- [x] **UI redesign — modern sporty dark UI** · _L, web_ — **shipped.** A
+  presentational overhaul on `redesign/modern-sporty`, in independently-mergeable
+  slices; no schema/determinism impact throughout. Slices:
+  - **Foundation:** replaced the phosphor-green CRT theme with a "stadium night"
+    dark theme — electric-blue accent + neutral ink ramp, rounded cards, a sticky
+    blurred header, self-hosted **Inter** (UI) + **JetBrains Mono** (tabular data)
+    via Fontsource (latin subset, no external font request).
+  - **Team identity ("which team am I?"):** the controlled club's name in the
+    header on every screen, a **"Seu time"** summary card + accent-bar/▸ row
+    marker in the standings, and **deterministic generated crests** (two-tone
+    shield + distinctive initials hashed from the name, since the world ships no
+    badge data — `ui/TeamCrest.tsx`) in standings, scoreboard, opponent preview
+    and other-match rows.
+  - **State-driven scorelines:** leader's goals bright accent, loser dimmed, in
+    both the live reveal and the round summary.
+  - **Motion & feedback:** phase transitions (fade+slide, keyed remount), button
+    loading states on the synchronous re-sim (Jogar/Aplicar, deferred a frame via
+    rAF so the spinner paints), and a goal-pulse on the scoreboard. All respect
+    `prefers-reduced-motion`.
+  - **Mobile-native layout:** standings render as row-cards on phones (`hiddenFrom
+    sm`) with the full stats `<Table>` on `sm`+; the running phase gets a fixed
+    bottom action nav on mobile (the inline button row stays on desktop).
+  - **Formation pitch** (`ui/FormationPitch.tsx`): a responsive portrait pitch
+    (fixed 3:4, scales to width → same on phone/desktop) that groups the XI into
+    position bands (FWD/MID/DEF/GK) — the honest layout, since `starting_xi` is 11
+    ids with only a coarse Position and no stored slot mapping. Interactive in the
+    lineup editor (tap a dot → same-position candidates → swap-perfect, mirroring
+    `LineupEditor.swap`); read-only in PrepareView to scout the opponent's shape.
+    Covered by `FormationPitch.test.tsx`.
+  - _Deferred (later slice):_ pitch drag-and-drop, a tactics board with arrows,
+    transfer-market radar charts.
 
 ## Suggested order
 

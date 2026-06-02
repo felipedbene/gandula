@@ -171,13 +171,18 @@ JSON blobs for the full domain objects — see `ARCHITECTURE.md`.
 ## Web app — career mode
 
 The same engine runs in the browser via WebAssembly. A Vite + React app lives
-in `web/`, with a Mantine-based UI that's responsive on both mobile and
+in `web/`, with a Mantine-based UI that's first-class on both mobile and
 desktop — a modern dark theme (electric-blue accent, Inter + JetBrains Mono),
 deterministic **generated club crests** (a two-tone shield + initials hashed
 from each name, since the world ships no badge art), a persistent "your team"
 header + standings highlight so you always know which club is yours, and
 state-driven scorelines (the leading side's goals bright, the trailing side
-dimmed). Full career-mode loop:
+dimmed). On phones the standings render as row-cards and the running phase has
+a fixed bottom action nav; on desktop the full stats table and inline actions.
+A responsive **formation pitch** drives lineup editing — players sit in their
+position bands, tap one to swap — and the same pitch previews the next
+opponent's shape. Screen changes fade, async re-sims show a loading state, and
+goals pulse the scoreboard. Full career-mode loop:
 
 - **A three-tier pyramid.** 60 fictional clubs in Série A / B / C (20 each). A
   new career starts you in a *random* Série C club (random season seed too — a
@@ -260,7 +265,11 @@ objectives, cash-runway warning, two-leg cup, livelier playback). That part of
 [`ROADMAP.md`](ROADMAP.md) is **parked**, with the remaining entries either
 deliberately deferred or a settled design decision rather than missing work.
 
-The active work is a **modern UI redesign** (on the `redesign/modern-sporty`
-branch): the dark-theme foundation, generated club crests, and a "which team am
-I?" identity pass have shipped; mobile standings row-cards, a fixed bottom
-action nav, and goal-pulse / phase transitions are still to come.
+A **modern UI redesign** (on the `redesign/modern-sporty` branch) is essentially
+complete: the dark-theme foundation, generated club crests, the "which team am
+I?" identity pass, state-driven scorelines, motion & feedback (phase
+transitions, button loading states, goal-pulse), mobile-native layout (standings
+row-cards + fixed bottom nav), and a responsive formation pitch for lineup
+editing + opponent scouting. Deliberately deferred for a later slice:
+drag-and-drop on the pitch, a tactics board with arrows, and radar charts in the
+transfer market.
