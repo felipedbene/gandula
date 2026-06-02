@@ -4,9 +4,13 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 **L** large. Items are grouped by epic; the suggested order is at the bottom.
 **Shipped history is below the active work.**
 
-> **Status (2026-06): roadmap parked — no feature work pending.** The full arc
-> shipped — three-tier pyramid → Copa do Brasil → full economy → RL-distilled
-> rival coaches → objectives / cash-runway / two-leg cup / playback polish. The
+> **Status (2026-06): gameplay roadmap parked; a UI redesign is in flight.** The
+> full gameplay arc shipped — three-tier pyramid → Copa do Brasil → full economy
+> → RL-distilled rival coaches → objectives / cash-runway / two-leg cup /
+> playback polish. The current open work is **presentational only**: a modern
+> sporty dark-UI redesign (foundation + team-identity pass shipped on
+> `redesign/modern-sporty`; mobile row-cards, bottom nav and goal-pulse
+> transitions still to come — see Polish). The
 > handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
 > not forgotten:
 >   - **E.4.b — Title affordability**: a parent header; its children b.1–b.7 all
@@ -268,6 +272,21 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
   lance, and goals/red cards/penalties render larger with glyphs (◎ penalty, ✗
   miss). Purely presentational (MatchReveal.tsx) — no persistence/determinism
   impact.
+- [x] **UI redesign — modern sporty dark UI** · _M, web_ — **shipped (foundation
+  + identity pass).** Replaced the phosphor-green CRT theme with a modern
+  "stadium night" dark theme: electric-blue accent + neutral ink ramp, rounded
+  cards, a sticky blurred header, and self-hosted **Inter** (UI) + **JetBrains
+  Mono** (tabular data) via Fontsource (latin subset, no external font request).
+  Then the "which team am I?" pass: the controlled club's name sits in the
+  header on every screen, a **"Seu time"** summary card + accent-bar/▸ row marker
+  in the standings, and (since the world carries no badge/colour data)
+  **deterministic generated crests** — a two-tone shield + distinctive initials
+  hashed from the club name (`ui/TeamCrest.tsx`), dropped into standings, the
+  scoreboard, opponent preview and other-match rows. Scorelines are now
+  state-driven (leader's goals bright accent, loser dimmed) in both the live
+  reveal and the round summary. Purely presentational — no schema/determinism
+  impact. _Still open (next slice): mobile standings as row-cards, a fixed
+  bottom action nav, and goal-pulse / phase transitions._
 
 ## Suggested order
 
@@ -320,7 +339,8 @@ ideally E.2. The gandula-rl repo is the measurement substrate for E.4/E.6.
 - **Scout reports** — free agents expand to an inline report: attribute bars,
   overall, and a verdict vs your squad at that position (delta + where they'd
   rank), so buys aren't blind.
-- **Platform** — Mantine UI (responsive, dark phosphor theme), tick-by-tick
+- **Platform** — Mantine UI (responsive, modern dark theme — see UI redesign
+  under Polish; originally a phosphor-green CRT theme), tick-by-tick
   match reveal with a running clock (on bye rounds too), randomized new careers
   (random Série B club + random seed), and GitHub Actions CI/CD (build wasm →
   test → deploy).
