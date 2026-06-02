@@ -1,0 +1,35 @@
+name: release-please
+
+# Conventional-commits release automation. On every push to main, release-please
+# reads the commits since the last release and maintains a single "Release vX.Y.Z"
+# PR that bumps the version (feat → minor, fix → patch, feat!/BREAKING → major),
+# updates the version files, and writes the CHANGELOG. Merging that PR tags the
+# release. The Cargo workspace (core/cli/wasm) and the web package are kept in
+# lockstep via the linked-versions plugin (see release-please-config.json).
+#
+# Versions live in: Cargo.toml [workspace.package], web/package.json (drives the
+# UI footer via __APP_VERSION__), and both lockfiles. release-please updates them
+# in the release PR; scripts/bump-version.sh does the same by hand if ever needed.
+
+on:
+  push:
+    branches: [main]
+
+# Needed for release-please to open/update the release PR and create releases.
+permissions:
+  contents: write
+  pull-requests: write
+
+# One release-please run at a time.
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -307,6 +307,21 @@ GitHub Actions (`.github/workflows/deploy.yml`): it builds the wasm module,
 runs the test suite as a gate, then deploys. Needs a `CLOUDFLARE_API_TOKEN`
 repo secret. To deploy by hand instead, run `npm run deploy` from `web/`.
 
+### Releases & versioning
+
+Versioning is driven by **conventional commits** via
+[release-please](https://github.com/googleapis/release-please)
+(`.github/workflows/release-please.yml`). On every push to `main` it maintains a
+single **"Release vX.Y.Z" PR** that bumps the version (`fix:` → patch, `feat:` →
+minor, `feat!:`/`BREAKING CHANGE` → major), updates the version files, and writes
+`CHANGELOG.md`. Merging that PR tags the release. The Cargo workspace
+(core/cli/wasm) and the web package are kept in lockstep (linked-versions). The
+version surfaces in the UI footer via `__APP_VERSION__` (read from
+`web/package.json`).
+
+To bump by hand instead — or to re-sync the four version files if they ever
+drift — run `./scripts/bump-version.sh <patch|minor|major|X.Y.Z>`.
+
 ## What's next
 
 The planned *gameplay* arc has largely shipped — three-tier pyramid, Copa do
