@@ -93,3 +93,20 @@ describe("pickRandomStarter", () => {
     expect(() => pickRandomStarter([])).toThrow();
   });
 });
+
+// Data-integrity anchor: a malformed import once shipped 5 teams with two
+// goalkeepers in the XI (and only 9 outfielders), which tripped the
+// "múltiplos goleiros" warning and skewed the formation pitch. Lock the
+// invariant so a fictionalize reroll can't reintroduce it.
+describe("team data integrity", () => {
+  it("every team fields exactly one goalkeeper in an 11-player XI", () => {
+    for (const team of ALL_TEAMS) {
+      const byId = new Map(team.roster.map((p) => [p.id, p]));
+      const gks = team.starting_xi.filter(
+        (id) => byId.get(id)?.position === "GK",
+      );
+      expect(team.starting_xi.length, `${team.name} XI size`).toBe(11);
+      expect(gks.length, `${team.name} GK count in XI`).toBe(1);
+    }
+  });
+});
