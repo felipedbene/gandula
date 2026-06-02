@@ -398,19 +398,21 @@ describe("advanceCareer — input immutability", () => {
 });
 
 describe("advanceCareer — negotiable deals (v12)", () => {
+  // Long terms so these relegation/clause/carry tests isolate their trigger and
+  // aren't also dropped by term expiry (which has its own tests below).
   const tvDeal = {
     id: "tv-2026-1",
     kind: "tv" as const,
     seasonAmount: 4_000_000,
     startYear: FIRST_YEAR,
-    termYears: 2,
+    termYears: 5,
   };
   const sponsorDeal = {
     id: "sponsorship-2026-0",
     kind: "sponsorship" as const,
     seasonAmount: 700_000,
     startYear: FIRST_YEAR,
-    termYears: 1,
+    termYears: 5,
   };
 
   it("carries deals forward when the user is NOT relegated (Série C user stays/promotes)", () => {
@@ -483,5 +485,46 @@ describe("advanceCareer — negotiable deals (v12)", () => {
     const { history, nextActiveDeals } = advanceCareer(career, pr);
     expect(history.userPosition).toBeGreaterThan(12);
     expect(nextActiveDeals?.sponsorship).toBeUndefined(); // clause failed → dropped
+  });
+
+  // Term expiry: a deal covers [startYear, startYear+termYears-1]. With the
+  // boundary advancing FIRST_YEAR → FIRST_YEAR+1, a 1-season deal starting at
+  // FIRST_YEAR has elapsed; a 2-season one is still mid-term. Sponsorship on a
+  // Série-C user isolates the expiry trigger (no relegation, no clause).
+  it("expires a deal whose term has elapsed (1-season deal lapses next boundary)", () => {
+    const career = makeFinishedCareer(1998n);
+    career.manager.activeDeals = {
+      sponsorship: {
+        id: "sponsorship-2026-exp",
+        kind: "sponsorship",
+        seasonAmount: 600_000,
+        startYear: FIRST_YEAR,
+        termYears: 1,
+      },
+    };
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const { nextActiveDeals } = advanceCareer(career, pr);
+    expect(nextActiveDeals?.sponsorship).toBeUndefined(); // term elapsed → floor
+  });
+
+  it("keeps a multi-season deal that is still within its term", () => {
+    const stillRunning = {
+      id: "sponsorship-2026-multi",
+      kind: "sponsorship" as const,
+      seasonAmount: 600_000,
+      startYear: FIRST_YEAR,
+      termYears: 2,
+    };
+    const career = makeFinishedCareer(1998n);
+    career.manager.activeDeals = { sponsorship: stillRunning };
+    const pr = computePromotionRelegation(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const { nextActiveDeals } = advanceCareer(career, pr);
+    expect(nextActiveDeals?.sponsorship).toEqual(stillRunning); // mid-term → carries
   });
 });

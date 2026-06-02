@@ -101,18 +101,22 @@ export type AdvanceResult = {
  *
  * Pure: no IDB, no mutation of inputs.
  */
-/** Whether a deal in `slot` survives into next season, given the just-finished
+/** Whether a deal in `slot` survives into `nextYear`, given the just-finished
  *  outcome + final position. Returns the deal to carry, or undefined if it
- *  drops (→ derived floor). Drop triggers: relegation (TV only), or a
- *  performance clause the club failed (`userPosition > maxPosition`, either
- *  slot). Order doesn't matter — either trigger drops it. */
+ *  drops (→ derived floor). Drop triggers (any one drops it):
+ *    - term expiry: the deal covers seasons [startYear, startYear+termYears-1],
+ *      so it lapses once `nextYear` reaches `startYear + termYears`;
+ *    - relegation (TV only);
+ *    - a performance clause the club failed (`userPosition > maxPosition`). */
 function keepDeal(
   deal: Deal | undefined,
   slot: "tv" | "sponsorship",
   userOutcome: "promoted" | "relegated" | "stayed",
   userPosition: number,
+  nextYear: number,
 ): Deal | undefined {
   if (!deal) return undefined;
+  if (nextYear >= deal.startYear + deal.termYears) return undefined; // term elapsed
   if (slot === "tv" && userOutcome === "relegated") return undefined;
   if (deal.performanceClause && userPosition > deal.performanceClause.maxPosition) {
     return undefined;
@@ -177,17 +181,26 @@ export function advanceCareer(
   //   - A performance clause drops EITHER deal when the club finished worse than
   //     the clause's `maxPosition` (the gamble on the Aggressive offer).
   // A dropped slot becomes undefined → derived floor next season. Sponsorship
-  // and the promote/stay cases otherwise carry forward untouched.
-  // (Term expiry + scandal events are later slices.)
+  // and the promote/stay cases otherwise carry forward untouched. Triggers:
+  // term expiry, relegation (TV), failed performance clause. (Scandal events
+  // are a later slice.)
+  const nextYear = career.currentSeason.year + 1;
   const currentDeals = career.manager.activeDeals;
   const nextActiveDeals: Manager["activeDeals"] = currentDeals
     ? {
-        tv: keepDeal(currentDeals.tv, "tv", userOutcome, history.userPosition),
+        tv: keepDeal(
+          currentDeals.tv,
+          "tv",
+          userOutcome,
+          history.userPosition,
+          nextYear,
+        ),
         sponsorship: keepDeal(
           currentDeals.sponsorship,
           "sponsorship",
           userOutcome,
           history.userPosition,
+          nextYear,
         ),
       }
     : currentDeals;

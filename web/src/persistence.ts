@@ -103,11 +103,12 @@ export type Deal = {
   seasonAmount: number;
   /** Season the deal first takes effect (the season it was signed FOR). */
   startYear: number;
-  /** Contract length in seasons (1..3). v1 uses the value but only drops on
-   *  relegation; expiry by term is a later slice. */
+  /** Contract length in seasons (1..3). The deal covers [startYear,
+   *  startYear+termYears-1] and lapses at the boundary into the year past it. */
   termYears: number;
-  /** Optional performance clause (later slice): the deal drops if the user
-   *  finishes worse than `maxPosition`. Undefined in v1 offers. */
+  /** Optional performance clause: the deal drops at the season boundary if the
+   *  club finishes worse than `maxPosition`. Carried only by the Aggressive
+   *  offer (per-tier target). */
   performanceClause?: { maxPosition: number };
 };
 
