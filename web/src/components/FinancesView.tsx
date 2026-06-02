@@ -284,6 +284,7 @@ export default function FinancesView({
             active={activeTv}
             floor={TV_DEAL_BY_TIER[tier]}
             offers={offers.tv}
+            currentYear={working.currentSeason.year}
             onSign={(o) => signDeal("tv", o)}
           />
           <DealSlot
@@ -294,6 +295,7 @@ export default function FinancesView({
                 working.manager.fanbase * SPONSORSHIP_FANBASE_COEF,
             )}
             offers={offers.sponsorship}
+            currentYear={working.currentSeason.year}
             onSign={(o) => signDeal("sponsorship", o)}
           />
           <Text size="xs" c="dimmed">
@@ -387,14 +389,21 @@ function DealSlot({
   active,
   floor,
   offers,
+  currentYear,
   onSign,
 }: {
   heading: string;
   active: Deal | undefined;
   floor: number;
   offers: DealOffer[];
+  currentYear: number;
   onSign: (offer: DealOffer) => void;
 }) {
+  // The active deal covers [startYear, startYear+termYears-1]; it's in its last
+  // valid season when currentYear is that final year → renew before it lapses.
+  const expiringNextSeason =
+    active !== undefined &&
+    currentYear === active.startYear + active.termYears - 1;
   return (
     <Stack gap={4}>
       <Group justify="space-between" wrap="nowrap">
@@ -420,6 +429,11 @@ function DealSlot({
         <Text size="xs" c="yellow.5">
           ⚠ Cláusula: terminar ≤ {active.performanceClause.maxPosition}º — senão o
           contrato cai no fim da temporada.
+        </Text>
+      )}
+      {expiringNextSeason && (
+        <Text size="xs" c="yellow.5">
+          ⚠ Expira ano que vem — renove numa das ofertas abaixo.
         </Text>
       )}
       {offers.map((o) => {
