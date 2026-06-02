@@ -1,10 +1,15 @@
-import { play_match, derive_match_seed } from "../wasm/gandula_wasm.js";
+import {
+  play_match,
+  play_first_half,
+  play_second_half,
+  derive_match_seed,
+} from "../wasm/gandula_wasm.js";
 import type { Match, Team } from "../types";
 import { computeStandings } from "../types";
 import { teamById } from "../teams";
 import { userTeam } from "./roster";
 import { evolveTeam } from "./regen";
-import { applyRivalCoach } from "./rival-coach";
+import { applyRivalCoach, rivalTactics } from "./rival-coach";
 import {
   FIRST_YEAR,
   findUserDivisionIdxInSeason,
@@ -30,6 +35,18 @@ export function applyUserTactics(baseTeam: Team, override: UserTactics): Team {
     starting_xi: override.starting_xi,
     bench: override.bench,
   };
+}
+
+/**
+ * The opponent's symmetric half-time tactical response: apply the distilled
+ * per-tier rival tactic (formation + tactics) for the second half, keeping its
+ * XI/bench. Deterministic by tier alone (no new entropy), so a re-sim or an F5
+ * mid-reveal reconstructs the identical opponent — see `rivalTactics`. Exported
+ * so the live half-time flow and the projection use the exact same team.
+ */
+export function applyRivalHalftime(opponent: Team, tier: 1 | 2 | 3): Team {
+  const { formation, tactics } = rivalTactics(tier);
+  return { ...opponent, formation, tactics };
 }
 
 /**
@@ -121,7 +138,26 @@ export function resimulateFromRound(
     const matchSeed = derive_match_seed(divSeed, i);
     const home = isUserHome ? effectiveUserTeam : opponentTeam;
     const away = isUserHome ? opponentTeam : effectiveUserTeam;
-    newMatches[i] = play_match(home, away, matchSeed) as Match;
+
+    // A half-time tactical change confirmed at the interval for this round is
+    // replayed deterministically: run the first half with the first-half
+    // (`userTactics`) teams, then the second half with the user's half-time
+    // tactics applied to their side (and the rival's symmetric half-time tactic
+    // to the opponent). With NO half-time entry, the two-phase path is
+    // byte-identical to play_match(90) — proven by the engine's half-split tests
+    // — so unchanged rounds reproduce exactly.
+    const htUser = season.halftimeTactics?.[f.round];
+    if (!htUser) {
+      newMatches[i] = play_match(home, away, matchSeed) as Match;
+      return;
+    }
+
+    const snapshot = play_first_half(home, away, matchSeed);
+    const htUserTeam = applyUserTactics(baseUserTeam, htUser);
+    const htOpponentTeam = applyRivalHalftime(opponentTeam, tier);
+    const home2 = isUserHome ? htUserTeam : htOpponentTeam;
+    const away2 = isUserHome ? htOpponentTeam : htUserTeam;
+    newMatches[i] = play_second_half(snapshot, home2, away2) as Match;
   });
 
   const totalRounds = totalRoundsOf(userDiv);

@@ -228,7 +228,7 @@ function careerAtRound(roundIdx: number): Career {
   const mk = (teams: Team[], ns: bigint, name: string) =>
     run_season(teams, seasonSeed ^ ns, name) as SeasonRecord;
   return {
-    schemaVersion: 10,
+    schemaVersion: 11,
     savedAt: "x",
     seed,
     controlledTeamId: starter.id,
