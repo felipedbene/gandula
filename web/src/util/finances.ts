@@ -175,6 +175,18 @@ export function formMultiplier(career: Career, beforeRoundIdx: number): number {
   return Math.max(FORM_MIN, Math.min(FORM_MAX, raw));
 }
 
+/** Projected attendance demand for one home match: `fanbase × coef × tierMult ×
+ *  opponentDraw`. The gate fills `min(demand, capacity)`, so when demand exceeds
+ *  capacity the club is leaving money on the table (expand to capture it). Pure;
+ *  the single source for both the gate revenue and the Finances-screen status. */
+export function matchDemand(
+  fanbase: number,
+  tier: 1 | 2 | 3,
+  oppStrength: number,
+): number {
+  return fanbase * DEMAND_FANBASE_COEF * DEMAND_TIER_MULT[tier] * opponentDraw(oppStrength);
+}
+
 /** Home-gate revenue for one home match: min(demand, capacity) × price × form.
  *  Shared by the per-round and season-total paths so they stay identical (the
  *  per-round-sums-to-season invariant). `form` defaults to 1.0. */
@@ -185,9 +197,7 @@ function homeGateRevenue(
   oppStrength: number,
   form = 1,
 ): number {
-  const demand =
-    fanbase * DEMAND_FANBASE_COEF * DEMAND_TIER_MULT[tier] * opponentDraw(oppStrength);
-  const attendance = Math.min(demand, capacity);
+  const attendance = Math.min(matchDemand(fanbase, tier, oppStrength), capacity);
   return Math.round(attendance * TICKET_PRICE * form);
 }
 
@@ -501,6 +511,44 @@ export function homeTicketForRound(career: Career, roundIdx: number): number {
     if (m.away === career.controlledTeamId) return 0; // away game
   }
   return 0; // bye round — user has no fixture this round
+}
+
+/**
+ * The user's NEXT home match (from the current round onward) as projected
+ * attendance demand vs. the current stadium capacity — the read-only status the
+ * Finances screen shows ("lotando, expanda" vs "sobra cadeira"). Returns null
+ * when no home game remains this season. Pure; reads the same `matchDemand` the
+ * gate revenue uses, so the comparison is exact. Form is excluded (it's a gate
+ * multiplier, not a demand/seat factor).
+ */
+export function nextHomeDemand(
+  career: Career,
+): { demand: number; capacity: number; oppId: number; roundIdx: number } | null {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const { fixtures, matches } = userDiv.record;
+  // Scan rounds from where the season currently sits forward, in round order.
+  const total = totalRoundsOf(userDiv);
+  for (let round = userDiv.currentRoundIdx; round < total; round++) {
+    for (let i = 0; i < fixtures.length; i++) {
+      if (fixtures[i].round !== round) continue;
+      const m = matches[i];
+      if (m.home === career.controlledTeamId) {
+        return {
+          demand: matchDemand(
+            career.manager.fanbase,
+            userDiv.tier,
+            opponentStrength(career, m.away),
+          ),
+          capacity: career.manager.stadiumCapacity,
+          oppId: m.away,
+          roundIdx: round,
+        };
+      }
+    }
+  }
+  return null;
 }
 
 /**
