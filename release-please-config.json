@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "b822ade9f0e0aef10141dda3218d29fbeb8b204a",
+  "include-component-in-tag": true,
+  "packages": {
+    ".": {
+      "release-type": "rust",
+      "component": "gandula"
+    },
+    "web": {
+      "release-type": "node",
+      "component": "gandula-web"
+    }
+  },
+  "plugins": [
+    {
+      "type": "linked-versions",
+      "groupName": "gandula",
+      "components": ["gandula", "gandula-web"]
+    }
+  ]
+}
