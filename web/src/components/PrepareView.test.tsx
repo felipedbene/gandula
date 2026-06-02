@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "../test-utils";
+import { render, screen, fireEvent, waitFor } from "../test-utils";
 import init, { run_season } from "../wasm/gandula_wasm.js";
 import PrepareView from "./PrepareView";
 import { ALL_TEAMS, teamById } from "../teams";
@@ -186,7 +186,7 @@ describe("PrepareView", () => {
     expect(resimCount).toBe(0);
   });
 
-  it("JOGAR with changes re-simulates and reports counters", () => {
+  it("JOGAR with changes re-simulates and reports counters", async () => {
     const career = makeCareer();
     userDivOf(career).currentRoundIdx = findPlayingRound(career);
     const onPlay = vi.fn();
@@ -195,7 +195,8 @@ describe("PrepareView", () => {
       target: { value: "VeryAttacking" },
     });
     fireEvent.click(screen.getByRole("button", { name: /jogar/i }));
-    expect(onPlay).toHaveBeenCalledOnce();
+    // The re-sim is deferred a frame so the button's loading state can paint.
+    await waitFor(() => expect(onPlay).toHaveBeenCalledOnce());
     const [newCareer, resimMs, resimCount] = onPlay.mock.calls[0];
     expect(newCareer).not.toBe(career); // new reference
     expect(newCareer.currentSeason.userTactics).toBeDefined();

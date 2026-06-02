@@ -94,6 +94,7 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
   const [current, setCurrent] = useState<TacticsFormState>(initial);
   const [currentLineup, setCurrentLineup] = useState<LineupState>(initialLineup);
   const [error, setError] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
   const dirty =
     !tacticsFormStateEquals(initial, current) ||
     !lineupStateEquals(initialLineup, currentLineup);
@@ -110,18 +111,28 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
       starting_xi: currentLineup.starting_xi.slice(),
       bench: currentLineup.bench.slice(),
     };
-    try {
-      const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
-      const userDiv = season.divisions[userDivIdx];
-      const fromRound = userDiv.currentRoundIdx;
-      const start = performance.now();
-      const newCareer = resimulateFromRound(career, fromRound, override);
-      const ms = Math.round(performance.now() - start);
-      const resimCount = countUserMatchesFromRound(career, fromRound);
-      onApply(newCareer, ms, resimCount);
-    } catch (e) {
-      setError(String(e));
-    }
+    // resimulateFromRound is synchronous; show the loading state and defer the
+    // work one frame so the spinner paints before the thread blocks.
+    setError(null);
+    setApplying(true);
+    requestAnimationFrame(() => {
+      try {
+        const userDivIdx = findUserDivisionIdxInSeason(
+          season,
+          career.controlledTeamId,
+        );
+        const userDiv = season.divisions[userDivIdx];
+        const fromRound = userDiv.currentRoundIdx;
+        const start = performance.now();
+        const newCareer = resimulateFromRound(career, fromRound, override);
+        const ms = Math.round(performance.now() - start);
+        const resimCount = countUserMatchesFromRound(career, fromRound);
+        onApply(newCareer, ms, resimCount);
+      } catch (e) {
+        setError(String(e));
+        setApplying(false);
+      }
+    });
   }
 
   return (
@@ -161,10 +172,15 @@ export default function TacticsView({ career, onApply, onBack }: TacticsViewProp
               </Text>
             )}
             <Group justify="center" gap="sm">
-              <Button type="submit" disabled={!dirty}>
-                Aplicar
+              <Button type="submit" disabled={!dirty || applying} loading={applying}>
+                {applying ? "Aplicando…" : "Aplicar"}
               </Button>
-              <Button type="button" variant="default" onClick={onBack}>
+              <Button
+                type="button"
+                variant="default"
+                onClick={onBack}
+                disabled={applying}
+              >
                 Voltar
               </Button>
             </Group>

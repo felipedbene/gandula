@@ -22,9 +22,10 @@ import {
 } from "../util/copa";
 import { avgStrength } from "../util/divisions";
 import { formatMoney } from "../util/money";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Anchor, Button, Collapse, Group, Stack, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
 import { TeamCrest } from "./ui/TeamCrest";
+import FormationPitch from "./ui/FormationPitch";
 import TacticsForm, {
   type TacticsFormState,
   tacticsFormStateEquals,
@@ -108,6 +109,7 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
   const [current, setCurrent] = useState<TacticsFormState>(initial);
   const [currentLineup, setCurrentLineup] = useState<LineupState>(initialLineup);
   const [error, setError] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
   const dirty =
     !tacticsFormStateEquals(initial, current) ||
     !lineupStateEquals(initialLineup, currentLineup);
@@ -152,15 +154,30 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
       starting_xi: currentLineup.starting_xi.slice(),
       bench: currentLineup.bench.slice(),
     };
-    try {
-      const start = performance.now();
-      const newCareer = resimulateFromRound(career, userDiv.currentRoundIdx, override);
-      const ms = Math.round(performance.now() - start);
-      const resimCount = countUserMatchesFromRound(career, userDiv.currentRoundIdx);
-      onPlay(newCareer, ms, resimCount);
-    } catch (e) {
-      setError(String(e));
-    }
+    // resimulateFromRound is synchronous and can take tens of ms; flip the
+    // button to its loading state and defer the work one frame so the spinner
+    // actually paints before the main thread blocks.
+    setError(null);
+    setPlaying(true);
+    requestAnimationFrame(() => {
+      try {
+        const start = performance.now();
+        const newCareer = resimulateFromRound(
+          career,
+          userDiv.currentRoundIdx,
+          override,
+        );
+        const ms = Math.round(performance.now() - start);
+        const resimCount = countUserMatchesFromRound(
+          career,
+          userDiv.currentRoundIdx,
+        );
+        onPlay(newCareer, ms, resimCount);
+      } catch (e) {
+        setError(String(e));
+        setPlaying(false);
+      }
+    });
   }
 
   const totalRounds = totalRoundsOf(userDiv);
@@ -212,8 +229,15 @@ export default function PrepareView({ career, onPlay, onBack }: PrepareViewProps
               </Text>
             )}
             <Group justify="center" gap="sm">
-              <Button type="submit">Jogar</Button>
-              <Button type="button" variant="default" onClick={onBack}>
+              <Button type="submit" loading={playing}>
+                {playing ? "Jogando…" : "Jogar"}
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                onClick={onBack}
+                disabled={playing}
+              >
                 Voltar
               </Button>
             </Group>
@@ -231,6 +255,7 @@ function NextOpponentCard({
   userMatch: Match;
   controlledTeamId: number;
 }) {
+  const [showShape, setShowShape] = useState(false);
   const isUserHome = userMatch.home === controlledTeamId;
   // `controlledTeam` (not `userTeam`) avoids shadowing the imported
   // userTeam(career) helper at module scope. NextOpponentCard doesn't
@@ -283,6 +308,29 @@ function NextOpponentCard({
             Força {opponentStrength}
           </Text>
         </Group>
+
+        {opponentTeam && (
+          <>
+            <Anchor
+              component="button"
+              type="button"
+              size="xs"
+              ta="center"
+              onClick={() => setShowShape((s) => !s)}
+            >
+              {showShape ? "Ocultar" : "Ver"} escalação do adversário
+            </Anchor>
+            <Collapse expanded={showShape}>
+              <FormationPitch
+                team={opponentTeam}
+                state={{
+                  starting_xi: opponentTeam.starting_xi,
+                  bench: opponentTeam.bench ?? [],
+                }}
+              />
+            </Collapse>
+          </>
+        )}
       </Stack>
     </Panel>
   );

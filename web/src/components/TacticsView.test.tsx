@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "../test-utils";
+import { render, screen, fireEvent, waitFor } from "../test-utils";
 import init, { run_season } from "../wasm/gandula_wasm.js";
 import TacticsView from "./TacticsView";
 import { ALL_TEAMS, teamById } from "../teams";
@@ -101,7 +101,7 @@ describe("TacticsView", () => {
     expect(onApply).not.toHaveBeenCalled();
   });
 
-  it("calls onApply with re-simulated career when APLICAR clicked", () => {
+  it("calls onApply with re-simulated career when APLICAR clicked", async () => {
     const { career } = makeCareer();
     const onApply = vi.fn();
     render(<TacticsView career={career} onApply={onApply} onBack={() => {}} />);
@@ -109,7 +109,8 @@ describe("TacticsView", () => {
       target: { value: "VeryAttacking" },
     });
     fireEvent.click(screen.getByRole("button", { name: /aplicar/i }));
-    expect(onApply).toHaveBeenCalledOnce();
+    // The re-sim is deferred a frame so the button's loading state can paint.
+    await waitFor(() => expect(onApply).toHaveBeenCalledOnce());
     const [newCareer, resimMs, resimCount] = onApply.mock.calls[0];
     expect(newCareer.currentSeason.userTactics).toBeDefined();
     expect(newCareer.currentSeason.userTactics.tactics.mentality).toBe(
