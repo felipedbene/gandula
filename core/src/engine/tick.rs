@@ -15,6 +15,7 @@ use crate::engine::strength::{
     width_shot_factor,
 };
 use crate::rng::MatchRng;
+use serde::{Deserialize, Serialize};
 
 // ─── Tunables ───────────────────────────────────────────────────────────────
 pub const BASE_STAMINA_DRAIN: f64 = 0.30;
@@ -73,8 +74,12 @@ pub const NEAR_MISS_PROMOTION_RATE: f64 = 0.50;
 // ─── State ──────────────────────────────────────────────────────────────────
 /// Penalty awarded last tick, kick to be taken next tick. The intervening
 /// minute is the dramatic beat between award and outcome.
-#[derive(Clone, Copy)]
-pub(crate) struct PendingPenalty {
+///
+/// `pub` (not `pub(crate)`) because it's reachable through the public
+/// `HalfTimeSnapshot::pending_penalty` field — a penalty awarded at 45' rides
+/// across the break in the snapshot and resolves at minute 46.
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct PendingPenalty {
     pub side: Side,
     pub taker: PlayerId,
 }
@@ -150,6 +155,92 @@ impl<'a> MatchState<'a> {
             events: self.events,
         }
     }
+
+    /// Capture the live mid-match state plus the RNG stream position at the
+    /// half-time break, into a serializable snapshot (no `&Team` held). The
+    /// `rng` passed must be the match RNG at the exact point the second half
+    /// will resume from — i.e. *after* half-time narration has been narrated.
+    pub fn snapshot_at_half(&self, seed: u64, rng: &MatchRng) -> HalfTimeSnapshot {
+        HalfTimeSnapshot {
+            seed,
+            home_id: self.home.id,
+            away_id: self.away.id,
+            home_goals: self.home_goals,
+            away_goals: self.away_goals,
+            home_current_xi: self.home_current_xi,
+            away_current_xi: self.away_current_xi,
+            home_stamina: self.home_stamina,
+            away_stamina: self.away_stamina,
+            home_on_field: self.home_on_field,
+            away_on_field: self.away_on_field,
+            home_bench_used: self.home_bench_used.clone(),
+            away_bench_used: self.away_bench_used.clone(),
+            home_subs_used: self.home_subs_used,
+            away_subs_used: self.away_subs_used,
+            pending_penalty: self.pending_penalty,
+            first_half_events: self.events.clone(),
+            rng_state: rng.clone(),
+        }
+    }
+
+    /// Rebuild a `MatchState` from a half-time snapshot for the second half.
+    /// All mutable match state (XI / stamina / on-field / bench / subs / goals
+    /// / pending penalty / events) comes from the snapshot; `home`/`away` are
+    /// the (possibly tactically-edited) teams passed in. Because `tick` re-reads
+    /// `state.<side>.tactics` every minute, swapping in an edited `Team` here is
+    /// exactly how a half-time tactics change takes effect — but in this commit
+    /// the same teams are passed, so behavior is unchanged.
+    pub fn resume_from(snap: &HalfTimeSnapshot, home: &'a Team, away: &'a Team) -> Self {
+        Self {
+            home,
+            away,
+            home_current_xi: snap.home_current_xi,
+            away_current_xi: snap.away_current_xi,
+            home_stamina: snap.home_stamina,
+            away_stamina: snap.away_stamina,
+            home_on_field: snap.home_on_field,
+            away_on_field: snap.away_on_field,
+            home_bench_used: snap.home_bench_used.clone(),
+            away_bench_used: snap.away_bench_used.clone(),
+            home_subs_used: snap.home_subs_used,
+            away_subs_used: snap.away_subs_used,
+            home_goals: snap.home_goals,
+            away_goals: snap.away_goals,
+            events: snap.first_half_events.clone(),
+            pending_penalty: snap.pending_penalty,
+        }
+    }
+}
+
+/// Serializable mid-match state captured at the half-time break, so the second
+/// half can be run as a separate call (and, in later commits, with edited
+/// tactics). Crucially holds NO `&Team` — only ids and the derived mutable
+/// state — and carries the full `MatchRng` so the second half resumes the
+/// exact keystream rather than re-seeding.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct HalfTimeSnapshot {
+    pub seed: u64,
+    pub home_id: crate::domain::TeamId,
+    pub away_id: crate::domain::TeamId,
+    pub home_goals: u8,
+    pub away_goals: u8,
+    pub home_current_xi: [PlayerId; 11],
+    pub away_current_xi: [PlayerId; 11],
+    pub home_stamina: [f64; 11],
+    pub away_stamina: [f64; 11],
+    pub home_on_field: [bool; 11],
+    pub away_on_field: [bool; 11],
+    pub home_bench_used: Vec<bool>,
+    pub away_bench_used: Vec<bool>,
+    pub home_subs_used: u8,
+    pub away_subs_used: u8,
+    /// A penalty awarded at 45' that hasn't been taken yet — it resolves on the
+    /// first tick of the second half (minute 46), exactly as in the one-shot
+    /// `simulate`. Not force-resolved at the break in this commit.
+    pub pending_penalty: Option<PendingPenalty>,
+    /// All first-half events, including the synthetic `HalfTime` marker.
+    pub first_half_events: Vec<MatchEvent>,
+    pub rng_state: MatchRng,
 }
 
 // ─── Per-tick drive ─────────────────────────────────────────────────────────

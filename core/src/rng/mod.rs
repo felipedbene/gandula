@@ -1,10 +1,17 @@
 use rand::{RngCore, SeedableRng};
 use rand_chacha::ChaCha8Rng;
+use serde::{Deserialize, Serialize};
 
 /// Single source of randomness for one match. Wraps `ChaCha8Rng` so the engine
 /// can be seeded with a plain `u64` and the rest of the code never imports an
 /// RNG type directly. Determinism guarantee: identical `seed` + identical
 /// inputs → byte-identical event log.
+///
+/// `Serialize`/`Deserialize` (via rand_chacha's `serde` feature) capture the
+/// full ChaCha8 state — seed AND word position within the keystream — so a
+/// half-time snapshot can resume the *exact* stream in the second half rather
+/// than re-seeding. The half-split property test asserts this is byte-exact.
+#[derive(Clone, Serialize, Deserialize)]
 pub struct MatchRng(ChaCha8Rng);
 
 impl MatchRng {
