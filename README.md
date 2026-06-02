@@ -88,6 +88,28 @@ in `web/` — the Rust core stays a lean, division-agnostic match/season engine
 trains a reinforcement-learning agent against this same engine; its learned
 policy was distilled into the in-game rival "coaches" (see the web section).
 
+## Toolchain prerequisites
+
+A from-scratch checkout needs three things on `PATH`: a **Rust** toolchain with
+the `wasm32-unknown-unknown` target, **wasm-pack**, and **Node 24**. One script
+installs all three (into your home dir — no root), builds the wasm module, and
+installs the web deps. It's idempotent, so re-run it any time:
+
+```bash
+./scripts/setup-dev.sh
+```
+
+It works on immutable OSes (Bazzite/Silverblue/etc.) too — nvm + rustup avoid
+the layered-package + reboot a system `dnf install` would need. Already have
+Rust? `SKIP_RUST=1 ./scripts/setup-dev.sh`. Toolchain only, no `npm ci`?
+`--no-deps`.
+
+> **Why wasm must be built before the web tests.** The TS layer imports the
+> engine from `web/src/wasm/` (e.g. `util/copa.ts` → `../wasm/gandula_wasm.js`),
+> so `npm run test:run` can't even load its files until the module exists. The
+> setup script (and `./scripts/build-web.sh`) build it; CI does the same:
+> build wasm → install deps → test.
+
 ## Building and testing
 
 ```bash
