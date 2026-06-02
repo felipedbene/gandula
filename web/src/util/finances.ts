@@ -325,15 +325,39 @@ export const CUP_CHAMPION_BONUS = 1_200_000;
  *  the wage bill (`round(S·(r+1)/T) − round(S·r/T)`), so slices sum to the exact
  *  season total with no drift. Accrues EVERY round (incl. away) — it's a
  *  structural floor, not gated by home/away. */
-/** Season-total TV money: a signed deal's `seasonAmount` if one is active,
- *  else the tier-derived floor (`TV_DEAL_BY_TIER`). Single source for both the
- *  per-round slice and any season-total display. */
-export function tvSeasonTotal(career: Career): number {
-  const deal = career.manager.activeDeals?.tv;
-  if (deal) return deal.seasonAmount;
+/** The tier-derived TV floor, ignoring any signed deal — the value income
+ *  reverts to when a deal isn't in force (or drops mid-season). */
+export function tvFloor(career: Career): number {
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   return TV_DEAL_BY_TIER[season.divisions[userDivIdx].tier];
+}
+
+/** Season-total TV money: a signed deal's `seasonAmount` if one is active, else
+ *  the tier floor. (For a deal that DROPPED mid-season this returns the
+ *  contract amount — the realized total is segmented; see `tvIncomeForRound`.)
+ *  Single source for the headline season figure. */
+export function tvSeasonTotal(career: Career): number {
+  return career.manager.activeDeals?.tv?.seasonAmount ?? tvFloor(career);
+}
+
+/**
+ * Fair-rounded slice of `total` for `roundIdx` within the sub-range
+ * `[from, to)` — `round(total·(i+1)/n) − round(total·i/n)` where `i` is the
+ * round's offset into the range and `n` its length. Summed across the range it
+ * equals `total` exactly (no drift). Used to split a season into a
+ * contract segment and a post-drop floor segment that each sum cleanly.
+ */
+function slicedSegment(
+  total: number,
+  roundIdx: number,
+  from: number,
+  to: number,
+): number {
+  const n = to - from;
+  if (n <= 0) return 0;
+  const i = roundIdx - from;
+  return Math.round((total * (i + 1)) / n) - Math.round((total * i) / n);
 }
 
 export function tvIncomeForRound(career: Career, roundIdx: number): number {
@@ -341,10 +365,19 @@ export function tvIncomeForRound(career: Career, roundIdx: number): number {
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const total = totalRoundsOf(season.divisions[userDivIdx]);
   if (total <= 0) return 0;
-  const s = tvSeasonTotal(career);
-  return (
-    Math.round((s * (roundIdx + 1)) / total) - Math.round((s * roundIdx) / total)
-  );
+  const deal = career.manager.activeDeals?.tv;
+  const k = deal?.droppedAtRound;
+  if (deal && k !== undefined) {
+    // Dropped at round k: pre-drop rounds earn the contract at its normal
+    // per-round rate (sliced over the FULL season, so it's pro-rata — you got
+    // the contract while it lasted, not the whole season crammed early);
+    // post-drop rounds earn the derived floor, sliced over the tail [k,total)
+    // so that tail sums to a full floor's worth. Each part fair-rounds cleanly.
+    return roundIdx < k
+      ? slicedSegment(deal.seasonAmount, roundIdx, 0, total)
+      : slicedSegment(tvFloor(career), roundIdx, k, total);
+  }
+  return slicedSegment(tvSeasonTotal(career), roundIdx, 0, total);
 }
 
 // ─── E.4.b.6 — sponsorship (recurring revenue floor) ─────────────────────
@@ -375,12 +408,10 @@ export const SPONSORSHIP_FANBASE_COEF = 2.5;
 export const SPONSORSHIP_PLACEMENT_BONUS = 600_000;
 export const SPONSORSHIP_PLACEMENT_PIVOT = 10;
 
-/** Total sponsorship income for the current season. A signed sponsorship deal's
- *  `seasonAmount` takes precedence; otherwise it's derived (pure) from the
- *  user's tier, current fanbase, and last season's finishing position. */
-export function sponsorshipSeasonTotal(career: Career): number {
-  const deal = career.manager.activeDeals?.sponsorship;
-  if (deal) return deal.seasonAmount;
+/** The derived sponsorship floor, ignoring any signed deal — tier base +
+ *  fanbase + last-season placement, floored at 0. The value income reverts to
+ *  with no deal (or after a mid-season drop). */
+export function sponsorshipFloor(career: Career): number {
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const tier = season.divisions[userDivIdx].tier;
@@ -399,6 +430,14 @@ export function sponsorshipSeasonTotal(career: Career): number {
         placementTerm,
     ),
   );
+}
+
+/** Total sponsorship income for the current season. A signed deal's
+ *  `seasonAmount` takes precedence; else the derived floor. (For a deal that
+ *  dropped mid-season this is the contract amount — the realized total is
+ *  segmented; see `sponsorshipForRound`.) */
+export function sponsorshipSeasonTotal(career: Career): number {
+  return career.manager.activeDeals?.sponsorship?.seasonAmount ?? sponsorshipFloor(career);
 }
 
 // ─── Negotiable deal offers (v12) ────────────────────────────────────────────
@@ -473,20 +512,50 @@ export function generateDealOffers(
   careerSeed: bigint,
   year: number,
   tier: 1 | 2 | 3,
-  tvFloor: number,
-  sponsorshipFloor: number,
+  tvFloorAmount: number,
+  sponsorshipFloorAmount: number,
 ): { tv: DealOffer[]; sponsorship: DealOffer[] } {
   return {
-    tv: offersFor("tv", tvFloor, tier, careerSeed, year, TV_OFFER_SALT),
+    tv: offersFor("tv", tvFloorAmount, tier, careerSeed, year, TV_OFFER_SALT),
     sponsorship: offersFor(
       "sponsorship",
-      sponsorshipFloor,
+      sponsorshipFloorAmount,
       tier,
       careerSeed,
       year,
       SPONSOR_OFFER_SALT,
     ),
   };
+}
+
+/** Salt for the scandal stream, independent of the offer salts. */
+const SCANDAL_SALT = 0x5ca1n;
+/** Per-season probability that a scandal terminates an active deal (per slot).
+ *  ~5% — rare enough to be memorable bad luck, not punitive. */
+export const SCANDAL_SEASON_CHANCE = 0.05;
+
+/**
+ * Whether a scandal terminates the deal in `slot` at exactly `roundIdx`, for a
+ * season with `totalRounds`. Pure + deterministic in (careerSeed, year, slot):
+ * one roll decides IF a scandal hits this season (`SCANDAL_SEASON_CHANCE`), a
+ * second picks WHICH round — so re-running with the same inputs always agrees
+ * (the drop is persisted on the Deal, but this stays reproducible regardless).
+ * Returns true only for the single struck round.
+ */
+export function scandalStrikesAt(
+  careerSeed: bigint,
+  year: number,
+  slot: "tv" | "sponsorship",
+  roundIdx: number,
+  totalRounds: number,
+): boolean {
+  if (totalRounds <= 0) return false;
+  const slotSalt = slot === "tv" ? 0n : 0x11n;
+  const folded = careerSeed ^ BigInt(year) ^ SCANDAL_SALT ^ slotSalt;
+  const rng = mulberry32(Number(folded & 0xffffffffn));
+  if (rng() >= SCANDAL_SEASON_CHANCE) return false; // no scandal this season
+  const struckRound = Math.floor(rng() * totalRounds);
+  return roundIdx === struckRound;
 }
 
 /** Sponsorship slice for `roundIdx` — the season total sliced with the same
@@ -497,10 +566,16 @@ export function sponsorshipForRound(career: Career, roundIdx: number): number {
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const total = totalRoundsOf(season.divisions[userDivIdx]);
   if (total <= 0) return 0;
-  const s = sponsorshipSeasonTotal(career);
-  return (
-    Math.round((s * (roundIdx + 1)) / total) - Math.round((s * roundIdx) / total)
-  );
+  const deal = career.manager.activeDeals?.sponsorship;
+  const k = deal?.droppedAtRound;
+  if (deal && k !== undefined) {
+    // Pre-drop: contract at its normal per-round rate (pro-rata, sliced over
+    // the full season). Post-drop: derived floor over the tail [k,total).
+    return roundIdx < k
+      ? slicedSegment(deal.seasonAmount, roundIdx, 0, total)
+      : slicedSegment(sponsorshipFloor(career), roundIdx, k, total);
+  }
+  return slicedSegment(sponsorshipSeasonTotal(career), roundIdx, 0, total);
 }
 
 /** Per-match win/draw bonus for the user's match in `roundIdx`: WIN_BONUS on a

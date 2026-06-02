@@ -12,9 +12,12 @@ import init, { run_season } from "../wasm/gandula_wasm.js";
 import {
   tvIncomeForRound,
   tvSeasonTotal,
+  tvFloor,
   sponsorshipForRound,
   sponsorshipSeasonTotal,
   generateDealOffers,
+  scandalStrikesAt,
+  SCANDAL_SEASON_CHANCE,
   TV_DEAL_BY_TIER,
 } from "./finances";
 import {
@@ -228,5 +231,83 @@ describe("performance clauses on offers", () => {
     const clauseOffer = o.tv.find((d) => d.performanceClause)!;
     const maxAmt = Math.max(...o.tv.map((d) => d.seasonAmount));
     expect(clauseOffer.seasonAmount).toBe(maxAmt);
+  });
+});
+
+describe("scandal drop (mid-season, segmented income)", () => {
+  it("a dropped TV deal earns pro-rata contract before K + a full floor from K", () => {
+    const k = 14;
+    const dropped = { ...tvDeal, droppedAtRound: k };
+    const c = makeCareer(1998n, { tv: dropped });
+    const undropped = makeCareer(1998n, { tv: tvDeal });
+    const div = c.currentSeason.divisions[
+      findUserDivisionIdxInSeason(c.currentSeason, c.controlledTeamId)
+    ];
+    const total = totalRoundsOf(div);
+
+    // Pre-drop rounds are exactly the un-dropped contract slices (pro-rata over
+    // the full season) — the deal paid its normal rate while it lasted.
+    let pre = 0;
+    let preUndropped = 0;
+    for (let r = 0; r < k; r++) {
+      pre += tvIncomeForRound(c, r);
+      preUndropped += tvIncomeForRound(undropped, r);
+    }
+    expect(pre).toBe(preUndropped);
+
+    // Post-drop rounds are the derived floor, sliced over the tail [k,total) so
+    // that tail sums to a full floor's worth (each segment fair-rounds clean).
+    let post = 0;
+    for (let r = k; r < total; r++) post += tvIncomeForRound(c, r);
+    expect(post).toBe(tvFloor(c));
+
+    // Realized season total = pro-rata contract to K + a full floor after.
+    let all = 0;
+    for (let r = 0; r < total; r++) all += tvIncomeForRound(c, r);
+    expect(all).toBe(pre + tvFloor(c));
+  });
+
+  it("rounds before the drop earn the contract rate, rounds after earn the floor rate", () => {
+    const k = 10;
+    const dropped = { ...tvDeal, droppedAtRound: k };
+    const c = makeCareer(1998n, { tv: dropped });
+    const undropped = makeCareer(1998n, { tv: tvDeal });
+    // A pre-drop round matches the un-dropped (full-contract) slice.
+    expect(tvIncomeForRound(c, 0)).toBe(tvIncomeForRound(undropped, 0));
+    // A post-drop round is the floor segment, strictly less than the contract
+    // slice (tvDeal pays well above the C floor).
+    expect(tvIncomeForRound(c, k)).toBeLessThan(tvIncomeForRound(undropped, k));
+  });
+});
+
+describe("scandalStrikesAt (deterministic, rare)", () => {
+  it("same (seed, year, slot) ⇒ identical strike pattern across rounds", () => {
+    const pattern = (s: bigint) =>
+      Array.from({ length: 38 }, (_, r) => scandalStrikesAt(s, 2027, "tv", r, 38));
+    expect(pattern(1998n)).toEqual(pattern(1998n));
+  });
+
+  it("strikes at most ONE round in a season (or none)", () => {
+    for (const seed of [1n, 7n, 42n, 99n, 1998n, 2026n]) {
+      const hits = Array.from({ length: 38 }, (_, r) =>
+        scandalStrikesAt(seed, 2027, "tv", r, 38),
+      ).filter(Boolean).length;
+      expect(hits).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("fires at roughly SCANDAL_SEASON_CHANCE across many seeds", () => {
+    const N = 2000;
+    let seasonsWithScandal = 0;
+    for (let s = 0; s < N; s++) {
+      const any = Array.from({ length: 38 }, (_, r) =>
+        scandalStrikesAt(BigInt(s), 2027, "tv", r, 38),
+      ).some(Boolean);
+      if (any) seasonsWithScandal++;
+    }
+    const rate = seasonsWithScandal / N;
+    // Within a loose band of the configured ~5% (PRNG, finite sample).
+    expect(rate).toBeGreaterThan(SCANDAL_SEASON_CHANCE * 0.5);
+    expect(rate).toBeLessThan(SCANDAL_SEASON_CHANCE * 1.6);
   });
 });

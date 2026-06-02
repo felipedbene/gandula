@@ -48,6 +48,7 @@ import {
   cupPrizeForAdvance,
   isManagerFired,
   roundCashDelta,
+  scandalStrikesAt,
   seedStadiumForTier,
 } from "../util/finances";
 import { formatMoney } from "../util/money";
@@ -117,6 +118,40 @@ type Phase =
  * resume in `running`. Used by both the autoload path and by the round
  * reveal's onDone handoff.
  */
+/**
+ * Apply any mid-season scandal that strikes at `playedRound` (v12, 4th deal
+ * drop trigger). For each active, not-yet-dropped deal, `scandalStrikesAt`
+ * decides deterministically from (seed, year, slot, round) whether it's
+ * terminated now — if so, the deal is marked `droppedAtRound = playedRound` so
+ * income segments to the derived floor from here on (and the drop persists, so
+ * a re-sim / F5 reproduces it). Returns the career unchanged when nothing hits.
+ * Pure.
+ */
+function applyScandals(career: Career, playedRound: number): Career {
+  const deals = career.manager.activeDeals;
+  if (!deals) return career;
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const total = totalRoundsOf(season.divisions[userDivIdx]);
+  const year = season.year;
+
+  let changed = false;
+  const next = { ...deals };
+  for (const slot of ["tv", "sponsorship"] as const) {
+    const deal = deals[slot];
+    if (
+      deal &&
+      deal.droppedAtRound === undefined &&
+      scandalStrikesAt(career.seed, year, slot, playedRound, total)
+    ) {
+      next[slot] = { ...deal, droppedAtRound: playedRound };
+      changed = true;
+    }
+  }
+  if (!changed) return career;
+  return { ...career, manager: { ...career.manager, activeDeals: next } };
+}
+
 function initialPhaseFor(career: Career): Phase {
   const userDivIdx = findUserDivisionIdxInSeason(
     career.currentSeason,
@@ -546,6 +581,14 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
     // Bank the home gate (if mandante) and pay the wage slice — money moves
     // every matchday, persisted here with the round advance.
     const playedRound = season.divisions[userDivIdx].currentRoundIdx;
+
+    // Scandal (v12, 4th drop trigger): a rare deterministic event can terminate
+    // an active deal mid-season. If it strikes this round, mark the deal dropped
+    // AT this round — income segments to the derived floor from here on, and the
+    // drop is persisted so a re-sim / F5 reproduces it. Applied before
+    // roundCashDelta so this round already reflects the post-drop floor.
+    newCareer = applyScandals(newCareer, playedRound);
+
     const cashDelta = roundCashDelta(newCareer, playedRound);
     const cashStr =
       cashDelta >= 0
