@@ -6,17 +6,29 @@ import { teamById } from "../teams";
 import { revealMinutes } from "../util/prng";
 import { COPA_ROUND_AT_LEAGUE_ROUND, userTieInRound } from "../util/copa";
 import { Panel } from "./ui/Panel";
+import { derive_match_seed } from "../wasm/gandula_wasm.js";
 import MatchReveal, {
   HALFTIME_PAUSE_MS,
   REVEAL_MS_PER_MIN,
   useMatchClock,
 } from "./MatchReveal";
+import UserMatchReveal from "./UserMatchReveal";
+import type { UserTactics } from "../persistence";
 
 type RevealRoundProps = {
   career: Career;
   /** Fires once when the user's match reveal and all parallel matches have
    *  completed (or PULAR was clicked). Parent transitions back to running. */
   onDone: () => void;
+  /** Called when the user's match is finalized after the live half-time flow:
+   *  the full 90' match (replacing the pre-simulated one) and the half-time
+   *  tactics the user confirmed (null if unchanged). Parent persists both. */
+  onUserMatchFinalized: (
+    fixtureIdx: number,
+    round: number,
+    match: Match,
+    halftime: UserTactics | null,
+  ) => void;
 };
 
 type OtherMatch = {
@@ -43,7 +55,11 @@ type OtherMatch = {
  * pane is omitted and the header says "SEU TIME DESCANSA". Série A is
  * N=8 even, no byes — user is always playing there.
  */
-export default function RevealRound({ career, onDone }: RevealRoundProps) {
+export default function RevealRound({
+  career,
+  onDone,
+  onUserMatchFinalized,
+}: RevealRoundProps) {
   const season = career.currentSeason;
   const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
   const userDiv = season.divisions[userDivIdx];
@@ -157,10 +173,15 @@ export default function RevealRound({ career, onDone }: RevealRoundProps) {
       </Text>
 
       {userMatch ? (
-        <MatchReveal
-          match={userMatch.match}
-          onComplete={() => setUserDone(true)}
+        <UserMatchReveal
+          career={career}
+          fixtureIdx={userMatch.idx}
+          matchSeed={derive_match_seed(divSeed, userMatch.idx)}
           skipAll={skipAll}
+          onComplete={() => setUserDone(true)}
+          onFinalized={(match, halftime) =>
+            onUserMatchFinalized(userMatch.idx, revealRound, match, halftime)
+          }
         />
       ) : (
         <Card withBorder radius="md" padding="md">

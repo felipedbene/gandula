@@ -43,7 +43,7 @@ function makeCareer(): Career {
   const recordB = run_season(tierB, seasonSeed ^ 2n, "Série B") as SeasonRecord;
   const recordC = run_season(tierC, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 10,
+    schemaVersion: 11,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,
@@ -79,7 +79,7 @@ function makeCareerWithBye(): Career {
   const seasonSeed = seed ^ BigInt(FIRST_YEAR);
   const recordC = run_season(nine, seasonSeed ^ 3n, "Série C") as SeasonRecord;
   return {
-    schemaVersion: 10,
+    schemaVersion: 11,
     savedAt: new Date().toISOString(),
     seed,
     controlledTeamId: starter.id,

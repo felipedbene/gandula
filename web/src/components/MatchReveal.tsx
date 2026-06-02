@@ -52,9 +52,25 @@ type MatchRevealProps = {
   /** External skip signal. Flipping to `true` jumps reveal to the end and
    *  triggers onComplete on the next tick. */
   skipAll?: boolean;
+  /** When true, the feed animates only up to the `HalfTime` event and then
+   *  holds (fires `onHalfTime` once) until `match` grows with the second-half
+   *  events — at which point it resumes from minute 46 WITHOUT re-animating the
+   *  first half. Used by the live two-phase reveal so the player can change
+   *  tactics at the interval. */
+  pauseAtHalfTime?: boolean;
+  /** Fires once when the feed reaches the HalfTime marker under
+   *  `pauseAtHalfTime`. The parent shows the half-time panel and, on confirm,
+   *  swaps in the full Match. */
+  onHalfTime?: () => void;
 };
 
-export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealProps) {
+export default function MatchReveal({
+  match,
+  onComplete,
+  skipAll,
+  pauseAtHalfTime,
+  onHalfTime,
+}: MatchRevealProps) {
   const home = teamById(match.home)?.name ?? `Time ${match.home}`;
   const away = teamById(match.away)?.name ?? `Time ${match.away}`;
 
@@ -68,32 +84,88 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   // Guards onComplete from firing twice: once when naturally hitting the last
   // event, and again if skipAll flips true after that.
   const completedRef = useRef(false);
+  // How many events are already on screen — read by the resume path so the
+  // second half doesn't re-animate the first.
+  const revealedRef = useRef(0);
+  revealedRef.current = revealed;
+  // onHalfTime fires at most once across the pause.
+  const halfTimeFiredRef = useRef(false);
 
   // Continuous match clock — counts up during the calm stretches between
   // lances instead of standing still on the last event's minute.
   const clockMinute = useMatchClock(finalMinute, !!skipAll, match);
 
+  // Index of the HalfTime marker, if any (the pause point).
+  const halfTimeIdx = match.events.findIndex(
+    (e) => eventKindName(e.kind) === "HalfTime",
+  );
+
   useEffect(() => {
-    setRevealed(0);
-    completedRef.current = false;
-    // Walk events in order, scheduling each at its minute-proportional time
-    // but never closer than MIN_EVENT_GAP_MS to the previous one. Seeding
-    // `prev` at -gap lets the first event keep its natural (ungapped) time.
+    // Resume detection: if we're already mid-reveal (first half shown) and the
+    // match has now grown past the half-time marker, schedule ONLY the new
+    // (second-half) events, rebased to start shortly from now — the first half
+    // stays exactly as-is on screen.
+    const startFrom = revealedRef.current > 0 ? revealedRef.current : 0;
+    if (startFrom === 0) {
+      setRevealed(0);
+      completedRef.current = false;
+    }
+
+    // Under pause, hold once the HalfTime marker is the LAST event present
+    // (no second half yet). `pauseAtHalfTime` is the parent's intent.
+    const pausedHere =
+      !!pauseAtHalfTime &&
+      halfTimeIdx >= 0 &&
+      halfTimeIdx === match.events.length - 1;
+    const stopAt = match.events.length;
+
+    // Nothing new to schedule (e.g. the effect re-ran while paused because the
+    // onHalfTime callback identity changed). Don't touch the timers or index an
+    // out-of-range event — just keep what's on screen.
+    if (startFrom >= stopAt) {
+      return;
+    }
+
+    const resuming = startFrom > 0;
+    // On a fresh pass, time each event from kickoff (absolute minute timing).
+    // On resume, the absolute times are in the past, so drive purely off the
+    // gap+linger spacing with a half-time-length lead-in beat before 46'.
+    const resumeMinuteBase = resuming
+      ? match.events[startFrom].minute * REVEAL_MS_PER_MIN
+      : 0;
     let prev = -MIN_EVENT_GAP_MS;
-    let linger = 0; // extra hold carried from the PREVIOUS big moment
-    const timers = match.events.map((e, i) => {
-      const base =
-        e.minute * REVEAL_MS_PER_MIN +
-        (e.minute > 45 ? HALFTIME_PAUSE_MS : 0);
-      // The previous event's linger pushes this event's earliest fire time, so
-      // a goal stays on screen before the next lance arrives.
+    let linger = 0;
+    const timers: number[] = [];
+    for (let i = startFrom; i < stopAt; i++) {
+      const e = match.events[i];
+      const absolute =
+        e.minute * REVEAL_MS_PER_MIN + (e.minute > 45 ? HALFTIME_PAUSE_MS : 0);
+      // Resume: rebase to ~0 + a lead-in so the second half doesn't fire all at
+      // once; fresh pass: keep the real minute-proportional time.
+      const base = resuming
+        ? HALFTIME_PAUSE_MS + (absolute - resumeMinuteBase)
+        : absolute;
       const at = Math.max(base, prev + MIN_EVENT_GAP_MS + linger);
       prev = at;
       linger = eventLingerMs(eventKindName(e.kind));
-      return window.setTimeout(() => setRevealed(i + 1), at);
-    });
+      const idx = i;
+      timers.push(
+        window.setTimeout(() => {
+          setRevealed(idx + 1);
+          if (pausedHere && idx === halfTimeIdx && !halfTimeFiredRef.current) {
+            halfTimeFiredRef.current = true;
+            onHalfTime?.();
+          }
+        }, at),
+      );
+    }
     return () => timers.forEach(window.clearTimeout);
-  }, [match]);
+  }, [match, pauseAtHalfTime, halfTimeIdx, onHalfTime]);
+
+  // While the feed is paused at half-time (only first-half events present), the
+  // match isn't over — skip jumps to the marker, and onComplete must not fire.
+  const pausedAtHalfTime =
+    !!pauseAtHalfTime && halfTimeIdx >= 0 && match.events.length === halfTimeIdx + 1;
 
   useEffect(() => {
     if (skipAll) {
@@ -102,11 +174,16 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
   }, [skipAll, match.events.length]);
 
   useEffect(() => {
-    if (!completedRef.current && revealed >= match.events.length && match.events.length > 0) {
+    if (
+      !pausedAtHalfTime &&
+      !completedRef.current &&
+      revealed >= match.events.length &&
+      match.events.length > 0
+    ) {
       completedRef.current = true;
       onComplete();
     }
-  }, [revealed, match.events.length, onComplete]);
+  }, [revealed, match.events.length, onComplete, pausedAtHalfTime]);
 
   // Keep the most recent event in view as new ones land.
   const feedRef = useRef<HTMLOListElement>(null);

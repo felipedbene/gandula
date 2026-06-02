@@ -204,6 +204,13 @@ export type Season = {
   seed: bigint;
   divisions: Division[];
   userTactics?: UserTactics;
+  /** Half-time tactical changes the user confirmed at the interval, keyed by
+   *  the division round index the match was played in (v11+). Absent entry =
+   *  no half-time change (the first-half `userTactics` carries through). This
+   *  is what lets `resimulateFromRound` deterministically reproduce a match
+   *  whose second half was steered live at half-time — a future re-sim or an
+   *  F5 mid-reveal rebuilds the identical 90'. */
+  halftimeTactics?: Record<number, UserTactics>;
   /** Copa do Brasil bracket for this season (E.3). Always present in v7+. */
   copa: Copa;
   /** Transfer-market activity accumulated during this season. Mercado
@@ -274,7 +281,7 @@ export type SeasonHistory = {
  * `manager` carries cross-season state (money, eventually reputation).
  */
 export type Career = {
-  schemaVersion: 10;
+  schemaVersion: 11;
   savedAt: string;
   /** User-provided base seed. Stable across the entire career. Each season
    *  derives its own seed via `seed XOR BigInt(year)`. */
@@ -339,6 +346,7 @@ async function db(): Promise<IDBPDatabase> {
  */
 export type LoadCareerResult =
   | { kind: "loaded"; career: Career }
+  | { kind: "migratedV10"; career: Career }
   | { kind: "migratedV9"; career: Career }
   | { kind: "migratedV8"; career: Career }
   | { kind: "migratedV7"; career: Career }
@@ -363,8 +371,14 @@ export async function loadCareer(): Promise<LoadCareerResult> {
   if (!value) return { kind: "none" };
   const candidate = value as { schemaVersion?: number };
 
-  if (candidate.schemaVersion === 10) {
+  if (candidate.schemaVersion === 11) {
     return { kind: "loaded", career: value as Career };
+  }
+  if (candidate.schemaVersion === 10) {
+    // Pre-half-time-tactics. Purely additive: `halftimeTactics` is optional and
+    // absent means "no half-time change" — the caller just stamps v11 and
+    // re-saves. No field to seed.
+    return { kind: "migratedV10", career: value as unknown as Career };
   }
   if (candidate.schemaVersion === 9) {
     // Single-leg Copa ties (pre-E.3.b). The caller re-derives the current

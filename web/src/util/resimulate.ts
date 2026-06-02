@@ -1,10 +1,15 @@
-import { play_match, derive_match_seed } from "../wasm/gandula_wasm.js";
+import {
+  play_match,
+  play_first_half,
+  play_second_half,
+  derive_match_seed,
+} from "../wasm/gandula_wasm.js";
 import type { Match, Team } from "../types";
 import { computeStandings } from "../types";
 import { teamById } from "../teams";
 import { userTeam } from "./roster";
 import { evolveTeam } from "./regen";
-import { applyRivalCoach } from "./rival-coach";
+import { applyRivalCoach, rivalTactics } from "./rival-coach";
 import {
   FIRST_YEAR,
   findUserDivisionIdxInSeason,
@@ -30,6 +35,38 @@ export function applyUserTactics(baseTeam: Team, override: UserTactics): Team {
     starting_xi: override.starting_xi,
     bench: override.bench,
   };
+}
+
+/**
+ * The opponent's symmetric half-time tactical response: apply the distilled
+ * per-tier rival tactic (formation + tactics) for the second half, keeping its
+ * XI/bench. Deterministic by tier alone (no new entropy), so a re-sim or an F5
+ * mid-reveal reconstructs the identical opponent — see `rivalTactics`. Exported
+ * so the live half-time flow and the projection use the exact same team.
+ */
+export function applyRivalHalftime(opponent: Team, tier: 1 | 2 | 3): Team {
+  const { formation, tactics } = rivalTactics(tier);
+  return { ...opponent, formation, tactics };
+}
+
+/**
+ * Reconstruct a division opponent exactly as the season was simulated against:
+ * the registry team aged (`evolveTeam`) and coached (`applyRivalCoach`) for the
+ * current season's elapsed years. The single source for "who the user actually
+ * plays", shared by `resimulateFromRound` (above) and the live two-phase reveal
+ * so both produce byte-identical matches for the same seed + tactics.
+ */
+export function liveOpponentTeam(career: Career, opponentId: number): Team {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const tier = season.divisions[userDivIdx].tier as 1 | 2 | 3;
+  const elapsed = season.year - FIRST_YEAR;
+  const base = teamById(opponentId);
+  if (!base) {
+    throw new Error(`Opponent team ${opponentId} not found in registry`);
+  }
+  const evolved = evolveTeam(base, elapsed, career.seed);
+  return applyRivalCoach(evolved, tier, season.year, career.seed, elapsed);
 }
 
 /**
@@ -91,18 +128,12 @@ export function resimulateFromRound(
   // user's division, so their tier is `userDiv.tier`. Season 0 → elapsed 0 →
   // registry team, but the coach still runs (year/seed drive its buys).
   // Memoized: the user faces each opponent twice.
-  const elapsed = season.year - FIRST_YEAR;
   const tier = userDiv.tier as 1 | 2 | 3;
   const evolvedCache = new Map<number, Team>();
   const liveOpponent = (id: number): Team => {
     const cached = evolvedCache.get(id);
     if (cached) return cached;
-    const base = teamById(id);
-    if (!base) {
-      throw new Error(`Opponent team ${id} not found in registry`);
-    }
-    const evolved = evolveTeam(base, elapsed, career.seed);
-    const coached = applyRivalCoach(evolved, tier, season.year, career.seed, elapsed);
+    const coached = liveOpponentTeam(career, id);
     evolvedCache.set(id, coached);
     return coached;
   };
@@ -121,7 +152,26 @@ export function resimulateFromRound(
     const matchSeed = derive_match_seed(divSeed, i);
     const home = isUserHome ? effectiveUserTeam : opponentTeam;
     const away = isUserHome ? opponentTeam : effectiveUserTeam;
-    newMatches[i] = play_match(home, away, matchSeed) as Match;
+
+    // A half-time tactical change confirmed at the interval for this round is
+    // replayed deterministically: run the first half with the first-half
+    // (`userTactics`) teams, then the second half with the user's half-time
+    // tactics applied to their side (and the rival's symmetric half-time tactic
+    // to the opponent). With NO half-time entry, the two-phase path is
+    // byte-identical to play_match(90) — proven by the engine's half-split tests
+    // — so unchanged rounds reproduce exactly.
+    const htUser = season.halftimeTactics?.[f.round];
+    if (!htUser) {
+      newMatches[i] = play_match(home, away, matchSeed) as Match;
+      return;
+    }
+
+    const snapshot = play_first_half(home, away, matchSeed);
+    const htUserTeam = applyUserTactics(baseUserTeam, htUser);
+    const htOpponentTeam = applyRivalHalftime(opponentTeam, tier);
+    const home2 = isUserHome ? htUserTeam : htOpponentTeam;
+    const away2 = isUserHome ? htOpponentTeam : htUserTeam;
+    newMatches[i] = play_second_half(snapshot, home2, away2) as Match;
   });
 
   const totalRounds = totalRoundsOf(userDiv);

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { run_season } from "../wasm/gandula_wasm.js";
 import { ALL_TEAMS, teamById } from "../teams";
-import type { SeasonRecord, TeamStats } from "../types";
+import type { Match, SeasonRecord, TeamStats } from "../types";
 import { computeStandings, goalDifference, points } from "../types";
 import {
   FIRST_YEAR,
@@ -15,6 +15,7 @@ import {
   type Division,
   type SeasonHistory,
   type TransferRecord,
+  type UserTactics,
 } from "../persistence";
 import {
   biggestWin,
@@ -135,6 +136,9 @@ function randomSeed(): number {
 
 export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
   const [phase, setPhase] = useState<Phase>({ tag: "loading" });
+  // Holds the user's finalized match/career across the live half-time reveal,
+  // so afterReveal continues from it without remounting RevealRound.
+  const finalizedCareerRef = useRef<Career | null>(null);
 
   // Keep the app header in sync with the controlled team. Every phase that
   // carries a Career exposes it as phase.career; the form/loading phases don't,
@@ -162,16 +166,20 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
           result.kind === "migratedV6" ||
           result.kind === "migratedV7" ||
           result.kind === "migratedV8" ||
-          result.kind === "migratedV9"
+          result.kind === "migratedV9" ||
+          result.kind === "migratedV10"
         ) {
           let career = result.career;
           const migrated =
             result.kind === "migratedV6" ||
             result.kind === "migratedV7" ||
             result.kind === "migratedV8" ||
-            result.kind === "migratedV9";
+            result.kind === "migratedV9" ||
+            result.kind === "migratedV10";
           if (migrated) {
-            // Additive cascade v6→v7→v8→v9→v10 — progress preserved.
+            // Additive cascade v6→v7→v8→v9→v10→v11 — progress preserved.
+            //   v10 lacks halftimeTactics — purely optional, nothing to seed
+            //     (absent = no half-time change); just stamps v11 below.
             //   v6 lacks the Copa (deterministic from the season seed,
             //     fast-forwarded past played cup rounds);
             //   v6 + v7 lack the stadium/fanbase fields (seeded by tier);
@@ -188,19 +196,20 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
               )
             ].tier;
             const managerFields =
-              result.kind === "migratedV9"
-                ? career.manager // v9 already has every manager field
+              result.kind === "migratedV10" || result.kind === "migratedV9"
+                ? career.manager // v9/v10 already have every manager field
                 : result.kind === "migratedV8"
                   ? { ...career.manager, marketingMomentum: 0 }
                   : { ...career.manager, ...seedStadiumForTier(userTierForSeed) };
             // v6 (no Copa) and v9 (single-leg Copa) both (re)derive the Copa;
             // initCopaForSeason now builds two-leg ties and replays played
             // rounds, so a mid-season v9 save keeps correct bracket progress.
+            // v10 already has two-leg ties — no rebuild.
             const needsCopaRebuild =
               result.kind === "migratedV6" || result.kind === "migratedV9";
             career = {
               ...career,
-              schemaVersion: 10,
+              schemaVersion: 11,
               currentSeason: needsCopaRebuild
                 ? { ...career.currentSeason, copa: initCopaForSeason(career) }
                 : career.currentSeason,
@@ -225,7 +234,9 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
                   ? "save v8 migrado (marketing)"
                   : result.kind === "migratedV9"
                     ? "save v9 migrado (Copa em ida e volta)"
-                    : "save carregado";
+                    : result.kind === "migratedV10"
+                      ? "save v10 migrado (tática de intervalo)"
+                      : "save carregado";
           onStatus(
             `${prefix} · ${teamName} (${userDiv.name}) · ano ${career.currentSeason.year} · rodada ${userDiv.currentRoundIdx} · $ ${formatMoney(career.manager.money)}`,
           );
@@ -280,7 +291,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
       const ms = Math.round(performance.now() - start);
 
       const newCareer: Career = {
-        schemaVersion: 10,
+        schemaVersion: 11,
         savedAt: new Date().toISOString(),
         seed: careerSeed,
         controlledTeamId: starterTeam.id,
@@ -575,15 +586,78 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
    * user's division wrapped up, jump to finale; otherwise return to
    * running for the next round.
    */
+  /**
+   * The user's match was finalized by the live half-time flow (UserMatchReveal
+   * ran first + second half). Replace the provisional pre-simulated match in
+   * the division record with the real one, persist the confirmed half-time
+   * tactics (so re-sim / F5 reproduce it), recompute standings, save, and keep
+   * the revealing phase's career in sync so `afterReveal` continues from the
+   * finalized state.
+   */
+  function onUserMatchFinalized(
+    career: Career,
+    fixtureIdx: number,
+    round: number,
+    match: Match,
+    halftime: UserTactics | null,
+  ) {
+    const season = career.currentSeason;
+    const userDivIdx = findUserDivisionIdxInSeason(
+      season,
+      career.controlledTeamId,
+    );
+    const userDiv = season.divisions[userDivIdx];
+    const newMatches = userDiv.record.matches.slice();
+    newMatches[fixtureIdx] = match;
+    const teamIds = userDiv.record.standings.map((s) => s.team_id);
+    const newStandings = computeStandings(
+      newMatches,
+      userDiv.record.fixtures,
+      totalRoundsOf(userDiv),
+      teamIds,
+    );
+    const newDivisions = season.divisions.slice();
+    newDivisions[userDivIdx] = {
+      ...userDiv,
+      record: { ...userDiv.record, matches: newMatches, standings: newStandings },
+    };
+    const newHalftime = { ...(season.halftimeTactics ?? {}) };
+    if (halftime) newHalftime[round] = halftime;
+    const newCareer: Career = {
+      ...career,
+      savedAt: new Date().toISOString(),
+      currentSeason: {
+        ...season,
+        divisions: newDivisions,
+        halftimeTactics: newHalftime,
+      },
+    };
+    saveCareer(newCareer).catch((e) =>
+      onStatus(`erro ao salvar resultado: ${e}`),
+    );
+    // Stash the finalized career in a ref so afterReveal continues from it
+    // WITHOUT remounting RevealRound (a setPhase here would restart the reveal).
+    finalizedCareerRef.current = newCareer;
+  }
+
   function afterReveal(career: Career) {
+    // If the live half-time flow finalized the user's match, continue from that
+    // career (the result + half-time tactics are baked in) rather than the
+    // provisional one the reveal started with.
+    const effective = finalizedCareerRef.current ?? career;
+    finalizedCareerRef.current = null;
     // Mid-season firing: if this round's wage slice pushed the balance below
     // the floor, the board fires you right after the reveal.
-    if (isManagerFired(career.manager.money)) {
+    if (isManagerFired(effective.manager.money)) {
       onStatus("demitido · saldo negativo");
-      setPhase({ tag: "fired", career, finalBalance: career.manager.money });
+      setPhase({
+        tag: "fired",
+        career: effective,
+        finalBalance: effective.manager.money,
+      });
       return;
     }
-    setPhase(initialPhaseFor(career));
+    setPhase(initialPhaseFor(effective));
   }
 
   /**
@@ -713,6 +787,15 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
           <RevealRound
             career={phase.career}
             onDone={() => afterReveal(phase.career)}
+            onUserMatchFinalized={(fixtureIdx, round, match, halftime) =>
+              onUserMatchFinalized(
+                phase.career,
+                fixtureIdx,
+                round,
+                match,
+                halftime,
+              )
+            }
           />
         );
       case "tactics":

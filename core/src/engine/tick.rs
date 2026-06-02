@@ -10,23 +10,17 @@ use crate::domain::{
 };
 use crate::engine::narration::{self, NarrationContext};
 use crate::engine::strength::{
-    self, TeamStrength, pressing_disrupt, pressing_foul_factor, pressing_stamina_factor,
-    raw_player_stats, stamina_effectiveness, tempo_event_factor, tempo_stamina_factor,
-    width_shot_factor,
+    self, TeamStrength, event_prob, possession_home, pressing_disrupt, pressing_foul_factor,
+    pressing_stamina_factor, raw_player_stats, shot_prob, stamina_effectiveness,
+    tempo_stamina_factor, width_shot_factor,
 };
 use crate::rng::MatchRng;
+use serde::{Deserialize, Serialize};
 
 // ─── Tunables ───────────────────────────────────────────────────────────────
+// Possession / event / shot probabilities and their constants now live in
+// `strength.rs` (shared with the analytic projection); imported below.
 pub const BASE_STAMINA_DRAIN: f64 = 0.30;
-pub const BASE_EVENT_RATE: f64 = 0.18;
-pub const POSSESSION_MID_SCALE: f64 = 0.005;
-pub const POSSESSION_MIN: f64 = 0.10;
-pub const POSSESSION_MAX: f64 = 0.90;
-
-pub const SHOT_BASE_WITHIN_EVENT: f64 = 0.70;
-pub const SHOT_ATTACK_DEFENSE_SCALE: f64 = 1.0 / 200.0;
-pub const SHOT_PROB_MIN: f64 = 0.20;
-pub const SHOT_PROB_MAX: f64 = 0.95;
 
 pub const FOUL_BASE_WITHIN_EVENT: f64 = 0.15;
 
@@ -73,8 +67,12 @@ pub const NEAR_MISS_PROMOTION_RATE: f64 = 0.50;
 // ─── State ──────────────────────────────────────────────────────────────────
 /// Penalty awarded last tick, kick to be taken next tick. The intervening
 /// minute is the dramatic beat between award and outcome.
-#[derive(Clone, Copy)]
-pub(crate) struct PendingPenalty {
+///
+/// `pub` (not `pub(crate)`) because it's reachable through the public
+/// `HalfTimeSnapshot::pending_penalty` field — a penalty awarded at 45' rides
+/// across the break in the snapshot and resolves at minute 46.
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct PendingPenalty {
     pub side: Side,
     pub taker: PlayerId,
 }
@@ -150,6 +148,93 @@ impl<'a> MatchState<'a> {
             events: self.events,
         }
     }
+
+    /// Capture the live mid-match state plus the RNG stream position at the
+    /// half-time break, into a serializable snapshot (no `&Team` held). The
+    /// `rng` passed must be the match RNG at the exact point the second half
+    /// will resume from — i.e. *after* half-time narration has been narrated.
+    pub fn snapshot_at_half(&self, seed: u64, rng: &MatchRng) -> HalfTimeSnapshot {
+        HalfTimeSnapshot {
+            seed,
+            home_id: self.home.id,
+            away_id: self.away.id,
+            home_goals: self.home_goals,
+            away_goals: self.away_goals,
+            home_current_xi: self.home_current_xi,
+            away_current_xi: self.away_current_xi,
+            home_stamina: self.home_stamina,
+            away_stamina: self.away_stamina,
+            home_on_field: self.home_on_field,
+            away_on_field: self.away_on_field,
+            home_bench_used: self.home_bench_used.clone(),
+            away_bench_used: self.away_bench_used.clone(),
+            home_subs_used: self.home_subs_used,
+            away_subs_used: self.away_subs_used,
+            pending_penalty: self.pending_penalty,
+            first_half_events: self.events.clone(),
+            rng_state: rng.clone(),
+        }
+    }
+
+    /// Rebuild a `MatchState` from a half-time snapshot for the second half.
+    /// All mutable match state (XI / stamina / on-field / bench / subs / goals
+    /// / pending penalty / events) comes from the snapshot; `home`/`away` are
+    /// the (possibly tactically-edited) teams passed in. Because `tick` re-reads
+    /// `state.<side>.tactics` every minute, swapping in an edited `Team` here is
+    /// exactly how a half-time tactics change takes effect — but in this commit
+    /// the same teams are passed, so behavior is unchanged.
+    pub fn resume_from(snap: &HalfTimeSnapshot, home: &'a Team, away: &'a Team) -> Self {
+        Self {
+            home,
+            away,
+            home_current_xi: snap.home_current_xi,
+            away_current_xi: snap.away_current_xi,
+            home_stamina: snap.home_stamina,
+            away_stamina: snap.away_stamina,
+            home_on_field: snap.home_on_field,
+            away_on_field: snap.away_on_field,
+            home_bench_used: snap.home_bench_used.clone(),
+            away_bench_used: snap.away_bench_used.clone(),
+            home_subs_used: snap.home_subs_used,
+            away_subs_used: snap.away_subs_used,
+            home_goals: snap.home_goals,
+            away_goals: snap.away_goals,
+            events: snap.first_half_events.clone(),
+            pending_penalty: snap.pending_penalty,
+        }
+    }
+}
+
+/// Serializable mid-match state captured at the half-time break, so the second
+/// half can be run as a separate call (and, in later commits, with edited
+/// tactics). Crucially holds NO `&Team` — only ids and the derived mutable
+/// state — and carries the full `MatchRng` so the second half resumes the
+/// exact keystream rather than re-seeding.
+#[derive(Clone, Serialize, Deserialize)]
+pub struct HalfTimeSnapshot {
+    pub seed: u64,
+    pub home_id: crate::domain::TeamId,
+    pub away_id: crate::domain::TeamId,
+    pub home_goals: u8,
+    pub away_goals: u8,
+    pub home_current_xi: [PlayerId; 11],
+    pub away_current_xi: [PlayerId; 11],
+    pub home_stamina: [f64; 11],
+    pub away_stamina: [f64; 11],
+    pub home_on_field: [bool; 11],
+    pub away_on_field: [bool; 11],
+    pub home_bench_used: Vec<bool>,
+    pub away_bench_used: Vec<bool>,
+    pub home_subs_used: u8,
+    pub away_subs_used: u8,
+    /// A penalty pending across the break. `simulate_first_half` force-resolves
+    /// any 45'-penalty before snapshotting, so this is `None` for snapshots it
+    /// produces; the field is retained so a hand-built snapshot can still carry
+    /// a pending kick into the second half if a caller wants that.
+    pub pending_penalty: Option<PendingPenalty>,
+    /// All first-half events, including the synthetic `HalfTime` marker.
+    pub first_half_events: Vec<MatchEvent>,
+    pub rng_state: MatchRng,
 }
 
 // ─── Per-tick drive ─────────────────────────────────────────────────────────
@@ -166,12 +251,7 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     let home_str = current_strength(state, Side::Home);
     let away_str = current_strength(state, Side::Away);
 
-    let mut p_home = 0.5 + POSSESSION_MID_SCALE * (home_str.midfield - away_str.midfield);
-    if p_home < POSSESSION_MIN {
-        p_home = POSSESSION_MIN;
-    } else if p_home > POSSESSION_MAX {
-        p_home = POSSESSION_MAX;
-    }
+    let p_home = possession_home(&home_str, &away_str);
     let attacker_side = if rng.chance(p_home) {
         Side::Home
     } else {
@@ -179,7 +259,7 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     };
 
     let attacker_team = team_for(state, attacker_side);
-    let event_p = BASE_EVENT_RATE * tempo_event_factor(attacker_team.tactics.tempo);
+    let event_p = event_prob(attacker_team.tactics.tempo);
     if !rng.chance(event_p) {
         return;
     }
@@ -190,13 +270,7 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     };
     let defender_team = team_for(state, attacker_side.flip());
 
-    let mut shot_p = SHOT_BASE_WITHIN_EVENT
-        * (1.0 + (att_str.attack - def_str.defense) * SHOT_ATTACK_DEFENSE_SCALE);
-    if shot_p < SHOT_PROB_MIN {
-        shot_p = SHOT_PROB_MIN;
-    } else if shot_p > SHOT_PROB_MAX {
-        shot_p = SHOT_PROB_MAX;
-    }
+    let shot_p = shot_prob(att_str, def_str);
     let foul_p = FOUL_BASE_WITHIN_EVENT * pressing_foul_factor(defender_team.tactics.pressing);
 
     let r = rng.unit();
@@ -204,6 +278,25 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
         resolve_shot(state, rng, minute, attacker_side);
     } else if r < shot_p + foul_p {
         resolve_foul(state, rng, minute, attacker_side);
+    }
+}
+
+/// Force-resolve a penalty that was awarded at 45' but hasn't been taken,
+/// *before* the half-time break — so the half-time score is closed (the UI
+/// shows a real scoreline at the interval) rather than leaving the kick to
+/// straddle into minute 46. Consumes the RNG for the kick at the given minute
+/// and clears `pending_penalty`. No-op if nothing is pending.
+///
+/// This is the one deliberate behavior change of the half-split work: it
+/// reorders RNG consumption relative to the former one-shot `simulate` for the
+/// rare match that earns a penalty exactly at 45'. See `half_split.rs`.
+pub(crate) fn force_resolve_pending_penalty(
+    state: &mut MatchState,
+    rng: &mut MatchRng,
+    minute: u16,
+) {
+    if let Some(pen) = state.pending_penalty.take() {
+        resolve_penalty(state, rng, minute, pen);
     }
 }
 
@@ -247,7 +340,9 @@ fn drain_stamina(state: &mut MatchState) {
 }
 
 // ─── Strength snapshot using current XI + stamina ───────────────────────────
-fn current_strength(state: &MatchState, side: Side) -> TeamStrength {
+// `pub(crate)` so the analytic projection (`project_second_half`) can compose
+// the same strengths the tick sees, from a snapshot-reconstructed state.
+pub(crate) fn current_strength(state: &MatchState, side: Side) -> TeamStrength {
     let (team, current_xi, stamina, on_field, opp_pressing) = match side {
         Side::Home => (
             state.home,

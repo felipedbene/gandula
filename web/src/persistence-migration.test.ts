@@ -35,9 +35,9 @@ async function writeRaw(value: unknown): Promise<void> {
   await conn.put(STORE, value, SLOT_KEY);
 }
 
-function makeV10Career(opts: { seed: bigint; controlledTeamId: number }): Career {
+function makeV11Career(opts: { seed: bigint; controlledTeamId: number }): Career {
   return {
-    schemaVersion: 10,
+    schemaVersion: 11,
     savedAt: "2026-01-01T00:00:00Z",
     seed: opts.seed,
     controlledTeamId: opts.controlledTeamId,
@@ -64,14 +64,47 @@ describe("loadCareer", () => {
     expect(result.kind).toBe("none");
   });
 
-  it("returns kind:'loaded' when a v10 Career is present", async () => {
-    await saveCareer(makeV10Career({ seed: 1998n, controlledTeamId: 60 }));
+  it("returns kind:'loaded' when a v11 Career is present", async () => {
+    await saveCareer(makeV11Career({ seed: 1998n, controlledTeamId: 60 }));
     const result = await loadCareer();
     expect(result.kind).toBe("loaded");
     if (result.kind === "loaded") {
       expect(result.career.controlledTeamId).toBe(60);
       expect(result.career.manager.money).toBe(STARTING_MONEY);
       expect(result.career.userRoster).toEqual([]);
+    }
+  });
+
+  // A v10 save (everything but half-time tactics) migrates forward. loadCareer
+  // returns kind:'migratedV10'; the caller just stamps v11 (halftimeTactics is
+  // optional, absent = no half-time change — nothing to seed).
+  it("returns kind:'migratedV10' for a v10 save (no half-time tactics)", async () => {
+    await writeRaw({
+      schemaVersion: 10,
+      savedAt: "2026-01-01T00:00:00Z",
+      seed: 1998n,
+      controlledTeamId: 60,
+      seasons: [],
+      currentSeason: {
+        year: FIRST_YEAR,
+        seed: 1998n ^ BigInt(FIRST_YEAR),
+        divisions: [],
+        transfers: [],
+        copa: freshCopa(),
+      },
+      manager: {
+        money: STARTING_MONEY,
+        stadiumCapacity: 12_000,
+        fanbase: 10_000,
+        marketingMomentum: 0,
+      },
+      userRoster: [],
+    });
+    const result = await loadCareer();
+    expect(result.kind).toBe("migratedV10");
+    if (result.kind === "migratedV10") {
+      expect(result.career.controlledTeamId).toBe(60);
+      expect(result.career.currentSeason.halftimeTactics).toBeUndefined();
     }
   });
 

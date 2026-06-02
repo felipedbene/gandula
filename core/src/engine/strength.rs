@@ -128,6 +128,45 @@ pub fn width_shot_factor(w: Width) -> f64 {
     }
 }
 
+// ─── Per-minute drive probabilities ─────────────────────────────────────────
+// These constants and the three helpers below are the single source of truth
+// for how a minute's possession / event / shot probabilities are derived from
+// team strength. `tick` consumes them by sampling against the RNG;
+// `project_second_half` consumes the SAME helpers to produce expected values.
+// Keeping them here (not inline in `tick`) is what keeps the live engine and
+// the analytic projection from drifting apart when a constant is tuned.
+pub const BASE_EVENT_RATE: f64 = 0.18;
+pub const POSSESSION_MID_SCALE: f64 = 0.005;
+pub const POSSESSION_MIN: f64 = 0.10;
+pub const POSSESSION_MAX: f64 = 0.90;
+
+pub const SHOT_BASE_WITHIN_EVENT: f64 = 0.70;
+pub const SHOT_ATTACK_DEFENSE_SCALE: f64 = 1.0 / 200.0;
+pub const SHOT_PROB_MIN: f64 = 0.20;
+pub const SHOT_PROB_MAX: f64 = 0.95;
+
+/// Probability the home side has possession this minute, from the midfield gap.
+/// Clamped to `[POSSESSION_MIN, POSSESSION_MAX]`.
+pub fn possession_home(home: &TeamStrength, away: &TeamStrength) -> f64 {
+    (0.5 + POSSESSION_MID_SCALE * (home.midfield - away.midfield))
+        .clamp(POSSESSION_MIN, POSSESSION_MAX)
+}
+
+/// Probability that the attacking side's possession turns into an *event* this
+/// minute, scaled by their tempo.
+pub fn event_prob(tempo: Tempo) -> f64 {
+    BASE_EVENT_RATE * tempo_event_factor(tempo)
+}
+
+/// Probability that an event becomes a *shot* (vs. a foul / nothing), from the
+/// attacker's attack minus the defender's defense. Clamped to
+/// `[SHOT_PROB_MIN, SHOT_PROB_MAX]`.
+pub fn shot_prob(attacker: &TeamStrength, defender: &TeamStrength) -> f64 {
+    (SHOT_BASE_WITHIN_EVENT
+        * (1.0 + (attacker.attack - defender.defense) * SHOT_ATTACK_DEFENSE_SCALE))
+        .clamp(SHOT_PROB_MIN, SHOT_PROB_MAX)
+}
+
 // ─── Aggregate stats per team ───────────────────────────────────────────────
 pub struct TeamStrength {
     pub attack: f64,
