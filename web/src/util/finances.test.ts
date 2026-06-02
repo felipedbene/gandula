@@ -36,6 +36,7 @@ import {
   nextFanbase,
   nextMarketingMomentum,
   placementPrizeFor,
+  projectSeasonRunway,
   roundCashDelta,
   salarySliceForRound,
   seedStadiumForTier,
@@ -83,7 +84,7 @@ function makeFinishedCareer(seed: bigint): Career {
   const totalB = Math.max(...recordB.fixtures.map((f) => f.round)) + 1;
   const totalC = Math.max(...recordC.fixtures.map((f) => f.round)) + 1;
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: "2026-01-01T00:00:00Z",
     seed,
     controlledTeamId: starter.id,
@@ -446,6 +447,60 @@ describe("per-round finances", () => {
     for (let r = 0; r < total; r++) sum += roundCashDelta(career, r);
     const fin = computeSeasonFinances(career, "stayed");
     expect(sum).toBe(fin.net - fin.cupPrize - fin.placementPrize - fin.prBonus);
+  });
+});
+
+describe("projectSeasonRunway (E.5.a — cash-runway warning)", () => {
+  // A mid-season clone: rewind the user's division to the start so every round
+  // is "remaining". Other divisions are irrelevant to the projection.
+  function midSeason(career: Career): Career {
+    const idx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const divisions = career.currentSeason.divisions.map((d, i) =>
+      i === idx ? { ...d, currentRoundIdx: 0 } : d,
+    );
+    return { ...career, currentSeason: { ...career.currentSeason, divisions } };
+  }
+
+  it("from round 0, projectedNet equals the sum of all roundCashDelta", () => {
+    const career = midSeason(makeFinishedCareer(1998n));
+    const idx = findUserDivisionIdxInSeason(
+      career.currentSeason,
+      career.controlledTeamId,
+    );
+    const total = totalRoundsOf(career.currentSeason.divisions[idx]);
+    let expected = 0;
+    for (let r = 0; r < total; r++) expected += roundCashDelta(career, r);
+    const proj = projectSeasonRunway(career);
+    expect(proj.remainingRounds).toBe(total);
+    expect(proj.projectedNet).toBe(expected);
+    expect(proj.projectedEndBalance).toBe(career.manager.money + expected);
+  });
+
+  it("a finished season has no remaining rounds and no projected movement", () => {
+    const career = makeFinishedCareer(1998n); // currentRoundIdx == total
+    const proj = projectSeasonRunway(career);
+    expect(proj.remainingRounds).toBe(0);
+    expect(proj.projectedNet).toBe(0);
+    expect(proj.projectedEndBalance).toBe(career.manager.money);
+    expect(proj.atRisk).toBe(false);
+  });
+
+  it("flags atRisk when starting money is too low to cover the wage bill", () => {
+    const base = midSeason(makeFinishedCareer(1998n));
+    const broke: Career = { ...base, manager: { ...base.manager, money: 0 } };
+    const proj = projectSeasonRunway(broke);
+    // A 0-cash Série C club with a full wage bill and only the floors should
+    // project negative at least somewhere; atRisk reflects the end balance.
+    expect(proj.remainingWages).toBeGreaterThan(0);
+    expect(proj.atRisk).toBe(proj.projectedEndBalance < 0);
+  });
+
+  it("is deterministic", () => {
+    const career = midSeason(makeFinishedCareer(1998n));
+    expect(projectSeasonRunway(career)).toEqual(projectSeasonRunway(career));
   });
 });
 

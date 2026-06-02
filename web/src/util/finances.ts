@@ -539,6 +539,56 @@ export function roundCashDelta(career: Career, roundIdx: number): number {
 }
 
 /**
+ * Cash-runway projection (E.5.a) — answers "can I afford this squad across the
+ * REST of the season?" from where the season currently sits. Sums the per-round
+ * net (`roundCashDelta`: gate + TV + sponsorship + bonus − wages) over every
+ * round not yet played in the user's division, and adds it to the current
+ * balance. Excludes the end-of-season placement/PR prize (outcome unknown) and
+ * cup prizes (land on their own matchdays) — so it's a deliberately
+ * CONSERVATIVE floor: the real end balance is usually a bit higher.
+ *
+ * Pure. Reads the live roster via the same helpers the per-round accrual uses,
+ * so a buy/sell in the market (which mutates the working Career) immediately
+ * moves the projection — that's the point: see the wage-bill impact before
+ * committing.
+ */
+export type RunwayProjection = {
+  /** Rounds in the user's division still unplayed (currentRoundIdx … end). */
+  remainingRounds: number;
+  /** Net cash expected across those rounds (signed). */
+  projectedNet: number;
+  /** Projected balance at season end: current money + projectedNet. */
+  projectedEndBalance: number;
+  /** Wage bill across the remaining rounds (always ≥ 0). */
+  remainingWages: number;
+  /** True if the projection dips below zero at season end — overspend risk. */
+  atRisk: boolean;
+};
+
+export function projectSeasonRunway(career: Career): RunwayProjection {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const userDiv = season.divisions[userDivIdx];
+  const total = totalRoundsOf(userDiv);
+  const from = Math.min(userDiv.currentRoundIdx, total);
+
+  let projectedNet = 0;
+  let remainingWages = 0;
+  for (let r = from; r < total; r++) {
+    projectedNet += roundCashDelta(career, r);
+    remainingWages += salarySliceForRound(career, r);
+  }
+  const projectedEndBalance = career.manager.money + projectedNet;
+  return {
+    remainingRounds: Math.max(0, total - from),
+    projectedNet,
+    projectedEndBalance,
+    remainingWages,
+    atRisk: projectedEndBalance < 0,
+  };
+}
+
+/**
  * Breakdown of a season's net cash flow for the user. All values in
  * moedas; signs match the running-total convention (revenue/bonus
  * positive, salaries always positive — the subtraction lives in `net`).

@@ -90,7 +90,7 @@ function makeCareer(opts: {
     makePlayer(1000 + i, "MID"),
   );
   return {
-    schemaVersion: 9,
+    schemaVersion: 10,
     savedAt: "2026-01-01T00:00:00Z",
     seed: 1998n,
     controlledTeamId: 1,

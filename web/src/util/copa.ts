@@ -137,19 +137,54 @@ export function seededShootout(match: Match, tieSeed: bigint): CupShootout {
   };
 }
 
-/** Resolve a single non-bye tie: play it, then shootout on a draw. Returns a
- *  resolved copy of the tie. */
+/** Leg-seed namespaces — XORed into the tie seed so the two legs draw distinct
+ *  (but deterministic) match seeds and never collide with each other or the
+ *  shootout's `0x5e0c0a` fold in seededShootout. */
+const LEG1_NS = 0x1e_60_01n;
+const LEG2_NS = 0x1e_60_02n;
+
+/**
+ * Resolve a single non-bye tie over TWO LEGS (E.3.b). Leg 1: homeId hosts.
+ * Leg 2: awayId hosts (sides reversed). Winner is decided on AGGREGATE goals,
+ * then the AWAY-GOALS rule (the leg-1 away side's goals scored AT homeId count
+ * extra if aggregate is level), then a penalty shootout at leg 2's venue.
+ * Returns a resolved copy with both legs, aggregates, and (if needed) shootout.
+ *
+ * Determinism: each leg derives its own seed from the tie seed via a fixed XOR,
+ * so the whole two-leg tie is a pure function of (tieSeed, the two sides).
+ */
 function resolveTie(tie: CupTie, tieSeed: bigint, resolveTeam: (id: number) => Team): CupTie {
-  const home = resolveTeam(tie.homeId);
-  const away = resolveTeam(tie.awayId);
-  const match = play_match(home, away, tieSeed) as Match;
-  if (match.result.home_goals === match.result.away_goals) {
-    const shootout = seededShootout(match, tieSeed);
-    return { ...tie, played: true, match, shootout, winnerId: shootout.winnerId };
+  const homeTeam = resolveTeam(tie.homeId);
+  const awayTeam = resolveTeam(tie.awayId);
+
+  // Leg 1 at homeId; leg 2 at awayId (reversed).
+  const match = play_match(homeTeam, awayTeam, tieSeed ^ LEG1_NS) as Match;
+  const leg2 = play_match(awayTeam, homeTeam, tieSeed ^ LEG2_NS) as Match;
+
+  // Aggregate from each side's perspective. In leg 2 the sides are swapped, so
+  // homeId's goals are leg2.away_goals and awayId's are leg2.home_goals.
+  const aggHome = match.result.home_goals + leg2.result.away_goals;
+  const aggAway = match.result.away_goals + leg2.result.home_goals;
+
+  if (aggHome !== aggAway) {
+    const winnerId = aggHome > aggAway ? tie.homeId : tie.awayId;
+    return { ...tie, played: true, match, leg2, aggHome, aggAway, winnerId };
   }
-  const winnerId =
-    match.result.home_goals > match.result.away_goals ? tie.homeId : tie.awayId;
-  return { ...tie, played: true, match, winnerId };
+
+  // Aggregate level → away-goals rule. Goals scored AWAY: homeId scored away in
+  // leg 2 (leg2.away_goals); awayId scored away in leg 1 (match.away_goals).
+  const homeAwayGoals = leg2.result.away_goals;
+  const awayAwayGoals = match.result.away_goals;
+  if (homeAwayGoals !== awayAwayGoals) {
+    const winnerId = homeAwayGoals > awayAwayGoals ? tie.homeId : tie.awayId;
+    return { ...tie, played: true, match, leg2, aggHome, aggAway, winnerId };
+  }
+
+  // Still level → penalty shootout at leg 2's venue (awayId hosts). seededShootout
+  // returns winner ∈ {leg2.home, leg2.away} = {awayId, homeId}; map back.
+  const shootout = seededShootout(leg2, tieSeed);
+  const winnerId = shootout.winnerId; // already a team id (leg2.home/away)
+  return { ...tie, played: true, match, leg2, aggHome, aggAway, shootout, winnerId };
 }
 
 /** Count of real (non-bye) ties in all rounds strictly before `roundIdx` — the
