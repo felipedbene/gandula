@@ -17,6 +17,8 @@ import { findUserDivisionIdxInSeason } from "../persistence";
 import {
   canExpand,
   canMarket,
+  applyTransferAction,
+  reverseTransferAction,
   type TransferAction,
 } from "../util/transfer-market";
 import { formatMoney } from "../util/money";
@@ -46,74 +48,36 @@ export default function FinancesView({
   const [working, setWorking] = useState<Career>(career);
   const [actions, setActions] = useState<TransferAction[]>([]);
 
-  // E.4.b.4: pay to add a fixed block of seats. Debits money, raises capacity;
-  // reversible. Purely manager-state — not a TransferRecord.
+  // E.4.b.4: pay to add a fixed block of seats. E.4.b.5: run a marketing
+  // campaign. Both are reversible manager-state spends; the money/state math
+  // lives in applyTransferAction (shared with the market) so it can't drift.
   function expandStadium() {
     if (!canExpand(working).ok) return;
-    const price = expansionCost(working.manager.stadiumCapacity);
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-        stadiumCapacity: working.manager.stadiumCapacity + STADIUM_EXPANSION_STEP,
-      },
-    });
-    setActions([
-      ...actions,
-      { kind: "expandStadium", seats: STADIUM_EXPANSION_STEP, price },
-    ]);
+    const action = {
+      kind: "expandStadium" as const,
+      seats: STADIUM_EXPANSION_STEP,
+      price: expansionCost(working.manager.stadiumCapacity),
+    };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
   }
 
-  // E.4.b.5: run a marketing campaign. Adds fanbase now AND raises the decaying
-  // marketingMomentum the seasonal drift reads, so the boost persists. Reversible.
   function runCampaign() {
     if (!canMarket(working).ok) return;
-    const price = marketingCost(working.manager.marketingMomentum);
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-        fanbase: working.manager.fanbase + CAMPAIGN_FANBASE,
-        marketingMomentum:
-          working.manager.marketingMomentum + MARKETING_MOMENTUM_PER_CAMPAIGN,
-      },
-    });
-    setActions([
-      ...actions,
-      {
-        kind: "runCampaign",
-        fanbase: CAMPAIGN_FANBASE,
-        momentum: MARKETING_MOMENTUM_PER_CAMPAIGN,
-        price,
-      },
-    ]);
+    const action = {
+      kind: "runCampaign" as const,
+      fanbase: CAMPAIGN_FANBASE,
+      momentum: MARKETING_MOMENTUM_PER_CAMPAIGN,
+      price: marketingCost(working.manager.marketingMomentum),
+    };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
   }
 
   function undoLast() {
     const last = actions[actions.length - 1];
     if (!last) return;
-    if (last.kind === "expandStadium") {
-      setWorking({
-        ...working,
-        manager: {
-          ...working.manager,
-          money: working.manager.money + last.price,
-          stadiumCapacity: working.manager.stadiumCapacity - last.seats,
-        },
-      });
-    } else if (last.kind === "runCampaign") {
-      setWorking({
-        ...working,
-        manager: {
-          ...working.manager,
-          money: working.manager.money + last.price,
-          fanbase: working.manager.fanbase - last.fanbase,
-          marketingMomentum: working.manager.marketingMomentum - last.momentum,
-        },
-      });
-    }
+    setWorking(reverseTransferAction(working, last));
     setActions(actions.slice(0, -1));
   }
 

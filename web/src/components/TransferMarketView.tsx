@@ -7,12 +7,14 @@ import {
   generateFreeAgents,
   playerPrice,
   scoutReport,
+  applyTransferAction,
+  reverseTransferAction,
   type ScoutReport,
   type TransferAction,
 } from "../util/transfer-market";
 import { projectSeasonRunway } from "../util/finances";
 import { formatMoney } from "../util/money";
-import type { Career, TransferRecord } from "../persistence";
+import type { Career } from "../persistence";
 import type { Player } from "../types";
 import { Button, Group, Progress, SimpleGrid, Stack, Text } from "@mantine/core";
 import { Panel } from "./ui/Panel";
@@ -78,107 +80,26 @@ export default function TransferMarketView({
     return pool.filter((p) => !rosterIds.has(p.id));
   }, [pool, team]);
 
-  /** Lazy-init the working roster from the registry team on first
-   *  transaction. After the first buy/sell, working.userRoster is
-   *  always populated (and stays populated across undos — see briefing
-   *  decision: skipping the "non-empty content-equal to registry"
-   *  optimisation; userTeam fallback is functionally identical). */
-  function currentRosterCopy(): Player[] {
-    return working.userRoster.length === 0
-      ? team.roster.slice()
-      : working.userRoster.slice();
-  }
-
   function buy(player: Player) {
     const price = playerPrice(player, "buy");
-    const check = canBuy(working, price);
-    if (!check.ok) return;
-
-    const newRoster = [...currentRosterCopy(), player];
-    const newTransfers: TransferRecord[] = [
-      ...working.currentSeason.transfers,
-      { kind: "buy", playerName: player.name, position: player.position, price },
-    ];
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money - price,
-      },
-      userRoster: newRoster,
-      currentSeason: {
-        ...working.currentSeason,
-        transfers: newTransfers,
-      },
-    });
-    setActions([...actions, { kind: "buy", player, price }]);
+    if (!canBuy(working, price).ok) return;
+    const action = { kind: "buy" as const, player, price };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
   }
 
   function sell(player: Player) {
     const price = playerPrice(player, "sell");
-    const check = canSell(working, player.id);
-    if (!check.ok) return;
-
-    const newRoster = currentRosterCopy().filter((p) => p.id !== player.id);
-
-    // Lazy-prune userTactics.bench if the sold id is there. XI is
-    // hard-blocked by canSell so we never need to mutate it.
-    let newUserTactics = working.currentSeason.userTactics;
-    if (newUserTactics?.bench.includes(player.id)) {
-      newUserTactics = {
-        ...newUserTactics,
-        bench: newUserTactics.bench.filter((id) => id !== player.id),
-      };
-    }
-
-    const newTransfers: TransferRecord[] = [
-      ...working.currentSeason.transfers,
-      { kind: "sell", playerName: player.name, position: player.position, price },
-    ];
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money + price,
-      },
-      userRoster: newRoster,
-      currentSeason: {
-        ...working.currentSeason,
-        transfers: newTransfers,
-        userTactics: newUserTactics,
-      },
-    });
-    setActions([...actions, { kind: "sell", player, price }]);
+    if (!canSell(working, player.id).ok) return;
+    const action = { kind: "sell" as const, player, price };
+    setWorking(applyTransferAction(working, action));
+    setActions([...actions, action]);
   }
 
   function undoLast() {
-    if (actions.length === 0) return;
     const last = actions[actions.length - 1];
-
-    const baseRoster = currentRosterCopy();
-    const newRoster =
-      last.kind === "buy"
-        ? baseRoster.filter((p) => p.id !== last.player.id)
-        : [...baseRoster, last.player];
-    const moneyDelta = last.kind === "buy" ? last.price : -last.price;
-    // The lazy-prune of userTactics.bench on a sell is intentionally
-    // NOT reversed here: re-adding the player to the roster on undo
-    // doesn't put them back on the bench. Simpler than nesting undo
-    // state, and consistent with how a freshly bought player also
-    // arrives outside the bench — user uses BenchEditor to slot
-    // anyone into bench from the broader roster.
-    setWorking({
-      ...working,
-      manager: {
-        ...working.manager,
-        money: working.manager.money + moneyDelta,
-      },
-      userRoster: newRoster,
-      currentSeason: {
-        ...working.currentSeason,
-        transfers: working.currentSeason.transfers.slice(0, -1),
-      },
-    });
+    if (!last) return;
+    setWorking(reverseTransferAction(working, last));
     setActions(actions.slice(0, -1));
   }
 
