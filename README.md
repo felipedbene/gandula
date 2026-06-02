@@ -10,9 +10,9 @@ season fits in an evening, and a clear cause-and-effect line between the
 tactics you set and the result you read.
 
 **Play it now:** [gandula.debene.dev](https://gandula.debene.dev). Each new
-career drops you into a random Série B club in the Brasileirão Imaginário —
-try to climb. State lives in your browser's IndexedDB; no account, no
-tracking, no server.
+career drops you into a random **Série C** club at the bottom of a three-tier
+Brasileirão Imaginário — climb the pyramid, win the Copa, build a champion.
+State lives in your browser's IndexedDB; no account, no tracking, no server.
 
 Enjoying it? [Buy me a coffee on Ko-fi](https://ko-fi.com/felipedebene) — keeps
 the side-project lights on.
@@ -60,9 +60,12 @@ single most important property of the engine. See `core/tests/determinism.rs`.
 | `flamenguinho_fc.json`     | Balanced F442              | ~68           |
 | `ipanema_atletico.json`    | Defensive F352 underdog    | ~55           |
 
-…plus 14 more in `assets/teams/fictional/` — together they make up the
-17-team Brasileirão Imaginário the web app uses for its two-tier league
-(Série A 8 + Série B 9).
+These three are CLI playthings (and test fixtures). The **web app** instead
+uses a separate set of **60 fictional clubs** in `assets/teams/fictional/`,
+which make up the three-tier Brasileirão Imaginário (Série A / B / C × 20).
+Those 60 are generated deterministically from a public FC-25/SoFIFA dataset by
+`scripts/build-fictional-teams.sh` (the strongest clubs, with names/badges
+fictionalised) — see that script and `gandula-import-sofifa/`.
 
 ## Workspace layout
 
@@ -71,10 +74,17 @@ core/          — domain types, deterministic RNG wrapper, simulation engine
 cli/           — `gandula` binary
 wasm/          — wasm-bindgen wrapper around core for the browser
 web/           — Vite + React + Mantine career-mode app (responsive)
-assets/teams/  — sample team JSONs (3 at top + 14 in fictional/)
-scripts/       — build helpers (mainly the wasm→web pipeline)
+assets/teams/  — 3 sample CLI clubs at top + 60 fictional/ clubs (the web world)
+scripts/       — build helpers (wasm→web pipeline, fictional-team generation)
 ARCHITECTURE.md — tick loop + event-weighting formulas (for tuning)
+ROADMAP.md     — the (now largely shipped) plan and its history
 ```
+
+The division pyramid, economy, Copa and transfer market are **pure TypeScript**
+in `web/` — the Rust core stays a lean, division-agnostic match/season engine
+(`play_match`, `run_season`). There is a sibling repo, **gandula-rl**, that
+trains a reinforcement-learning agent against this same engine; its learned
+policy was distilled into the in-game rival "coaches" (see the web section).
 
 ## Building and testing
 
@@ -162,30 +172,46 @@ The same engine runs in the browser via WebAssembly. A Vite + React app lives
 in `web/`, with a Mantine-based UI that's responsive on both mobile and
 desktop. Full career-mode loop:
 
-- **Two divisions in parallel.** 17 fictional Brazilian clubs split into Série A
-  (top 8) and Série B (bottom 9). Each new career drops you into a *random*
-  Série B club (the season seed is randomized too — a fresh league every time).
+- **A three-tier pyramid.** 60 fictional clubs in Série A / B / C (20 each). A
+  new career starts you in a *random* Série C club (random season seed too — a
+  fresh world every time), so reaching the top means **two promotions**.
+- **Promotion / relegation across two boundaries.** 3 up / 3 down at A↔B and
+  B↔C each season; the middle tier shuffles both ways. Careers span many
+  seasons — your club plays whichever tier P/R left it in.
+- **Copa do Brasil.** A season-long 60-club knockout running alongside the
+  league, seeded by (evolved) strength. **Two-legged ties** decided on
+  aggregate → away goals → penalty shootout, with prize money per round.
+- **A full economy.** Per-round accrual of a home gate (fanbase × stadium
+  capacity × opponent draw × form), a tier-keyed TV floor, sponsorship,
+  win/draw bonuses, and Copa prizes, minus a strength-scaled wage bill — plus
+  end-of-season placement prizes and P/R bonuses. Go broke and you're **fired**.
+  A live **cash-runway** panel in the market projects your end-of-season balance
+  vs. the wage bill before you commit to a buy.
+- **Build-vs-buy levers.** Spend on **stadium expansion** (more gate capacity)
+  and **marketing campaigns** (grow the fanbase, with decaying momentum) — the
+  compounding flywheel behind the title.
+- **Transfer market.** A deterministic free-agent pool per `(career.seed,
+  year)`, with a rare-elite tail of title-grade players. Age-curve pricing,
+  roster bounds [14..25], scouting verdicts, session-level undo.
+- **Living, coached rivals.** Opponents age, retire, and bring through youth
+  each season — *and* now **coach themselves**: a policy trained in the sibling
+  **gandula-rl** repo was distilled into per-tier tactics + a transfer budget,
+  so AI clubs genuinely strengthen and the table evolves year to year.
+- **Career objectives.** A tier-aware goal ladder (survive → promote → win
+  Série A) with live met / on-track / at-risk status off your standings.
 - **Round-by-round reveal.** Pre-simulated season; rounds reveal one at a time
   with a tick-by-tick animation — a running match clock plus a live event feed
-  (goals, cards, subs). F5 mid-reveal autoloads cleanly into the saved state —
-  animation is lost, save intact.
+  that lingers on the big moments (goals, red cards, penalties). F5 mid-reveal
+  autoloads cleanly into the saved state — animation is lost, save intact.
 - **Tactics.** Per-season formation, mentality, tempo, pressing, width, plus
   starting XI + bench. Mid-season changes re-simulate the user's remaining
-  fixtures only; other matches stay frozen.
-- **Promotion / relegation.** Top 2 of Série B go up, bottom 2 of Série A come
-  down. Survives multi-season careers — your team plays whichever tier P/R
-  placed it.
-- **Finances.** Per-season net of ticket revenue (home opponent strength ×
-  factor), salaries (full-roster × player avg × factor), and a promotion/
-  relegation bonus or penalty. Money carries across seasons.
-- **Transfer market.** Between seasons, a deterministic free agent pool (2 GK,
-  4 DEF, 4 MID, 2 FWD) generated per `(career.seed, year)`. Buy / sell with
-  age-curve pricing and roster bounds [14..25]. Session-level undo.
-- **History.** Past seasons collapsed to compact summaries (champion, user's
-  position, P/R outcome, money delta, transfers).
+  fixtures only; other matches stay frozen, and the result is reproducible.
+- **History.** Past seasons collapse to compact summaries (champion, your
+  position, P/R outcome, Copa run, money delta, transfers).
 
-Schema is versioned (currently v5) with in-place migrations from every prior
-version — `loadCareer` cascades v2→v3→v4→v5 transparently.
+State is a schema-versioned `Career` in IndexedDB (currently **v10**) with
+additive in-place migrations — `loadCareer` cascades older saves forward
+transparently (the most recent step re-derives the Copa as two-legged).
 
 ### Running locally
 
@@ -199,8 +225,9 @@ cd web && npm run dev
 # Production bundle in web/dist/
 cd web && npm run build
 
-# Run the JS test suite (117 tests covering schema, persistence,
-# simulation parity, finances, transfer market, components).
+# Run the JS test suite (200+ tests covering schema/migrations, persistence,
+# simulation parity, finances, Copa, transfer market, rival coaching,
+# objectives, and components).
 cd web && npm run test:run
 ```
 
@@ -220,6 +247,9 @@ repo secret. To deploy by hand instead, run `npm run deploy` from `web/`.
 
 ## What's next
 
-See [`ROADMAP.md`](ROADMAP.md) for the structured plan. In short: **E.1.f**
-manager firing (next), then **E.2** player aging/evolution, **E.3** self-play
-rival AIs, plus a polish track (scout reports, live playback).
+The planned arc has largely shipped — three-tier pyramid, Copa do Brasil, the
+full economy, RL-distilled rival coaches, and a polish pass (career objectives,
+cash-runway warning, two-leg cup, livelier playback). See
+[`ROADMAP.md`](ROADMAP.md) for the full history; it's currently **parked**, with
+the remaining entries either deliberately deferred or a settled design decision
+rather than missing work.
