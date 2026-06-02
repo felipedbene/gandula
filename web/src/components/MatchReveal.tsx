@@ -149,7 +149,12 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
             </Text>
           </Stack>
           <Group gap={6} wrap="nowrap" align="center" style={{ flexShrink: 0 }}>
+            {/* key={score} remounts the number when its side scores, which
+                re-fires the goal-pulse CSS animation. Guarded at >0 so 0-0
+                doesn't pulse on first paint. */}
             <Text
+              key={runningHome}
+              className={runningHome > 0 ? "goal-pulse" : undefined}
               fw={800}
               fz={32}
               c={homeLeading ? "accent.4" : awayLeading ? "dimmed" : undefined}
@@ -161,6 +166,8 @@ export default function MatchReveal({ match, onComplete, skipAll }: MatchRevealP
               –
             </Text>
             <Text
+              key={runningAway}
+              className={runningAway > 0 ? "goal-pulse" : undefined}
               fw={800}
               fz={32}
               c={awayLeading ? "accent.4" : homeLeading ? "dimmed" : undefined}

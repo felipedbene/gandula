@@ -668,81 +668,105 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
     }
   }
 
+  function renderPhase() {
+    switch (phase.tag) {
+      case "loading":
+        return <Text c="dimmed">Carregando save…</Text>;
+      case "form":
+        return <NewSeasonForm onSubmit={run} onSupport={openSupport} />;
+      case "running":
+        return (
+          <CampeonatoEmCurso
+            career={phase.career}
+            onReset={resetCareer}
+            onPrepare={() => openPrepare(phase.career)}
+            onTactics={() => openTactics(phase.career)}
+            onViewOtherDivision={() => openOtherDivision(phase.career)}
+            onViewCopa={() => openCopa(phase.career)}
+            onOpenMarket={() => openTransferMarket(phase.career, "running")}
+          />
+        );
+      case "viewOtherDivision":
+        return (
+          <OtherDivisionView
+            career={phase.career}
+            onBack={() => backFromOtherDivision(phase.career)}
+          />
+        );
+      case "copa":
+        return (
+          <CopaView
+            career={phase.career}
+            onBack={() => backFromCopa(phase.career)}
+          />
+        );
+      case "prepare":
+        return (
+          <PrepareView
+            career={phase.career}
+            onPlay={playRound}
+            onBack={() => backFromPrepare(phase.career)}
+          />
+        );
+      case "revealing":
+        return (
+          <RevealRound
+            career={phase.career}
+            onDone={() => afterReveal(phase.career)}
+          />
+        );
+      case "tactics":
+        return (
+          <TacticsView
+            career={phase.career}
+            onApply={applyTactics}
+            onBack={() => backFromTactics(phase.career)}
+          />
+        );
+      case "finale":
+        return (
+          <SeasonFinale
+            career={phase.career}
+            onOpenMarket={() => openTransferMarket(phase.career, "finale")}
+            onAdvanceSeason={() => advanceToNextSeason(phase.career)}
+            onOpenHistory={() => openHistory(phase.career)}
+            onReset={resetCareer}
+          />
+        );
+      case "history":
+        return (
+          <HistoryView
+            career={phase.career}
+            onBack={() => backFromHistory(phase.career)}
+          />
+        );
+      case "transferMarket":
+        return (
+          <TransferMarketView
+            career={phase.career}
+            onClose={(c) => closeTransferMarket(c, phase.returnTo)}
+          />
+        );
+      case "fired":
+        return (
+          <FiredView
+            career={phase.career}
+            finalBalance={phase.finalBalance}
+            onNewCareer={resetCareer}
+          />
+        );
+      case "support":
+        return <SupportView onBack={backFromSupport} />;
+    }
+  }
+
   return (
     <>
-      {phase.tag === "loading" && <Text c="dimmed">Carregando save…</Text>}
-      {phase.tag === "form" && (
-        <NewSeasonForm onSubmit={run} onSupport={openSupport} />
-      )}
-      {phase.tag === "running" && (
-        <CampeonatoEmCurso
-          career={phase.career}
-          onReset={resetCareer}
-          onPrepare={() => openPrepare(phase.career)}
-          onTactics={() => openTactics(phase.career)}
-          onViewOtherDivision={() => openOtherDivision(phase.career)}
-          onViewCopa={() => openCopa(phase.career)}
-          onOpenMarket={() => openTransferMarket(phase.career, "running")}
-        />
-      )}
-      {phase.tag === "viewOtherDivision" && (
-        <OtherDivisionView
-          career={phase.career}
-          onBack={() => backFromOtherDivision(phase.career)}
-        />
-      )}
-      {phase.tag === "copa" && (
-        <CopaView career={phase.career} onBack={() => backFromCopa(phase.career)} />
-      )}
-      {phase.tag === "prepare" && (
-        <PrepareView
-          career={phase.career}
-          onPlay={playRound}
-          onBack={() => backFromPrepare(phase.career)}
-        />
-      )}
-      {phase.tag === "revealing" && (
-        <RevealRound
-          career={phase.career}
-          onDone={() => afterReveal(phase.career)}
-        />
-      )}
-      {phase.tag === "tactics" && (
-        <TacticsView
-          career={phase.career}
-          onApply={applyTactics}
-          onBack={() => backFromTactics(phase.career)}
-        />
-      )}
-      {phase.tag === "finale" && (
-        <SeasonFinale
-          career={phase.career}
-          onOpenMarket={() => openTransferMarket(phase.career, "finale")}
-          onAdvanceSeason={() => advanceToNextSeason(phase.career)}
-          onOpenHistory={() => openHistory(phase.career)}
-          onReset={resetCareer}
-        />
-      )}
-      {phase.tag === "history" && (
-        <HistoryView
-          career={phase.career}
-          onBack={() => backFromHistory(phase.career)}
-        />
-      )}
-      {phase.tag === "transferMarket" && (
-        <TransferMarketView
-          career={phase.career}
-          onClose={(c) => closeTransferMarket(c, phase.returnTo)}
-        />
-      )}
-      {phase.tag === "fired" && (
-        <FiredView
-          career={phase.career}
-          finalBalance={phase.finalBalance}
-          onNewCareer={resetCareer}
-        />
-      )}
-      {phase.tag === "support" && <SupportView onBack={backFromSupport} />}
+      {/* Keyed by phase tag so React remounts on every screen change, which
+          re-fires the enter animation. */}
+      <Box key={phase.tag} className="phase-enter">
+        {renderPhase()}
+      </Box>
       {error && (
         <Text c="red" style={{ whiteSpace: "pre-wrap" }}>
           {error}
