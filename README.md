@@ -197,33 +197,52 @@ goals pulse the scoreboard. Full career-mode loop:
   capacity × opponent draw × form), a tier-keyed TV floor, sponsorship,
   win/draw bonuses, and Copa prizes, minus a strength-scaled wage bill — plus
   end-of-season placement prizes and P/R bonuses. Go broke and you're **fired**.
-  A live **cash-runway** panel in the market projects your end-of-season balance
-  vs. the wage bill before you commit to a buy.
+- **A Finances screen, any time during the season.** Reachable from the running
+  panel: balance, the rest-of-season **cash-runway** projection, a
+  season-to-date cash ledger (Bilheteria / TV / Patrocínio / Bônus / Folha →
+  Líquido), the recurring TV + sponsorship floors, and the stadium/fanbase
+  status (next home game's demand vs. capacity → "lotando, expanda" /
+  "sobra cadeira").
 - **Build-vs-buy levers.** Spend on **stadium expansion** (more gate capacity)
   and **marketing campaigns** (grow the fanbase, with decaying momentum) — the
-  compounding flywheel behind the title.
-- **Transfer market.** A deterministic free-agent pool per `(career.seed,
-  year)`, with a rare-elite tail of title-grade players. Age-curve pricing,
-  roster bounds [14..25], scouting verdicts, session-level undo.
+  compounding flywheel behind the title. Both live on the Finances screen
+  (transactional: draft + undo + confirm).
+- **Transfer market.** Players-only now (stadium/marketing moved to Finances):
+  a deterministic free-agent pool per `(career.seed, year)`, with a rare-elite
+  tail of title-grade players. Age-curve pricing, roster bounds [14..25],
+  scouting verdicts, session-level undo.
 - **Living, coached rivals.** Opponents age, retire, and bring through youth
   each season — *and* now **coach themselves**: a policy trained in the sibling
   **gandula-rl** repo was distilled into per-tier tactics + a transfer budget,
   so AI clubs genuinely strengthen and the table evolves year to year.
 - **Career objectives.** A tier-aware goal ladder (survive → promote → win
   Série A) with live met / on-track / at-risk status off your standings.
-- **Round-by-round reveal.** Pre-simulated season; rounds reveal one at a time
-  with a tick-by-tick animation — a running match clock plus a live event feed
-  that lingers on the big moments (goals, red cards, penalties). F5 mid-reveal
-  autoloads cleanly into the saved state — animation is lost, save intact.
+- **Round-by-round reveal.** Other matches are pre-simulated and reveal at
+  deterministic moments; the *user's* match runs live in two halves with a
+  tick-by-tick animation — a running match clock plus a live event feed that
+  lingers on the big moments (goals, red cards, penalties). F5 mid-reveal
+  autoloads cleanly into the saved state.
+- **Half-time tactics.** The user's match pauses at the interval on a closed
+  scoreline; you can retune the tactical dials for the second half while an
+  **analytic projection** (expected possession + per-side pressure, no projected
+  score) updates live and already folds in the rival's symmetric response.
+  Confirming runs the second half from the exact RNG stream the first half left
+  off; the chosen tactic is persisted per round so a re-sim / reload reproduces
+  the same 90'. Built on a split engine (`simulate_first_half` /
+  `simulate_second_half` over a serializable `HalfTimeSnapshot`) — leaving the
+  tactic unchanged is byte-for-byte identical to the old one-shot `simulate`.
 - **Tactics.** Per-season formation, mentality, tempo, pressing, width, plus
-  starting XI + bench. Mid-season changes re-simulate the user's remaining
+  starting XI + bench. The same analytic projection (possession + pressure) is
+  shown live in pre-match prep as you edit, computed from the kickoff state
+  against the next opponent. Mid-season changes re-simulate the user's remaining
   fixtures only; other matches stay frozen, and the result is reproducible.
 - **History.** Past seasons collapse to compact summaries (champion, your
   position, P/R outcome, Copa run, money delta, transfers).
 
-State is a schema-versioned `Career` in IndexedDB (currently **v10**) with
+State is a schema-versioned `Career` in IndexedDB (currently **v11**) with
 additive in-place migrations — `loadCareer` cascades older saves forward
-transparently (the most recent step re-derives the Copa as two-legged).
+transparently (v11 adds optional per-round half-time tactics; absent = no
+half-time change).
 
 ### Running locally
 
@@ -265,11 +284,15 @@ objectives, cash-runway warning, two-leg cup, livelier playback). That part of
 [`ROADMAP.md`](ROADMAP.md) is **parked**, with the remaining entries either
 deliberately deferred or a settled design decision rather than missing work.
 
-A **modern UI redesign** (on the `redesign/modern-sporty` branch) is essentially
-complete: the dark-theme foundation, generated club crests, the "which team am
-I?" identity pass, state-driven scorelines, motion & feedback (phase
-transitions, button loading states, goal-pulse), mobile-native layout (standings
-row-cards + fixed bottom nav), and a responsive formation pitch for lineup
-editing + opponent scouting. Deliberately deferred for a later slice:
-drag-and-drop on the pitch, a tactics board with arrows, and radar charts in the
-transfer market.
+The **modern UI redesign** shipped: dark-theme foundation, generated club
+crests, the "which team am I?" identity pass, state-driven scorelines, motion &
+feedback (phase transitions, button loading states, goal-pulse), mobile-native
+layout (standings row-cards + fixed bottom nav), and a responsive formation
+pitch for lineup editing + opponent scouting. Deferred for a later slice:
+drag-and-drop on the pitch and a tactics board with arrows.
+
+More recently: **half-time tactics** with a live analytic projection (engine
+split into first/second half over a serializable snapshot), the **pre-match
+projection** sharing the same indicators, and a **Finances screen** (cash
+runway, season ledger, recurring TV/sponsorship, and the build-vs-buy levers
+moved out of the transfer market).

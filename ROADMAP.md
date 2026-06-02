@@ -4,14 +4,16 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 **L** large. Items are grouped by epic; the suggested order is at the bottom.
 **Shipped history is below the active work.**
 
-> **Status (2026-06): gameplay roadmap parked; UI redesign essentially done.**
+> **Status (2026-06): gameplay roadmap parked; UI + analytics layers shipping.**
 > The full gameplay arc shipped — three-tier pyramid → Copa do Brasil → full
 > economy → RL-distilled rival coaches → objectives / cash-runway / two-leg cup /
-> playback polish. A **presentational** modern sporty dark-UI redesign then
-> shipped on `redesign/modern-sporty` (foundation, generated crests + team
-> identity, state-driven scorelines, motion & feedback, mobile-native layout,
-> formation pitch — see Polish); only later-slice extras (pitch drag-and-drop,
-> tactics board, market radar charts) remain deferred. The
+> playback polish. On top of that, a **modern sporty dark-UI redesign** (crests +
+> team identity, state-driven scorelines, motion, mobile-native layout, formation
+> pitch), then an **analytics/finance layer**: half-time tactics with a live
+> projection (engine split into first/second half), the matching pre-match
+> projection, and a during-season **Finances screen** (cash runway, season ledger,
+> recurring TV/sponsorship, build-vs-buy levers moved out of the market). All in
+> Polish below. Deferred extras: pitch drag-and-drop, a tactics board. The
 > handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
 > not forgotten:
 >   - **E.4.b — Title affordability**: a parent header; its children b.1–b.7 all
@@ -302,8 +304,46 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
     lineup editor (tap a dot → same-position candidates → swap-perfect, mirroring
     `LineupEditor.swap`); read-only in PrepareView to scout the opponent's shape.
     Covered by `FormationPitch.test.tsx`.
-  - _Deferred (later slice):_ pitch drag-and-drop, a tactics board with arrows,
-    transfer-market radar charts.
+  - _Deferred (later slice):_ pitch drag-and-drop, a tactics board with arrows.
+- [x] **Half-time tactics** · _L, core + wasm + web_ — **shipped.** The user's
+  match reveals in two halves with a real interval: it pauses at 45' on a closed
+  scoreline, the player retunes the tactical dials for the second half, and an
+  analytic projection (expected possession + per-side pressure, no projected
+  score) updates live, already folding in the rival's symmetric per-tier
+  response. Built as a 3-part sub-fio (PR #22):
+  - **Engine split** — `simulate` becomes `simulate_first_half` (→ a
+    serializable `HalfTimeSnapshot` carrying the full ChaCha8 RNG state incl.
+    its u128 word_pos) + `simulate_second_half`, which resumes the EXACT stream
+    (no re-seed). Proven byte-identical to the old one-shot by a property test
+    over many seeds with a serde round-trip, a pinned penalty-at-45 case, and a
+    real serde-wasm-bindgen round-trip test (`wasm-pack test --node`).
+  - **Analytic projection** — `project_second_half` composes the SAME
+    possession/event/shot helpers the live tick samples (extracted to
+    `strength.rs` so engine and projection can't drift); RNG-free, monotonicity-
+    tested. A 45' penalty is taken before the break (the one deliberate
+    behaviour change; split↔one-shot equivalence preserved).
+  - **Schema + UI** — schema **v10→v11** adds optional per-round
+    `halftimeTactics`; `resimulateFromRound` replays the user's match in two
+    phases so a re-sim / F5 reproduces the steered 90'. UI in `UserMatchReveal`
+    + `HalftimePanel`, MatchReveal gaining a pause/resume seam at 45'.
+- [x] **Pre-match projection** · _S, core + wasm + web_ — **shipped (PR #24).**
+  The same analytic indicators (possession + per-side pressure) shown live in
+  pre-match prep as the user edits tactics, from the kickoff state (no snapshot):
+  `tick::kickoff_strength` + `project_match` reuse the shared helpers, so the
+  projection can't drift from the engine; `current_strength` untouched → engine
+  tests unchanged. `ProjectionIndicators` extracted and shared with
+  `HalftimePanel`. Monotonicity + mirrored-symmetry tested.
+- [x] **Finances screen** · _M, web_ — **shipped (PR #25).** A screen reachable
+  during the running phase, surfacing what was locked in the between-seasons
+  market: balance, the rest-of-season cash-runway projection, a season-to-date
+  cash ledger (`seasonToDateLedger`: the 5 streams summed over played rounds,
+  `net == Σ roundCashDelta` — anti-drift), the recurring TV + sponsorship floors,
+  and stadium/fanbase with next-home demand vs. capacity (`matchDemand` /
+  `nextHomeDemand`). The build-vs-buy levers (stadium expansion + marketing)
+  **moved here** from the transfer market (now players-only); the screen is
+  transactional with a draft + undo + confirm. `applyTransferAction` /
+  `reverseTransferAction` extracted to one pure source shared by both screens.
+  All finances.ts changes are pure additions — no behaviour moved.
 
 ## Suggested order
 
