@@ -15,19 +15,20 @@ pub use tick::{HalfTimeSnapshot, PendingPenalty};
 /// Simulate a single match end-to-end. Pure function of `(home, away, seed)` —
 /// identical inputs produce a byte-identical `Match`.
 ///
-/// Now a thin composition of [`simulate_first_half`] + [`simulate_second_half`];
-/// the half-split property test proves this is byte-for-byte identical to the
-/// former one-shot implementation.
+/// A thin composition of [`simulate_first_half`] + [`simulate_second_half`].
+/// Byte-identical to the former one-shot implementation for every match EXCEPT
+/// the rare one that earns a penalty exactly at 45': that kick is now taken
+/// before the break (closed half-time score) rather than at minute 46, which
+/// reorders RNG consumption. See the half-split tests.
 pub fn simulate(home: &Team, away: &Team, seed: u64) -> Result<Match, GandulaError> {
     let snap = simulate_first_half(home, away, seed)?;
     simulate_second_half(snap, home, away)
 }
 
-/// Run minutes 1..=45 plus the half-time narration, then capture a serializable
-/// [`HalfTimeSnapshot`] at the exact RNG stream position the second half resumes
-/// from. A penalty awarded at 45' is left pending in the snapshot — it resolves
-/// on the first tick of the second half (minute 46), exactly as in the former
-/// one-shot loop (no force-resolve at the break in this commit).
+/// Run minutes 1..=45, force-resolve any penalty pending at 45' (so the score
+/// is closed at the break), narrate half-time, then capture a serializable
+/// [`HalfTimeSnapshot`] at the exact RNG stream position the second half
+/// resumes from.
 pub fn simulate_first_half(
     home: &Team,
     away: &Team,
@@ -43,6 +44,12 @@ pub fn simulate_first_half(
         tick::tick(&mut state, &mut rng, minute);
         manager::run_managers(&mut state, &mut rng, minute);
     }
+    // A penalty awarded at 45' is taken NOW, before the break, so the half-time
+    // score is closed (the half-time UI shows a real scoreline). This reorders
+    // RNG consumption vs. the former one-shot loop for that rare case — see the
+    // half-split tests for the re-baselined equivalence.
+    tick::force_resolve_pending_penalty(&mut state, &mut rng, 45);
+
     let half_text = narration::narrate_half_time(
         &mut rng,
         &state.home.name,

@@ -106,11 +106,11 @@ fn wasm_split_matches_oneshot_basic() {
 }
 
 #[wasm_bindgen_test]
-fn wasm_split_matches_oneshot_with_pending_penalty() {
-    // Seed 687 leaves a penalty pending at 45' (see core/tests/half_split.rs).
-    // This is the path where the snapshot's pending_penalty AND the RNG state
-    // both must survive the BigInt boundary for the kick to resolve identically
-    // at minute 46.
+fn wasm_split_matches_oneshot_with_penalty_at_45() {
+    // Seed 687 awards a penalty exactly at 45', force-resolved before the break
+    // (see core/tests/half_split.rs). This is the densest first-half log + RNG
+    // path; it must survive the serde-wasm-bindgen BigInt boundary and still
+    // match the one-shot byte-for-byte.
     let home = team_with_bench("Home", 1, 72);
     let away = team_with_bench("Away", 2, 64);
     assert_wasm_split_matches_oneshot(&home, &away, 687);

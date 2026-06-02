@@ -5,15 +5,16 @@
 //!
 //! Coverage is deliberately layered:
 //!   - a property test over many seeds (the common path),
-//!   - a MANDATORY named case (seed 687) whose half-time snapshot carries a
-//!     `pending_penalty` — the riskiest path (new code that only the snapshot
-//!     exercises), pinned so it can never be skipped by chance, and
-//!   - a hand-built pending-penalty snapshot round-tripped directly, asserting
-//!     the penalty resolves identically after serialization.
+//!   - a MANDATORY named case (seed 687) where a penalty is awarded exactly at
+//!     45' and force-resolved before the break — pinned so a statistical sweep
+//!     can't skip the riskiest path, and
+//!   - a hand-carried pending-penalty snapshot round-tripped directly, asserting
+//!     it resolves identically after serialization (the field is retained even
+//!     though the engine no longer populates it).
 
 use gandula_core::{
-    Attributes, Formation, HalfTimeSnapshot, Mentality, Player, PlayerId, Position, Pressing,
-    Side, Tactics, Team, TeamId, Tempo, Width, simulate, simulate_first_half,
+    Attributes, Formation, HalfTimeSnapshot, Mentality, PendingPenalty, Player, PlayerId, Position,
+    Pressing, Side, Tactics, Team, TeamId, Tempo, Width, simulate, simulate_first_half,
     simulate_second_half,
 };
 
@@ -93,43 +94,69 @@ fn split_is_byte_identical_to_oneshot_over_many_seeds() {
     }
 }
 
-/// MANDATORY coverage of the pending-penalty-at-45' path. Seed 687 (found by an
-/// offline scan over team_with_bench(72 vs 64)) awards a penalty exactly at
-/// minute 45, so its half-time snapshot carries `pending_penalty = Some(..)`
-/// that must survive serialization and resolve at minute 46 — the single most
-/// fragile path, and the one a purely statistical seed sweep can silently miss.
+/// MANDATORY coverage of the penalty-at-45' path. Seed 687 (found by an offline
+/// scan over team_with_bench(72 vs 64)) awards a penalty exactly at minute 45.
+/// As of commit 3 that kick is FORCE-RESOLVED before the break, so the
+/// half-time score is closed: the snapshot carries no pending penalty, and the
+/// first-half log ends with PenaltyAwarded → (Goal|PenaltyMissed) → HalfTime,
+/// all at minute 45. Still the single most fragile path — pinned so a purely
+/// statistical seed sweep can't silently skip it.
 #[test]
-fn pending_penalty_at_halftime_round_trips_byte_identical() {
+fn penalty_at_45_is_resolved_before_the_break() {
     let home = team_with_bench("Home", 1, 72);
     let away = team_with_bench("Away", 2, 64);
     let seed = 687u64;
 
     let snap = simulate_first_half(&home, &away, seed).expect("first half");
     assert!(
-        snap.pending_penalty.is_some(),
-        "seed {seed} is pinned BECAUSE it has a penalty pending at 45'; if the engine \
-         tuning changed and this no longer holds, re-scan for a new pending-at-45 seed \
-         rather than deleting this assertion — the round-trip path below must stay covered"
+        snap.pending_penalty.is_none(),
+        "seed {seed}'s 45' penalty must be force-resolved before the break, leaving \
+         no pending kick in the snapshot"
     );
+    // The award AND its outcome are both in the first-half log at minute 45.
+    let kinds_at_45: Vec<String> = snap
+        .first_half_events
+        .iter()
+        .filter(|e| e.minute == 45)
+        .map(|e| format!("{:?}", e.kind))
+        .collect();
+    assert!(
+        kinds_at_45.iter().any(|k| k.contains("PenaltyAwarded")),
+        "expected a PenaltyAwarded at 45' for seed {seed}; got {kinds_at_45:?} \
+         (if engine tuning changed, re-scan for a new penalty-at-45 seed rather \
+         than deleting this — the path must stay covered)"
+    );
+    assert!(
+        kinds_at_45
+            .iter()
+            .any(|k| k.contains("Goal") || k.contains("PenaltyMissed")),
+        "the 45' penalty must be TAKEN before the break (Goal or PenaltyMissed at \
+         45'); got {kinds_at_45:?}"
+    );
+    // And the split is still byte-identical to the one-shot for this seed: the
+    // force-resolve lives inside simulate_first_half, which simulate() also
+    // calls, so the equivalence is preserved — only the snapshot's content moved.
     assert_split_matches_oneshot(&home, &away, seed);
 }
 
-/// Hand-build a snapshot whose penalty is pending, round-trip it, and assert the
-/// reconstructed snapshot resolves into the identical second half. Belt-and-
-/// suspenders alongside the seed-pinned case: it exercises the pending field
-/// directly rather than relying on the engine to produce it.
+/// The snapshot's `pending_penalty` field is retained (the engine no longer
+/// populates it, but a caller may hand-build one). Assert a hand-carried
+/// pending penalty still resolves into an identical second half whether the
+/// snapshot is used directly or after a serde round-trip — proving the field +
+/// the RNG that resolves it at 46' round-trip exactly.
 #[test]
 fn handbuilt_pending_penalty_snapshot_resolves_identically() {
     let home = team_with_bench("Home", 1, 72);
     let away = team_with_bench("Away", 2, 64);
-    let seed = 687u64; // known to leave a pending penalty at 45'
 
-    let snap = simulate_first_half(&home, &away, seed).expect("first half");
-    assert!(matches!(snap.pending_penalty, Some(p) if matches!(p.side, Side::Home | Side::Away)));
+    // Start from a real snapshot, then inject a pending penalty by hand (the
+    // taker is the home GK's slot-1 id — any valid on-field player works).
+    let mut snap = simulate_first_half(&home, &away, 7).expect("first half");
+    snap.pending_penalty = Some(PendingPenalty {
+        side: Side::Home,
+        taker: snap.home_current_xi[10], // a forward slot
+    });
 
-    // Resolve once from the live snapshot, once from a serde round-trip of it,
-    // and assert the two second halves are byte-identical — i.e. the pending
-    // penalty (and the RNG that resolves it at 46') round-trips exactly.
     let direct = simulate_second_half(snap.clone(), &home, &away).expect("direct second half");
     let json = serde_json::to_string(&snap).expect("ser snapshot");
     let restored: HalfTimeSnapshot = serde_json::from_str(&json).expect("de snapshot");
@@ -138,7 +165,7 @@ fn handbuilt_pending_penalty_snapshot_resolves_identically() {
     assert_eq!(
         serde_json::to_string(&direct).expect("ser direct"),
         serde_json::to_string(&via_serde).expect("ser via_serde"),
-        "a pending penalty must resolve identically whether the snapshot is used \
-         directly or after a serde round-trip"
+        "a hand-carried pending penalty must resolve identically whether the \
+         snapshot is used directly or after a serde round-trip"
     );
 }

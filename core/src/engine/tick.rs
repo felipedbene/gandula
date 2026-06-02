@@ -227,9 +227,10 @@ pub struct HalfTimeSnapshot {
     pub away_bench_used: Vec<bool>,
     pub home_subs_used: u8,
     pub away_subs_used: u8,
-    /// A penalty awarded at 45' that hasn't been taken yet — it resolves on the
-    /// first tick of the second half (minute 46), exactly as in the one-shot
-    /// `simulate`. Not force-resolved at the break in this commit.
+    /// A penalty pending across the break. `simulate_first_half` force-resolves
+    /// any 45'-penalty before snapshotting, so this is `None` for snapshots it
+    /// produces; the field is retained so a hand-built snapshot can still carry
+    /// a pending kick into the second half if a caller wants that.
     pub pending_penalty: Option<PendingPenalty>,
     /// All first-half events, including the synthetic `HalfTime` marker.
     pub first_half_events: Vec<MatchEvent>,
@@ -277,6 +278,25 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
         resolve_shot(state, rng, minute, attacker_side);
     } else if r < shot_p + foul_p {
         resolve_foul(state, rng, minute, attacker_side);
+    }
+}
+
+/// Force-resolve a penalty that was awarded at 45' but hasn't been taken,
+/// *before* the half-time break — so the half-time score is closed (the UI
+/// shows a real scoreline at the interval) rather than leaving the kick to
+/// straddle into minute 46. Consumes the RNG for the kick at the given minute
+/// and clears `pending_penalty`. No-op if nothing is pending.
+///
+/// This is the one deliberate behavior change of the half-split work: it
+/// reorders RNG consumption relative to the former one-shot `simulate` for the
+/// rare match that earns a penalty exactly at 45'. See `half_split.rs`.
+pub(crate) fn force_resolve_pending_penalty(
+    state: &mut MatchState,
+    rng: &mut MatchRng,
+    minute: u16,
+) {
+    if let Some(pen) = state.pending_penalty.take() {
+        resolve_penalty(state, rng, minute, pen);
     }
 }
 
