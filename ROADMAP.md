@@ -11,7 +11,9 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 > shipped on `redesign/modern-sporty` (foundation, generated crests + team
 > identity, state-driven scorelines, motion & feedback, mobile-native layout,
 > formation pitch — see Polish); only later-slice extras (pitch drag-and-drop,
-> tactics board, market radar charts) remain deferred. The
+> tactics board, market radar charts) remain deferred. A **half-time tactics**
+> sub-fio (engine split + analytic projection + live interval UI, schema v11)
+> then shipped on `motor/half-split-1-simulate-split` (PR #22 — see Polish). The
 > handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
 > not forgotten:
 >   - **E.4.b — Title affordability**: a parent header; its children b.1–b.7 all
@@ -273,6 +275,30 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
   lance, and goals/red cards/penalties render larger with glyphs (◎ penalty, ✗
   miss). Purely presentational (MatchReveal.tsx) — no persistence/determinism
   impact.
+- [x] **Half-time tactics** · _L, core + wasm + web_ — **shipped.** The user's
+  match reveals in two halves with a real interval: it pauses at 45' on a closed
+  scoreline, the player retunes the tactical dials for the second half, and an
+  analytic projection (expected possession + per-side pressure, no projected
+  score) updates live, already folding in the rival's symmetric per-tier
+  response. Shipped as a 3-part sub-fio:
+  - **Engine split** — `simulate` becomes `simulate_first_half` (→ a
+    serializable `HalfTimeSnapshot` carrying the full ChaCha8 RNG state, incl.
+    its u128 word_pos) + `simulate_second_half`, which resumes the EXACT stream
+    (no re-seed). Proven byte-identical to the old one-shot by a property test
+    over many seeds with a serde round-trip, plus a mandatory pinned
+    penalty-at-45 case and a real serde-wasm-bindgen round-trip test (`wasm-pack
+    test --node`). rand_chacha "serde" feature enabled.
+  - **Analytic projection** — `project_second_half` composes the SAME
+    possession/event/shot helpers the live tick samples (extracted to
+    `strength.rs` so engine and projection can't drift); RNG-free expected
+    values, monotonicity-tested.
+  - **Force-resolve + UI** — a 45' penalty is taken before the break (the one
+    deliberate behaviour change; split↔one-shot equivalence preserved). Schema
+    **v10→v11** adds optional per-round `halftimeTactics`; `resimulateFromRound`
+    replays the user's match in two phases so a re-sim / F5 reproduces the
+    half-time-steered 90' deterministically. WASM bindings `play_first_half` /
+    `play_second_half` / `project_second_half_js`; UI in `UserMatchReveal` +
+    `HalftimePanel`, with MatchReveal gaining a pause/resume seam at 45'.
 - [x] **UI redesign — modern sporty dark UI** · _L, web_ — **shipped.** A
   presentational overhaul on `redesign/modern-sporty`, in independently-mergeable
   slices; no schema/determinism impact throughout. Slices:

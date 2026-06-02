@@ -211,19 +211,31 @@ goals pulse the scoreboard. Full career-mode loop:
   so AI clubs genuinely strengthen and the table evolves year to year.
 - **Career objectives.** A tier-aware goal ladder (survive → promote → win
   Série A) with live met / on-track / at-risk status off your standings.
-- **Round-by-round reveal.** Pre-simulated season; rounds reveal one at a time
-  with a tick-by-tick animation — a running match clock plus a live event feed
-  that lingers on the big moments (goals, red cards, penalties). F5 mid-reveal
-  autoloads cleanly into the saved state — animation is lost, save intact.
+- **Round-by-round reveal.** The other matches are pre-simulated and reveal at
+  deterministic moments; the *user's* match runs live in two halves (see
+  half-time tactics) with a tick-by-tick animation — a running match clock plus
+  a live event feed that lingers on the big moments (goals, red cards,
+  penalties). F5 mid-reveal autoloads cleanly into the saved state.
+- **Half-time tactics.** The user's match pauses at the interval on a closed
+  scoreline (a penalty awarded at 45' is taken before the break). You can change
+  the tactical dials for the second half while an **analytic projection**
+  (expected possession + per-side pressure, no projected score) updates live and
+  already folds in the rival's symmetric response. Confirming runs the second
+  half from the exact RNG stream the first half left off — and the chosen tactic
+  is persisted per round so a re-sim / reload reproduces the same 90'. Built on a
+  split engine (`simulate_first_half` / `simulate_second_half` over a
+  serializable `HalfTimeSnapshot`); leaving the tactic unchanged is byte-for-byte
+  identical to the old one-shot `simulate`.
 - **Tactics.** Per-season formation, mentality, tempo, pressing, width, plus
   starting XI + bench. Mid-season changes re-simulate the user's remaining
   fixtures only; other matches stay frozen, and the result is reproducible.
 - **History.** Past seasons collapse to compact summaries (champion, your
   position, P/R outcome, Copa run, money delta, transfers).
 
-State is a schema-versioned `Career` in IndexedDB (currently **v10**) with
+State is a schema-versioned `Career` in IndexedDB (currently **v11**) with
 additive in-place migrations — `loadCareer` cascades older saves forward
-transparently (the most recent step re-derives the Copa as two-legged).
+transparently (v11 adds optional per-round half-time tactics; absent = no
+half-time change).
 
 ### Running locally
 
