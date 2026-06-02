@@ -15,19 +15,14 @@ Forward-looking plan for Gandula. Effort tags: **S** small, **M** medium,
 > recurring TV/sponsorship, build-vs-buy levers moved out of the market), and
 > **negotiable TV/sponsorship contracts** (sign offers; four ways to lose a deal
 > — relegation, performance clause, term expiry, mid-season scandal). All in
-> Polish below. Deferred extras: pitch drag-and-drop, a tactics board. The
-> handful of items still showing `[ ]`/`[~]` below are **deliberately parked**,
-> not forgotten:
->   - **E.4.b — Title affordability**: a parent header; its children b.1–b.7 all
->     shipped. Effectively done.
->   - **E.3.c — Self-play `[~]`**: its outcome (policy-distilled rivals) shipped.
->   - **E.4.a — Balance / difficulty presets**: a *design decision*, not missing
->     code. E.6 measured the economy as no-bankruptcy / title-reachable and that
->     was accepted as the intended difficulty; presets are a "if we want knobs"
->     nice-to-have.
->   - **E.6 — RL CI regression guard `[~]`**: measurement done; only the optional
->     auto-run-on-finances-change CI wiring is open.
->   - **E.3.c — State championship**: long-standing `DEFERRED` scope-trap.
+> Polish below. Deferred extras: pitch drag-and-drop, a tactics board. After a
+> cleanup pass, only TWO genuinely-open items remain below — everything else
+> that was once `[ ]`/`[~]` is now `[x]` (shipped or a settled decision):
+>   - **E.6 — RL regression guard `[~]`**: the measurement is done and the
+>     economy decision made; the *only* open piece is the optional CI wiring
+>     (auto-re-run on finances changes).
+>   - **E.3.c — State championship `[ ]`**: long-standing `DEFERRED` scope-trap,
+>     intentionally not built.
 >
 > Optional, off-roadmap follow-ups if we ever resume: a title-stronger RL policy
 > to re-distill (rivals consolidate in Série A today), and syncing the gandula-rl
@@ -111,11 +106,19 @@ starting-money knob (b.3), the player-controlled build-vs-buy levers
 (b.4–b.7: stadium / fanbase / marketing / sponsorship / momentum), and the
 richer SoFIFA market (E.4.c).
 
-- [ ] **E.4.a — Balance pass / difficulty tiers** · _M, core_
-  Decide intent: if greedy-broke-91% is too punishing, loosen per-round accrual
-  / starting cash; if intended, keep it but make solvency teachable (E.5).
-  Either way, expose difficulty presets backed by _measured_ survival rates.
-- [ ] **E.4.b — Title affordability** · _M, core_
+- [x] **E.4.a — Balance pass / difficulty tiers** · _M, core_ — **decided, not
+  a pending build.** The intent question was answered by the E.6 measurement:
+  the post-E.4 economy is no-bankruptcy and title-reachable (~5–10 seasons), and
+  that was *accepted as the intended difficulty* rather than chasing
+  solvency-as-skill. Difficulty presets remain an optional "if we ever want
+  knobs" nice-to-have, not missing work.
+- [x] **E.4.b — Title affordability** · _M, core_ — **shipped** (a parent
+  header; its children b.1–b.7 all landed — see below).
+  A 4.7% title ceiling over 20 seasons suggests the economy can't easily fund a
+  champion. Today the only revenue is the home gate (`opponentStrength × 1000`,
+  home games only) and the only standings-linked money is the step-function
+  promotion bonus (500k) / relegation penalty (200k) — nothing rewards results
+  _within_ a division. Add money so squad-building compounds:
   A 4.7% title ceiling over 20 seasons suggests the economy can't easily fund a
   champion. Today the only revenue is the home gate (`opponentStrength × 1000`,
   home games only) and the only standings-linked money is the step-function
@@ -236,11 +239,14 @@ richer SoFIFA market (E.4.c).
   wiring this as an automatic **CI regression guard** (re-run on finances
   changes, flag firing/title drift) and reporting peak/final `fanbase`.
 
-## E.3.c — Self-play search (open)
+## E.3.c — Self-play search (delivered via distillation)
 
-E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
+E.3.a/b shipped (see Shipped). The "learned per-club managers" goal was
+delivered by distilling the gandula-rl policy into the rival coaches.
 
-- [~] **E.3.c — Self-play search** · _L, core + training_
+- [x] **E.3.c — Self-play search** · _L, core + training_ — **delivered.** Its
+  outcome (credible learned opponents) shipped via policy distillation rather
+  than a from-scratch `ManagerConfig` search — see E.3.c.1/E.3.c.2 below.
   Tune configs by simulated fitness (win rate), persist the winners. The
   research-y endgame; benefits from the now-richer E.2 world.
 
@@ -373,29 +379,26 @@ E.3.a/b shipped (see Shipped). The open piece is learned per-club managers.
 
 ## Suggested order
 
-Shipped: ~~E.1.f firing~~, ~~scout reports~~, ~~E.2.a/a.2/b/c living world~~,
-~~E.3.a ManagerConfig~~, ~~E.3.b per-club styles~~ ✓
+The original priority list has almost entirely shipped — kept here struck-
+through for the record. Shipped ✓:
+~~E.1.f firing~~ · ~~scout reports~~ · ~~E.2.a/a.2/b/c living world~~ ·
+~~E.3.a ManagerConfig~~ · ~~E.3.b per-club styles~~ ·
+~~E.4.a balance (decided)~~ · ~~E.4.b.3 starting money~~ ·
+~~E.4.b.1/2 match + position prizes~~ ·
+~~E.4.b.4–7 stadium / marketing / sponsorship / momentum~~ ·
+~~E.5.a cash-runway warning~~ · ~~E.5.b objectives~~ ·
+~~E.3.c.1/2 policy-distilled rivals~~.
 
-Active, in priority order:
+Genuinely still open (low priority — the gameplay arc is parked):
 
-1. **E.4.a — balance pass / difficulty tiers** — decide intent; conditions everything below. ← next
-2. **E.4.b.3 — more starting money** — cheapest affordability knob, quick A/B.
-3. **E.4.b.1 + E.4.b.2 — match + position prizes** — performance revenue and the title flywheel.
-4. **E.4.c — richer market (SoFIFA)** — the means lever; pair with E.4.b or strong players sit unbought.
-5. **E.6 — RL balance-regression guard** — lock balance in once tuned (re-run after each lever).
-6. **E.5.a — cash-runway warning** — addresses the dominant failure (going broke).
-7. **Commercial levers (sequence, don't batch):** `fanbase` substrate (with RL
-   observation + eval metric wired in) → **E.4.b.4 stadium** (supply) →
-   **E.4.b.5 marketing** (demand) → **E.4.b.6 sponsorship** (floor) →
-   **E.4.b.7 momentum** (bounded form multiplier). Player-controlled,
-   compounding; the build-vs-buy depth layer.
-8. ~~**E.3.c.1/E.3.c.2 — policy-distilled rivals**~~ ✓ shipped — credible
-   opponents via the distilled gandula-rl policy (tactics + buy).
-9. _Then:_ E.5.b objectives, Polish, (optional) a title-stronger policy to re-distill.
+1. **E.4.c — richer market (SoFIFA)** — pull real FC25 attribute distributions
+   into the free-agent pool, if the synthetic rare-elite tail proves
+   insufficient under the gandula-rl FIO A/B. The means lever.
+2. **E.6 — RL guard CI wiring** — auto-re-run the gandula-rl eval on finances
+   changes and flag firing/title drift. (The measurement itself is done.)
+3. **E.3.c — State championship** — `DEFERRED` scope-trap; only if ever desired.
 
-Dependencies: E.4.a should land before the other E.4 levers + E.6, since the
-balance decision sets their targets. Self-play ← `Manager`-trait extraction +
-ideally E.2. The gandula-rl repo is the measurement substrate for E.4/E.6.
+The gandula-rl repo is the measurement substrate for E.4.c / E.6.
 
 ## Shipped
 
