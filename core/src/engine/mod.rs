@@ -3,11 +3,12 @@ mod narration;
 mod strength;
 mod tick;
 
-use crate::domain::{Match, MatchEvent, MatchEventKind, Team};
+use crate::domain::{Match, MatchEvent, MatchEventKind, Side, Team};
 use crate::error::GandulaError;
 use crate::rng::MatchRng;
 
-use tick::MatchState;
+use strength::{event_prob, possession_home, shot_prob};
+use tick::{MatchState, current_strength};
 
 pub use tick::{HalfTimeSnapshot, PendingPenalty};
 
@@ -105,4 +106,57 @@ pub fn simulate_second_half(
     });
 
     Ok(state.into_match(snap.seed))
+}
+
+/// Analytic, RNG-free projection of how the second half is shaped, computed
+/// from the half-time snapshot. Returns *expected values* — it never simulates
+/// a minute or scores a goal, so it's deterministic and cheap, suitable for
+/// recomputing live as the user edits tactics at the break.
+///
+/// `home_possession` is the expected share of minutes the home side controls;
+/// `home_pressure` / `away_pressure` are the expected shooting rate per minute
+/// for each side (`possession × event × shot`), the closest single number to
+/// "who will create danger". All three are built from the SAME
+/// `possession_home` / `event_prob` / `shot_prob` helpers the live tick samples
+/// against, so the projection can't drift from the engine.
+///
+/// Strength is taken as a single snapshot at the break (stamina as of 45') —
+/// it intentionally does NOT model the stamina the sides will lose over the
+/// coming 45 minutes, so this is "what it looks like right now", not a forecast
+/// of the average second-half state.
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct SecondHalfProjection {
+    /// Expected home possession share, in `[POSSESSION_MIN, POSSESSION_MAX]`.
+    pub home_possession: f64,
+    /// Expected home shots per minute (≥ 0).
+    pub home_pressure: f64,
+    /// Expected away shots per minute (≥ 0).
+    pub away_pressure: f64,
+}
+
+pub fn project_second_half(
+    snap: &HalfTimeSnapshot,
+    home: &Team,
+    away: &Team,
+) -> Result<SecondHalfProjection, GandulaError> {
+    home.validate()?;
+    away.validate()?;
+
+    // Reconstruct the break state (XI / stamina / on-field as of 45') without
+    // advancing the match or touching an RNG.
+    let state = MatchState::resume_from(snap, home, away);
+    let home_str = current_strength(&state, Side::Home);
+    let away_str = current_strength(&state, Side::Away);
+
+    let home_possession = possession_home(&home_str, &away_str);
+    let home_pressure =
+        home_possession * event_prob(home.tactics.tempo) * shot_prob(&home_str, &away_str);
+    let away_pressure =
+        (1.0 - home_possession) * event_prob(away.tactics.tempo) * shot_prob(&away_str, &home_str);
+
+    Ok(SecondHalfProjection {
+        home_possession,
+        home_pressure,
+        away_pressure,
+    })
 }

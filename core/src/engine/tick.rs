@@ -10,24 +10,17 @@ use crate::domain::{
 };
 use crate::engine::narration::{self, NarrationContext};
 use crate::engine::strength::{
-    self, TeamStrength, pressing_disrupt, pressing_foul_factor, pressing_stamina_factor,
-    raw_player_stats, stamina_effectiveness, tempo_event_factor, tempo_stamina_factor,
-    width_shot_factor,
+    self, TeamStrength, event_prob, possession_home, pressing_disrupt, pressing_foul_factor,
+    pressing_stamina_factor, raw_player_stats, shot_prob, stamina_effectiveness,
+    tempo_stamina_factor, width_shot_factor,
 };
 use crate::rng::MatchRng;
 use serde::{Deserialize, Serialize};
 
 // ─── Tunables ───────────────────────────────────────────────────────────────
+// Possession / event / shot probabilities and their constants now live in
+// `strength.rs` (shared with the analytic projection); imported below.
 pub const BASE_STAMINA_DRAIN: f64 = 0.30;
-pub const BASE_EVENT_RATE: f64 = 0.18;
-pub const POSSESSION_MID_SCALE: f64 = 0.005;
-pub const POSSESSION_MIN: f64 = 0.10;
-pub const POSSESSION_MAX: f64 = 0.90;
-
-pub const SHOT_BASE_WITHIN_EVENT: f64 = 0.70;
-pub const SHOT_ATTACK_DEFENSE_SCALE: f64 = 1.0 / 200.0;
-pub const SHOT_PROB_MIN: f64 = 0.20;
-pub const SHOT_PROB_MAX: f64 = 0.95;
 
 pub const FOUL_BASE_WITHIN_EVENT: f64 = 0.15;
 
@@ -257,12 +250,7 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     let home_str = current_strength(state, Side::Home);
     let away_str = current_strength(state, Side::Away);
 
-    let mut p_home = 0.5 + POSSESSION_MID_SCALE * (home_str.midfield - away_str.midfield);
-    if p_home < POSSESSION_MIN {
-        p_home = POSSESSION_MIN;
-    } else if p_home > POSSESSION_MAX {
-        p_home = POSSESSION_MAX;
-    }
+    let p_home = possession_home(&home_str, &away_str);
     let attacker_side = if rng.chance(p_home) {
         Side::Home
     } else {
@@ -270,7 +258,7 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     };
 
     let attacker_team = team_for(state, attacker_side);
-    let event_p = BASE_EVENT_RATE * tempo_event_factor(attacker_team.tactics.tempo);
+    let event_p = event_prob(attacker_team.tactics.tempo);
     if !rng.chance(event_p) {
         return;
     }
@@ -281,13 +269,7 @@ pub(crate) fn tick(state: &mut MatchState, rng: &mut MatchRng, minute: u16) {
     };
     let defender_team = team_for(state, attacker_side.flip());
 
-    let mut shot_p = SHOT_BASE_WITHIN_EVENT
-        * (1.0 + (att_str.attack - def_str.defense) * SHOT_ATTACK_DEFENSE_SCALE);
-    if shot_p < SHOT_PROB_MIN {
-        shot_p = SHOT_PROB_MIN;
-    } else if shot_p > SHOT_PROB_MAX {
-        shot_p = SHOT_PROB_MAX;
-    }
+    let shot_p = shot_prob(att_str, def_str);
     let foul_p = FOUL_BASE_WITHIN_EVENT * pressing_foul_factor(defender_team.tactics.pressing);
 
     let r = rng.unit();
@@ -338,7 +320,9 @@ fn drain_stamina(state: &mut MatchState) {
 }
 
 // ─── Strength snapshot using current XI + stamina ───────────────────────────
-fn current_strength(state: &MatchState, side: Side) -> TeamStrength {
+// `pub(crate)` so the analytic projection (`project_second_half`) can compose
+// the same strengths the tick sees, from a snapshot-reconstructed state.
+pub(crate) fn current_strength(state: &MatchState, side: Side) -> TeamStrength {
     let (team, current_xi, stamina, on_field, opp_pressing) = match side {
         Side::Home => (
             state.home,

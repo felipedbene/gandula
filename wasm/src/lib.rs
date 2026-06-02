@@ -6,7 +6,7 @@
 //! team files).
 
 use gandula_core::{
-    HalfTimeSnapshot, League, Team, match_seed, simulate, simulate_first_half,
+    HalfTimeSnapshot, League, Team, match_seed, project_second_half, simulate, simulate_first_half,
     simulate_second_half, simulate_season,
 };
 use serde::Serialize;
@@ -64,6 +64,29 @@ pub fn play_second_half(snapshot: JsValue, home: JsValue, away: JsValue) -> Resu
     let m = simulate_second_half(snapshot, &home, &away)
         .map_err(|e| JsError::new(&e.to_string()))?;
     m.serialize(&bigint_serializer())
+        .map_err(|e| JsError::new(&e.to_string()))
+}
+
+/// Analytic, RNG-free projection of the second half from a `HalfTimeSnapshot`
+/// (as returned by [`play_first_half`]). Returns a `SecondHalfProjection`
+/// object — expected possession + per-side pressure — with no goals computed,
+/// so JS can recompute it live as the user edits half-time tactics. The
+/// `home`/`away` teams carry the (possibly edited) tactics to project.
+#[wasm_bindgen]
+pub fn project_second_half_js(
+    snapshot: JsValue,
+    home: JsValue,
+    away: JsValue,
+) -> Result<JsValue, JsError> {
+    let snapshot: HalfTimeSnapshot = serde_wasm_bindgen::from_value(snapshot)
+        .map_err(|e| JsError::new(&format!("snapshot: {e}")))?;
+    let home: Team = serde_wasm_bindgen::from_value(home)
+        .map_err(|e| JsError::new(&format!("home: {e}")))?;
+    let away: Team = serde_wasm_bindgen::from_value(away)
+        .map_err(|e| JsError::new(&format!("away: {e}")))?;
+    let proj = project_second_half(&snapshot, &home, &away)
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    proj.serialize(&bigint_serializer())
         .map_err(|e| JsError::new(&e.to_string()))
 }
 
