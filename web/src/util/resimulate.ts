@@ -50,6 +50,26 @@ export function applyRivalHalftime(opponent: Team, tier: 1 | 2 | 3): Team {
 }
 
 /**
+ * Reconstruct a division opponent exactly as the season was simulated against:
+ * the registry team aged (`evolveTeam`) and coached (`applyRivalCoach`) for the
+ * current season's elapsed years. The single source for "who the user actually
+ * plays", shared by `resimulateFromRound` (above) and the live two-phase reveal
+ * so both produce byte-identical matches for the same seed + tactics.
+ */
+export function liveOpponentTeam(career: Career, opponentId: number): Team {
+  const season = career.currentSeason;
+  const userDivIdx = findUserDivisionIdxInSeason(season, career.controlledTeamId);
+  const tier = season.divisions[userDivIdx].tier as 1 | 2 | 3;
+  const elapsed = season.year - FIRST_YEAR;
+  const base = teamById(opponentId);
+  if (!base) {
+    throw new Error(`Opponent team ${opponentId} not found in registry`);
+  }
+  const evolved = evolveTeam(base, elapsed, career.seed);
+  return applyRivalCoach(evolved, tier, season.year, career.seed, elapsed);
+}
+
+/**
  * Re-simulate every match in the user's division at or after `fromRoundIdx`
  * that involves the controlled team, using the given `userTactics`. The
  * other division is untouched — tactical changes only ripple through the
@@ -108,18 +128,12 @@ export function resimulateFromRound(
   // user's division, so their tier is `userDiv.tier`. Season 0 → elapsed 0 →
   // registry team, but the coach still runs (year/seed drive its buys).
   // Memoized: the user faces each opponent twice.
-  const elapsed = season.year - FIRST_YEAR;
   const tier = userDiv.tier as 1 | 2 | 3;
   const evolvedCache = new Map<number, Team>();
   const liveOpponent = (id: number): Team => {
     const cached = evolvedCache.get(id);
     if (cached) return cached;
-    const base = teamById(id);
-    if (!base) {
-      throw new Error(`Opponent team ${id} not found in registry`);
-    }
-    const evolved = evolveTeam(base, elapsed, career.seed);
-    const coached = applyRivalCoach(evolved, tier, season.year, career.seed, elapsed);
+    const coached = liveOpponentTeam(career, id);
     evolvedCache.set(id, coached);
     return coached;
   };
