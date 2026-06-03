@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 dark theme — echoes the web app's electric-blue-on-dark look. -->
+    <style name="Theme.Gandula" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/electric_blue</item>
+        <item name="android:statusBarColor">@color/ink</item>
+        <item name="android:windowBackground">@color/ink</item>
+    </style>
+</resources>

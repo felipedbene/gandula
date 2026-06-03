@@ -75,6 +75,7 @@ fictionalised) — see that script and `gandula-import-sofifa/`.
 core/          — domain types, deterministic RNG wrapper, simulation engine
 cli/           — `gandula` binary
 wasm/          — wasm-bindgen wrapper around core for the browser
+android/       — native Android port: JNI bridge over core + Kotlin app (see android/README.md)
 web/           — Vite + React + Mantine career-mode app (responsive)
 assets/teams/  — 3 sample CLI clubs at top + 60 fictional/ clubs (the web world)
 scripts/       — build helpers (wasm→web pipeline, fictional-team generation)
@@ -87,6 +88,16 @@ in `web/` — the Rust core stays a lean, division-agnostic match/season engine
 (`play_match`, `run_season`). There is a sibling repo, **gandula-rl**, that
 trains a reinforcement-learning agent against this same engine; its learned
 policy was distilled into the in-game rival "coaches" (see the web section).
+
+## Native Android
+
+`android/` is a native Android port that cross-compiles the **same Rust core**
+to a JNI shared library (`libgandula_android.so`) and calls it from a small
+Kotlin app — so a match on Android is bit-for-bit identical to the same seed on
+the web or CLI. The bridge in `android/rust/src/lib.rs` mirrors `wasm/src/lib.rs`
+exactly: JSON in, JSON out, no simulation logic reimplemented. Build it with
+`cargo-ndk` + Gradle; full instructions in [`android/README.md`](android/README.md),
+and `.github/workflows/android.yml` builds the APK in CI.
 
 ## Toolchain prerequisites
 

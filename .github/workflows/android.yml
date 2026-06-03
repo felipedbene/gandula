@@ -1,0 +1,72 @@
+name: Android (native build)
+
+# Cross-compiles the Rust simulation engine to native Android shared libraries
+# (one .so per ABI) via cargo-ndk and assembles the debug APK. This is where the
+# *actual* native-Android compile happens — the dev sandbox can't link .so files
+# without the NDK, so this workflow is the source of truth that the engine builds
+# for arm64/armv7/x86_64.
+#
+# Runs on changes to the engine, the JNI bridge, or the app. The built APK is
+# uploaded as an artifact you can install on a device/emulator.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "core/**"
+      - "android/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "core/**"
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (Android targets)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: android/rust -> target
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK + NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Export ANDROID_NDK_HOME
+        run: echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Build native engine + assemble APK
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gandula-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

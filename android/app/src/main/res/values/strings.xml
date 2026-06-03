@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gandula</string>
+    <string name="home_label">Mandante (home)</string>
+    <string name="away_label">Visitante (away)</string>
+    <string name="seed_hint">Semente / seed</string>
+    <string name="play_label">Jogar partida</string>
+    <string name="feed_placeholder">Escolha dois times e toque em "Jogar partida".</string>
+</resources>

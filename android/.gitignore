@@ -1,0 +1,14 @@
+# Gradle / Android Studio
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+.cxx/
+
+# captured keystores / signing
+*.jks
+*.keystore
+
+# Rust build artifacts for the native engine
+rust/target/

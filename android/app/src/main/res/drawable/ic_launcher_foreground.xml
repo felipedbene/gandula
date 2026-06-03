@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A simple ball glyph, kept inside the adaptive-icon safe zone. -->
+    <path
+        android:fillColor="#2E7BFF"
+        android:pathData="M54,32 a22,22 0 1,0 0.01,0 Z" />
+    <path
+        android:fillColor="#0E1116"
+        android:pathData="M54,44 l7,5 -2.7,8.2 -8.6,0 -2.7,-8.2 Z" />
+</vector>

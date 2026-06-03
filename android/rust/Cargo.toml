@@ -1,0 +1,36 @@
+# Native Android JNI bridge for the Gandula simulation engine.
+#
+# This is its OWN tiny workspace (note the empty [workspace] table below) so it
+# stays out of the root Cargo workspace — the default `cargo build` at the repo
+# root keeps building only core/cli/wasm and never pulls the JNI/Android deps.
+# The engine itself is reused as a plain path dependency, so the simulation
+# stays the single source of truth shared with the CLI and the WASM build.
+[workspace]
+
+[package]
+name = "gandula-android"
+version = "1.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Felipe Debene"]
+publish = false
+
+[lib]
+# Loaded from Kotlin via System.loadLibrary("gandula_android") -> libgandula_android.so
+name = "gandula_android"
+crate-type = ["cdylib"]
+
+[dependencies]
+gandula-core = { path = "../../core" }
+serde_json = "1"
+# JNI bindings. `default-features = false` drops the `invocation` feature (which
+# would need libjvm at build time) — we are loaded *by* the JVM, not launching one.
+jni = { version = "0.21", default-features = false }
+
+# Smaller, faster-to-load .so for the on-device build.
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1
