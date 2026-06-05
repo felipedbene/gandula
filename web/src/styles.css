@@ -16,25 +16,23 @@ body,
 body {
   margin: 0;
   background-color: #050608;
-  /* Deep base with animated pitch grid and drifting orbs */
-  background-image: 
+  /* Deep base with a static pitch grid and corner orbs.
+     NOTE: this background is intentionally static. It used to animate
+     `background-position` (a perpetual `grid-drift` loop). Animating
+     background-position cannot be GPU-composited, so the browser repainted
+     the whole viewport every frame, forever, on every screen — and because
+     each `.glass-panel` sits on top with `backdrop-filter: blur(20px)`, every
+     panel had to re-blur its backdrop each frame as the grid moved beneath it.
+     That pegged the CPU/GPU at idle even on fast machines (M1). Keeping the
+     grid static lets the browser cache the paint and the backdrop blurs, so
+     the page costs ~0% CPU when nothing is happening. */
+  background-image:
     linear-gradient(rgba(31, 116, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(31, 116, 255, 0.05) 1px, transparent 1px),
     radial-gradient(circle at 50% 0%, rgba(31, 116, 255, 0.15) 0%, transparent 60%),
     radial-gradient(circle at 100% 100%, rgba(138, 43, 226, 0.08) 0%, transparent 50%);
   background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
   background-position: center top;
-  background-attachment: fixed;
-  animation: grid-drift 60s linear infinite;
-}
-
-@keyframes grid-drift {
-  0% {
-    background-position: 0px 0px, 0px 0px, center top, right bottom;
-  }
-  100% {
-    background-position: 0px 400px, 0px 0px, center top, right bottom;
-  }
 }
 
 /* Glassmorphism utility class for panels and cards */
