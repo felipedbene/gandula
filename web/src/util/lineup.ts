@@ -73,6 +73,24 @@ export const FORMATION_LINES: Record<string, number[]> = {
   F4231: [1, 3, 2, 4],
 };
 
+/**
+ * Coarse position composition per formation — the count of each GK/DEF/MID/FWD
+ * a valid XI for that formation must field (always summing to 11, GK always 1).
+ * The two MID lines of F4231 collapse into the coarse MID bucket. Used by the
+ * position-aware lineup repair (util/roster.ts) to self-heal an XI that lost a
+ * starter (retirement) without producing structurally invalid sides — e.g. two
+ * goalkeepers or a striker filling a centre-back slot.
+ */
+export const FORMATION_COMPOSITION: Record<
+  string,
+  { GK: number; DEF: number; MID: number; FWD: number }
+> = {
+  F442: { GK: 1, DEF: 4, MID: 4, FWD: 2 },
+  F433: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+  F352: { GK: 1, DEF: 3, MID: 5, FWD: 2 },
+  F4231: { GK: 1, DEF: 4, MID: 5, FWD: 1 },
+};
+
 // Front→back ordering of the coarse positions, so a position-sorted outfield
 // pool fills the formation's lines forwards-first.
 const POS_RANK: Record<string, number> = { FWD: 0, MID: 1, DEF: 2, GK: 3 };
