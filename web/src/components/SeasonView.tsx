@@ -43,6 +43,8 @@ import {
   playCupRound,
 } from "../util/copa";
 import { advanceCareer } from "../util/career";
+import { resimulateFromRound } from "../util/resimulate";
+import { userTeam } from "../util/roster";
 import {
   computeSeasonFinances,
   cupPrizeForAdvance,
@@ -179,6 +181,32 @@ function initialPhaseFor(career: Career): Phase {
  *  to reproduce or share a specific career. */
 function randomSeed(): number {
   return Math.floor(Math.random() * 1_000_000);
+}
+
+/** A stable fingerprint of the user's effective squad (sorted ids), used to
+ *  detect whether a market session actually changed the roster — so the
+ *  mid-season re-sim only fires on a real buy/sell, not on an open-and-close. */
+function rosterFingerprint(career: Career): string {
+  return userTeam(career)
+    .roster.map((p) => p.id)
+    .sort((a, b) => a - b)
+    .join(",");
+}
+
+/** The user's current effective tactics: the per-season override if set, else
+ *  the controlled team's own formation/tactics/XI/bench. Passed to
+ *  resimulateFromRound so a transfer-only re-sim keeps tactics fixed and only
+ *  the new roster (picked up by userTeam) changes the unplayed matches. */
+function currentUserTactics(career: Career): UserTactics {
+  const existing = career.currentSeason.userTactics;
+  if (existing) return existing;
+  const t = userTeam(career);
+  return {
+    formation: t.formation,
+    tactics: t.tactics,
+    starting_xi: t.starting_xi,
+    bench: t.bench ?? [],
+  };
 }
 
 export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
@@ -564,23 +592,52 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
    * (and optionally userTactics.bench after lazy-prune) already mutated.
    * Persist and return to wherever the market was opened from — mid-season
    * (`running`) or at the season boundary (`finale`).
+   *
+   * Mid-season (#61): if the squad actually changed, re-simulate the user's
+   * STILL-UNPLAYED matches with the new roster (resimulateFromRound from the
+   * current round) so a signing affects the rest of the season — already-played
+   * rounds, their results and the banked cash are untouched. At the season
+   * boundary there's nothing to re-sim: the next season is built fresh from the
+   * new userRoster in advanceCareer.
    */
   async function closeTransferMarket(
+    prevCareer: Career,
     newCareer: Career,
     returnTo: "running" | "finale",
   ) {
     try {
-      await saveCareer(newCareer);
-      const txCount = newCareer.currentSeason.transfers.length;
+      let toSave = newCareer;
+      let resimNote = "";
+      const squadChanged =
+        rosterFingerprint(prevCareer) !== rosterFingerprint(newCareer);
+      if (returnTo === "running" && squadChanged) {
+        const season = newCareer.currentSeason;
+        const userDivIdx = findUserDivisionIdxInSeason(
+          season,
+          newCareer.controlledTeamId,
+        );
+        const fromRound = season.divisions[userDivIdx].currentRoundIdx;
+        const start = performance.now();
+        toSave = resimulateFromRound(
+          newCareer,
+          fromRound,
+          currentUserTactics(newCareer),
+        );
+        const ms = Math.round(performance.now() - start);
+        resimNote = ` · elenco novo aplicado, partidas re-simuladas em ${ms}ms`;
+      }
+      await saveCareer(toSave);
+      const txCount = toSave.currentSeason.transfers.length;
       onStatus(
-        txCount === 0
+        (txCount === 0
           ? "mercado fechado · sem transações"
-          : `mercado fechado · ${txCount} transação${txCount === 1 ? "" : "ões"}`,
+          : `mercado fechado · ${txCount} transação${txCount === 1 ? "" : "ões"}`) +
+          resimNote,
       );
       if (returnTo === "running") {
-        setPhase({ tag: "running", career: newCareer });
+        setPhase({ tag: "running", career: toSave });
       } else {
-        setPhase({ tag: "finale", career: newCareer });
+        setPhase({ tag: "finale", career: toSave });
       }
     } catch (e) {
       setError(String(e));
@@ -974,7 +1031,7 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
         return (
           <TransferMarketView
             career={phase.career}
-            onClose={(c) => closeTransferMarket(c, phase.returnTo)}
+            onClose={(c) => closeTransferMarket(phase.career, c, phase.returnTo)}
           />
         );
       case "fired":
