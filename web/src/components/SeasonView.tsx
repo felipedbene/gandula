@@ -53,6 +53,12 @@ import {
 } from "../util/finances";
 import { formatMoney } from "../util/money";
 import { computeHonours } from "../util/honours";
+import {
+  acceptDemand,
+  denyDemand,
+  generateWageDemands,
+  type WageDemand,
+} from "../util/contracts";
 import TransferMarketView from "./TransferMarketView";
 import FinancesView from "./FinancesView";
 import SupportView from "./SupportView";
@@ -503,6 +509,45 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
     setPhase({ tag: "form" });
   }
 
+  /**
+   * Pre-season wage demands (E.7). Accept grants the raise; deny applies the
+   * temperament-scaled consequence (sulk or departure). Both persist and stay
+   * in the finale (key unchanged ⇒ no remount), and `generateWageDemands`
+   * re-derives the now-shorter list from the saved career, so the panel updates
+   * without local state. Save errors surface on the error pre.
+   */
+  async function acceptWageDemand(career: Career, demand: WageDemand) {
+    try {
+      const next = acceptDemand(career, demand.playerId, demand.demandedMultiplier);
+      await saveCareer(next);
+      onStatus(
+        `renovação aceita · ${demand.name} · $ ${formatMoney(demand.demandedWage)}/temporada`,
+      );
+      setPhase({ tag: "finale", career: next });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao salvar renovação: ${e}`);
+    }
+  }
+
+  async function denyWageDemand(career: Career, demand: WageDemand) {
+    try {
+      const { career: next, outcome } = denyDemand(career, demand.playerId);
+      await saveCareer(next);
+      onStatus(
+        outcome.kind === "walked"
+          ? `${outcome.name} deixou o clube · + $ ${formatMoney(outcome.cashIn)}`
+          : outcome.forced
+            ? `${outcome.name} ficou a contragosto (sem espaço no elenco) e caiu de rendimento`
+            : `${outcome.name} ficou descontente e caiu de rendimento`,
+      );
+      setPhase({ tag: "finale", career: next });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao recusar renovação: ${e}`);
+    }
+  }
+
   function openFriendly() {
     onStatus("amistoso");
     setPhase({ tag: "friendly" });
@@ -909,6 +954,8 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
             onOpenMarket={() => openTransferMarket(phase.career, "finale")}
             onAdvanceSeason={() => advanceToNextSeason(phase.career)}
             onOpenHistory={() => openHistory(phase.career)}
+            onAcceptDemand={(d) => acceptWageDemand(phase.career, d)}
+            onDenyDemand={(d) => denyWageDemand(phase.career, d)}
             onReset={resetCareer}
           />
         );
@@ -1267,12 +1314,16 @@ function SeasonFinale({
   onOpenMarket,
   onAdvanceSeason,
   onOpenHistory,
+  onAcceptDemand,
+  onDenyDemand,
   onReset,
 }: {
   career: Career;
   onOpenMarket: () => void;
   onAdvanceSeason: () => void;
   onOpenHistory: () => void;
+  onAcceptDemand: (demand: WageDemand) => void;
+  onDenyDemand: (demand: WageDemand) => void;
   onReset: () => void;
 }) {
   const season = career.currentSeason;
@@ -1506,6 +1557,12 @@ function SeasonFinale({
         title={`Classificação · ${userDiv.name}`}
       />
 
+      <WageDemandsPanel
+        career={career}
+        onAccept={onAcceptDemand}
+        onDeny={onDenyDemand}
+      />
+
       <Group justify="center" gap="sm">
         <Button onClick={onOpenMarket}>Abrir mercado</Button>
         <Button onClick={onAdvanceSeason}>Iniciar próxima temporada</Button>
@@ -1519,6 +1576,84 @@ function SeasonFinale({
         </Button>
       </Group>
     </Stack>
+  );
+}
+
+// ─── Pre-season: wage demands (E.7) ──────────────────────────────────────────
+// Renders the pending renewals (derived fresh from the saved career, so the
+// list shrinks as the user resolves each one — no local state, F5-safe). Accept
+// grants the raise; recusar triggers the temperament-scaled consequence
+// (sulk / departure) handled by the parent. Hidden when there are no demands.
+function WageDemandsPanel({
+  career,
+  onAccept,
+  onDeny,
+}: {
+  career: Career;
+  onAccept: (demand: WageDemand) => void;
+  onDeny: (demand: WageDemand) => void;
+}) {
+  const demands = generateWageDemands(career);
+  if (demands.length === 0) return null;
+
+  return (
+    <Panel title="Vestiário · renovações de contrato">
+      <Stack gap="sm">
+        <Text size="xs" c="dimmed">
+          Jogadores pedindo reajuste antes da próxima temporada. Recusar tem
+          consequências: leais caem de rendimento, mercenários podem deixar o
+          clube por uma compensação.
+        </Text>
+        {demands.map((d) => (
+          <Box
+            key={d.playerId}
+            p="sm"
+            style={{
+              borderRadius: "var(--mantine-radius-sm)",
+              background: "var(--mantine-color-ink-9)",
+            }}
+          >
+            <Group justify="space-between" wrap="nowrap" gap="sm">
+              <Box style={{ minWidth: 0 }}>
+                <Group gap="xs" wrap="nowrap">
+                  <Text fw={600} truncate>
+                    {d.name}
+                  </Text>
+                  <Badge size="xs" variant="default" radius="sm">
+                    {d.position}
+                  </Badge>
+                  <Badge
+                    size="xs"
+                    radius="sm"
+                    variant="light"
+                    color={d.temperament === "mercenary" ? "red" : "accent"}
+                  >
+                    {d.temperament === "mercenary" ? "mercenário" : "leal"}
+                  </Badge>
+                </Group>
+                <Text size="xs" c="dimmed" ff="monospace" mt={2}>
+                  $ {formatMoney(d.currentWage)} → ${" "}
+                  {formatMoney(d.demandedWage)}/temporada
+                </Text>
+              </Box>
+              <Group gap="xs" wrap="nowrap" style={{ flexShrink: 0 }}>
+                <Button size="xs" onClick={() => onAccept(d)}>
+                  Aceitar
+                </Button>
+                <Button
+                  size="xs"
+                  variant="default"
+                  color="red"
+                  onClick={() => onDeny(d)}
+                >
+                  Recusar
+                </Button>
+              </Group>
+            </Group>
+          </Box>
+        ))}
+      </Stack>
+    </Panel>
   );
 }
 

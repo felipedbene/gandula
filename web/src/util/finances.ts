@@ -742,7 +742,7 @@ export function salarySliceForRound(career: Career, roundIdx: number): number {
   if (total <= 0) return 0;
   if (!teamById(career.controlledTeamId)) return 0;
   const s = userTeam(career).roster.reduce(
-    (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
+    (sum, p) => sum + playerWage(career, p),
     0,
   );
   return (
@@ -902,6 +902,19 @@ function avgAttributes(player: Player): number {
 }
 
 /**
+ * One player's season wage: the derived base (avg attributes ×
+ * SALARY_PER_PLAYER_STRENGTH) scaled by their contract's wage multiplier
+ * (E.7 — defaults to 1 when the player has no contract, so the bill is
+ * unchanged until the user grants a raise). Rounded to whole moedas. The
+ * single per-player wage used by both the per-round slice and the season total,
+ * so they stay consistent.
+ */
+function playerWage(career: Career, player: Player): number {
+  const mult = career.contracts?.[player.id]?.wageMultiplier ?? 1;
+  return Math.round(avgAttributes(player) * SALARY_PER_PLAYER_STRENGTH * mult);
+}
+
+/**
  * Compute finances for the just-finished season. Pure — derived from the
  * career's `currentSeason.divisions[userDivIdx].record.matches` (filtered
  * to home games), the user's effective roster (`userTeam(career)` — the
@@ -967,7 +980,7 @@ export function computeSeasonFinances(
   const sponsorship = sponsorshipSeasonTotal(career);
 
   const salaries = team.roster.reduce(
-    (sum, p) => sum + avgAttributes(p) * SALARY_PER_PLAYER_STRENGTH,
+    (sum, p) => sum + playerWage(career, p),
     0,
   );
 
