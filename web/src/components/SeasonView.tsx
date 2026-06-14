@@ -52,9 +52,12 @@ import {
   seedStadiumForTier,
 } from "../util/finances";
 import { formatMoney } from "../util/money";
+import { computeHonours } from "../util/honours";
 import TransferMarketView from "./TransferMarketView";
 import FinancesView from "./FinancesView";
 import SupportView from "./SupportView";
+import { GandulaSplash } from "./GandulaSplash";
+import FriendlyMatchView from "./FriendlyMatchView";
 import {
   Badge,
   Box,
@@ -110,6 +113,7 @@ type Phase =
   | { tag: "finances"; career: Career }
   | { tag: "transferMarket"; career: Career; returnTo: "running" | "finale" }
   | { tag: "fired"; career: Career; finalBalance: number }
+  | { tag: "friendly" }
   | { tag: "support" };
 
 /**
@@ -499,6 +503,16 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
     setPhase({ tag: "form" });
   }
 
+  function openFriendly() {
+    onStatus("amistoso");
+    setPhase({ tag: "friendly" });
+  }
+
+  function backFromFriendly() {
+    onStatus("pronto");
+    setPhase({ tag: "form" });
+  }
+
   /**
    * Called when TransferMarketView fires onClose. The view passes back
    * a Career with userRoster / manager.money / currentSeason.transfers
@@ -822,7 +836,13 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
       case "loading":
         return <Text c="dimmed">Carregando save…</Text>;
       case "form":
-        return <NewSeasonForm onSubmit={run} onSupport={openSupport} />;
+        return (
+          <GandulaSplash
+            onStart={run}
+            onFriendly={openFriendly}
+            onSupport={openSupport}
+          />
+        );
       case "running":
         return (
           <CampeonatoEmCurso
@@ -920,6 +940,8 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
         );
       case "support":
         return <SupportView onBack={backFromSupport} />;
+      case "friendly":
+        return <FriendlyMatchView onBack={backFromFriendly} />;
     }
   }
 
@@ -940,41 +962,10 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
 }
 
 // ─── Phase: form ────────────────────────────────────────────────────────────
-// The team checkboxes are gone (the Brasileirão Imaginário plays with all
-// 60 teams fixed) and the user no longer picks a team (assigned to a random
-// Série C club — the bottom of the pyramid — via pickRandomStarter).
-function NewSeasonForm({
-  onSubmit,
-  onSupport,
-}: {
-  onSubmit: () => void;
-  onSupport: () => void;
-}) {
-  return (
-    <Panel title="Nova carreira">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit();
-        }}
-      >
-        <Stack gap="md">
-          <Text c="dimmed" size="sm">
-            60 times divididos em Série A (20) + Série B (20) + Série C (20).
-            Você assume um time aleatório da Série C e começa a escalada do
-            fundo da pirâmide.
-          </Text>
-          <Group justify="center" gap="sm">
-            <Button type="submit">Iniciar carreira</Button>
-            <Button type="button" variant="default" onClick={onSupport}>
-              Apoiar projeto
-            </Button>
-          </Group>
-        </Stack>
-      </form>
-    </Panel>
-  );
-}
+// The branded landing lives in GandulaSplash. The team checkboxes are gone
+// (the Brasileirão Imaginário plays with all 60 teams fixed) and the user no
+// longer picks a team (assigned to a random Série C club — the bottom of the
+// pyramid — via pickRandomStarter).
 
 // ─── Phase: running ─────────────────────────────────────────────────────────
 // Reads from the user's division — fixtures of the current round (no
@@ -1666,6 +1657,8 @@ function HistoryView({
         {career.seasons.length === 1 ? "" : "s"}
       </Text>
 
+      <HonoursPanel career={career} />
+
       {career.seasons.map((s) => (
         <HistoryCard key={s.year} entry={s} />
       ))}
@@ -1676,6 +1669,56 @@ function HistoryView({
         </Button>
       </Group>
     </Stack>
+  );
+}
+
+// Career-long "galeria de troféus": league/cup titles, promotions, best
+// campaign and richest balance — all aggregated from the archived seasons by
+// computeHonours. Shown atop the history list so the legacy reads at a glance.
+function HonoursPanel({ career }: { career: Career }) {
+  const h = computeHonours(career);
+  const leagueTitlesText =
+    h.leagueTitles.length > 0
+      ? h.leagueTitles
+          .map((t) => `${t.division} ${t.year}`)
+          .join(", ")
+      : "—";
+  const copaTitlesText =
+    h.copaTitles.length > 0 ? h.copaTitles.join(", ") : "—";
+  const bestFinishText = h.bestFinish
+    ? `${h.bestFinish.position}º · ${h.bestFinish.division} (${h.bestFinish.year})`
+    : "—";
+
+  return (
+    <Panel title="Galeria de troféus">
+      <Stack gap={2}>
+        <FinanceRow
+          label={`Títulos de liga (${h.leagueTitles.length})`}
+          value={leagueTitlesText}
+          c={h.leagueTitles.length > 0 ? "gold.5" : undefined}
+        />
+        <FinanceRow
+          label={`Copa do Brasil (${h.copaTitles.length})`}
+          value={copaTitlesText}
+          c={h.copaTitles.length > 0 ? "gold.5" : undefined}
+        />
+        <FinanceRow label="Promoções" value={String(h.promotions)} c="accent.4" />
+        <FinanceRow
+          label="Rebaixamentos"
+          value={String(h.relegations)}
+          c={h.relegations > 0 ? "red.5" : undefined}
+        />
+        <FinanceRow label="Melhor campanha" value={bestFinishText} />
+        <FinanceRow
+          label="Maior saldo"
+          value={
+            h.richestBalance !== null
+              ? `$ ${formatMoney(h.richestBalance)}`
+              : "—"
+          }
+        />
+      </Stack>
+    </Panel>
   );
 }
 
