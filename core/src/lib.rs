@@ -9,8 +9,9 @@ pub use domain::{
     PlayerId, Position, Pressing, Side, Tactics, Team, TeamId, Tempo, Width,
 };
 pub use engine::{
-    HalfTimeSnapshot, MatchProjection, PendingPenalty, SecondHalfProjection, project_match,
-    project_second_half, simulate, simulate_first_half, simulate_second_half,
+    HalfTimeSnapshot, HalfTimeSub, MatchProjection, PendingPenalty, SecondHalfProjection,
+    project_match, project_second_half, simulate, simulate_first_half, simulate_second_half,
+    simulate_second_half_with_subs,
 };
 pub use error::GandulaError;
 pub use season::{Fixture, League, SeasonRecord, TeamStats, match_seed, simulate_season};

@@ -390,6 +390,58 @@ fn apply_substitution(
     }
 }
 
+/// Apply a user-chosen half-time substitution by player id, mirroring the AI
+/// path (shared [`apply_substitution`]) but driven by explicit off/on ids and
+/// allowing ANY position (it's the user's call). Returns whether it was applied.
+/// Respects the shared [`MAX_SUBS_PER_MATCH`] cap and skips an invalid swap —
+/// `off` not currently on the field, or `on` not an unused bench player — so a
+/// stale/duplicate request can't corrupt the lineup.
+pub(crate) fn apply_user_sub(
+    state: &mut MatchState,
+    rng: &mut MatchRng,
+    side: Side,
+    off_id: PlayerId,
+    on_id: PlayerId,
+    minute: u16,
+) -> bool {
+    // Resolve the slots from read-only views first, so the mutable
+    // apply_substitution borrow doesn't overlap.
+    let resolved = {
+        let (current_xi, on_field, bench, bench_used, subs_used) = match side {
+            Side::Home => (
+                &state.home_current_xi,
+                &state.home_on_field,
+                &state.home.bench,
+                &state.home_bench_used,
+                state.home_subs_used,
+            ),
+            Side::Away => (
+                &state.away_current_xi,
+                &state.away_on_field,
+                &state.away.bench,
+                &state.away_bench_used,
+                state.away_subs_used,
+            ),
+        };
+        if subs_used >= MAX_SUBS_PER_MATCH {
+            return false;
+        }
+        let off_slot = (0..11).find(|&i| current_xi[i] == off_id && on_field[i]);
+        let on_bench_idx = bench.iter().position(|id| *id == on_id);
+        match (off_slot, on_bench_idx) {
+            (Some(off_slot), Some(on_bench_idx)) if !bench_used[on_bench_idx] => {
+                Some((off_slot, on_bench_idx))
+            }
+            _ => None,
+        }
+    };
+    let Some((off_slot, on_bench_idx)) = resolved else {
+        return false;
+    };
+    apply_substitution(state, rng, side, off_slot, on_bench_idx, minute);
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

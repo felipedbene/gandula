@@ -3,7 +3,7 @@ mod narration;
 mod strength;
 mod tick;
 
-use crate::domain::{Match, MatchEvent, MatchEventKind, Side, Team};
+use crate::domain::{Match, MatchEvent, MatchEventKind, PlayerId, Side, Team};
 use crate::error::GandulaError;
 use crate::rng::MatchRng;
 
@@ -69,19 +69,54 @@ pub fn simulate_first_half(
     Ok(state.snapshot_at_half(seed, &rng))
 }
 
+/// A user-chosen half-time substitution: take `off` (an on-field player) out
+/// and bring `on` (an unused bench player) in. Position-free — unlike the AI
+/// manager's rules, the user may swap any positions. Applied at the restart.
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct HalfTimeSub {
+    pub off: PlayerId,
+    pub on: PlayerId,
+}
+
 /// Resume from a [`HalfTimeSnapshot`] and run minutes 46..=90, second-half
 /// injury time, and the full-time narration, returning the complete `Match`.
 /// `home`/`away` supply tactics/formation (re-read every tick); passing edited
-/// teams here is how a half-time tactics change takes effect in later commits.
+/// teams here is how a half-time tactics change takes effect.
 /// The returned `Match` has the same shape as the one-shot `simulate`.
 pub fn simulate_second_half(
     snap: HalfTimeSnapshot,
     home: &Team,
     away: &Team,
 ) -> Result<Match, GandulaError> {
+    simulate_second_half_with_subs(snap, home, away, &[], &[])
+}
+
+/// As [`simulate_second_half`], but applies the given half-time substitutions
+/// at the restart (minute 46) before the second half runs. Each side's subs are
+/// applied in order, capped at the shared per-match limit
+/// ([`manager::MAX_SUBS_PER_MATCH`]) minus any already made; invalid swaps (the
+/// `off` isn't on the field, the `on` isn't an unused bench player) are skipped.
+/// With empty slices this is byte-identical to [`simulate_second_half`] — the
+/// subs consume RNG (via narration), so a non-empty set intentionally diverges
+/// the keystream, but the same (snapshot, teams, subs) always reproduce.
+pub fn simulate_second_half_with_subs(
+    snap: HalfTimeSnapshot,
+    home: &Team,
+    away: &Team,
+    home_subs: &[HalfTimeSub],
+    away_subs: &[HalfTimeSub],
+) -> Result<Match, GandulaError> {
     // Resume the exact ChaCha8 keystream from the break — no re-seeding.
     let mut rng = snap.rng_state.clone();
     let mut state = MatchState::resume_from(&snap, home, away);
+
+    // User half-time subs land at the restart, before any second-half tick.
+    for s in home_subs {
+        manager::apply_user_sub(&mut state, &mut rng, Side::Home, s.off, s.on, 46);
+    }
+    for s in away_subs {
+        manager::apply_user_sub(&mut state, &mut rng, Side::Away, s.off, s.on, 46);
+    }
 
     for minute in 46..=90 {
         tick::tick(&mut state, &mut rng, minute);

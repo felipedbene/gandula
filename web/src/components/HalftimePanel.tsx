@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Badge, Button, Group, NativeSelect, Stack, Text } from "@mantine/core";
 import { project_second_half_js } from "../wasm/gandula_wasm.js";
-import type { Team } from "../types";
+import type { HalfTimeSub, Player, Team } from "../types";
 import type { UserTactics } from "../persistence";
 import { applyUserTactics, applyRivalHalftime } from "../util/resimulate";
 import { Panel } from "./ui/Panel";
@@ -38,9 +38,14 @@ type HalftimePanelProps = {
    *  the tactical dials, not the lineup — lineup edits stay in PrepareView). */
   startingXi: number[];
   bench: number[];
-  /** Confirm: pass the chosen half-time UserTactics, or null if unchanged. */
-  onConfirm: (halftime: UserTactics | null) => void;
+  /** Confirm: pass the chosen half-time UserTactics (or null if unchanged) and
+   *  the chosen substitutions (empty if none). */
+  onConfirm: (halftime: UserTactics | null, subs: HalfTimeSub[]) => void;
 };
+
+/** Max substitutions the user may make at the interval — mirrors the engine's
+ *  MAX_SUBS_PER_MATCH. */
+const MAX_HALFTIME_SUBS = 3;
 
 /**
  * The half-time interview. Shows the closed first-half score, lets the player
@@ -64,11 +69,49 @@ export default function HalftimePanel({
   onConfirm,
 }: HalftimePanelProps) {
   const [form, setForm] = useState<TacticsFormState>(initial);
+  const [subs, setSubs] = useState<HalfTimeSub[]>([]);
 
   const toUserTactics = (s: TacticsFormState): UserTactics => {
     const { formation, tactics } = tacticsFormStateToOverride(s);
     return { formation, tactics, starting_xi: startingXi, bench };
   };
+
+  // Player lookup for the sub dropdowns, off the user's break-time roster.
+  const byId = useMemo(() => {
+    const m = new Map<number, Player>();
+    for (const p of baseUserTeam.roster) m.set(p.id, p);
+    return m;
+  }, [baseUserTeam.roster]);
+  const label = (id: number) => {
+    const p = byId.get(id);
+    return p ? `${p.name} (${p.position})` : `#${id}`;
+  };
+
+  // Off candidates: on-field starters not already pulled. On candidates: bench
+  // players not already brought on. Keeps each player in at most one swap.
+  const usedOff = new Set(subs.map((s) => s.off));
+  const usedOn = new Set(subs.map((s) => s.on));
+  const offOptions = startingXi.filter((id) => !usedOff.has(id));
+  const onOptions = bench.filter((id) => !usedOn.has(id));
+  const [offSel, setOffSel] = useState<number | null>(null);
+  const [onSel, setOnSel] = useState<number | null>(null);
+
+  const canAddSub =
+    subs.length < MAX_HALFTIME_SUBS &&
+    offSel !== null &&
+    onSel !== null &&
+    !usedOff.has(offSel) &&
+    !usedOn.has(onSel);
+
+  function addSub() {
+    if (offSel === null || onSel === null) return;
+    setSubs([...subs, { off: offSel, on: onSel }]);
+    setOffSel(null);
+    setOnSel(null);
+  }
+  function removeSub(i: number) {
+    setSubs(subs.filter((_, idx) => idx !== i));
+  }
 
   // Recompute the projection whenever the form changes. The rival's symmetric
   // half-time tactic is baked into the opponent team here AND in the real
@@ -141,8 +184,70 @@ export default function HalftimePanel({
           oppName={oppName}
         />
 
+        {/* Substituições (até 3) — aplicadas no reinício do segundo tempo. */}
+        <Stack gap="xs">
+          <Text fw={600} size="sm">
+            Substituições ({subs.length}/{MAX_HALFTIME_SUBS})
+          </Text>
+          {subs.map((s, i) => (
+            <Group key={i} gap="xs" wrap="nowrap" justify="space-between">
+              <Text size="sm">
+                <Badge size="xs" color="red" variant="light" radius="sm">
+                  sai
+                </Badge>{" "}
+                {label(s.off)} →{" "}
+                <Badge size="xs" color="accent" variant="light" radius="sm">
+                  entra
+                </Badge>{" "}
+                {label(s.on)}
+              </Text>
+              <Button
+                size="compact-xs"
+                variant="subtle"
+                color="red"
+                onClick={() => removeSub(i)}
+              >
+                remover
+              </Button>
+            </Group>
+          ))}
+          {subs.length < MAX_HALFTIME_SUBS && onOptions.length > 0 && (
+            <Group gap="xs" align="end" wrap="nowrap">
+              <NativeSelect
+                size="xs"
+                label="Sai"
+                style={{ flex: 1 }}
+                value={offSel ?? ""}
+                onChange={(e) =>
+                  setOffSel(e.currentTarget.value ? Number(e.currentTarget.value) : null)
+                }
+                data={[
+                  { value: "", label: "—" },
+                  ...offOptions.map((id) => ({ value: String(id), label: label(id) })),
+                ]}
+              />
+              <NativeSelect
+                size="xs"
+                label="Entra"
+                style={{ flex: 1 }}
+                value={onSel ?? ""}
+                onChange={(e) =>
+                  setOnSel(e.currentTarget.value ? Number(e.currentTarget.value) : null)
+                }
+                data={[
+                  { value: "", label: "—" },
+                  ...onOptions.map((id) => ({ value: String(id), label: label(id) })),
+                ]}
+              />
+              <Button size="xs" variant="default" disabled={!canAddSub} onClick={addSub}>
+                Adicionar
+              </Button>
+            </Group>
+          )}
+        </Stack>
+
         <Group justify="center">
-          <Button onClick={() => onConfirm(toUserTactics(form))}>
+          <Button onClick={() => onConfirm(toUserTactics(form), subs)}>
             Iniciar segundo tempo
           </Button>
         </Group>

@@ -6,8 +6,8 @@
 //! team files).
 
 use gandula_core::{
-    HalfTimeSnapshot, League, Team, match_seed, project_match, project_second_half, simulate,
-    simulate_first_half, simulate_second_half, simulate_season,
+    HalfTimeSnapshot, HalfTimeSub, League, Team, match_seed, project_match, project_second_half,
+    simulate, simulate_first_half, simulate_second_half_with_subs, simulate_season,
 };
 use serde::Serialize;
 use serde_wasm_bindgen::Serializer;
@@ -53,15 +53,39 @@ pub fn play_first_half(home: JsValue, away: JsValue, seed: u64) -> Result<JsValu
 /// Resume from a `HalfTimeSnapshot` (as returned by [`play_first_half`]) and run
 /// the second half, returning the complete `Match`. `home`/`away` supply
 /// tactics — pass edited teams to apply a half-time tactics change.
+///
+/// `home_subs`/`away_subs` are arrays of `{ off, on }` player-id pairs — the
+/// user's half-time substitutions, applied at the restart (capped at the
+/// engine's 3-sub limit; invalid swaps skipped). Pass empty arrays (or
+/// `null`/`undefined`) for no subs, which is byte-identical to the old behavior.
 #[wasm_bindgen]
-pub fn play_second_half(snapshot: JsValue, home: JsValue, away: JsValue) -> Result<JsValue, JsError> {
+pub fn play_second_half(
+    snapshot: JsValue,
+    home: JsValue,
+    away: JsValue,
+    home_subs: JsValue,
+    away_subs: JsValue,
+) -> Result<JsValue, JsError> {
     let snapshot: HalfTimeSnapshot = serde_wasm_bindgen::from_value(snapshot)
         .map_err(|e| JsError::new(&format!("snapshot: {e}")))?;
     let home: Team = serde_wasm_bindgen::from_value(home)
         .map_err(|e| JsError::new(&format!("home: {e}")))?;
     let away: Team = serde_wasm_bindgen::from_value(away)
         .map_err(|e| JsError::new(&format!("away: {e}")))?;
-    let m = simulate_second_half(snapshot, &home, &away)
+    // Absent / null subs deserialize to an empty list (the no-sub path).
+    let home_subs: Vec<HalfTimeSub> = if home_subs.is_null() || home_subs.is_undefined() {
+        Vec::new()
+    } else {
+        serde_wasm_bindgen::from_value(home_subs)
+            .map_err(|e| JsError::new(&format!("home_subs: {e}")))?
+    };
+    let away_subs: Vec<HalfTimeSub> = if away_subs.is_null() || away_subs.is_undefined() {
+        Vec::new()
+    } else {
+        serde_wasm_bindgen::from_value(away_subs)
+            .map_err(|e| JsError::new(&format!("away_subs: {e}")))?
+    };
+    let m = simulate_second_half_with_subs(snapshot, &home, &away, &home_subs, &away_subs)
         .map_err(|e| JsError::new(&e.to_string()))?;
     m.serialize(&bigint_serializer())
         .map_err(|e| JsError::new(&e.to_string()))
