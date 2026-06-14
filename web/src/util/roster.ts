@@ -1,6 +1,7 @@
 import { teamById } from "../teams";
 import type { Career } from "../persistence";
-import type { Player, Team } from "../types";
+import type { Player, Position, Team } from "../types";
+import { FORMATION_COMPOSITION } from "./lineup";
 
 /**
  * Resolve the user's effective team. The JSON registry holds the
@@ -39,7 +40,7 @@ export function userTeam(career: Career): Team {
   }
   if (career.userRoster.length === 0) return base;
   const roster = career.userRoster;
-  const startingXi = reconcileXI(base.starting_xi, roster);
+  const startingXi = reconcileXI(base.starting_xi, roster, base.formation);
   const xiSet = new Set(startingXi);
   const rosterIds = new Set(roster.map((p) => p.id));
   return {
@@ -58,23 +59,63 @@ function attrSum(p: Player): number {
 }
 
 /**
- * The base starting XI, pruned to ids still on `roster`, then backfilled with
- * the best available roster players (by attribute sum, lower id breaking ties
- * for determinism) until it's a fieldable 11. Backfill only fires when a
- * starter has left the roster (E.2.c retirement); otherwise the filtered base
- * XI already has 11 and is returned as-is.
+ * The base starting XI, pruned to ids still on `roster`, then backfilled to a
+ * fieldable, POSITION-VALID 11. Backfill only fires when a starter has left the
+ * roster (E.2.c retirement); when every starter is still rostered the filtered
+ * base XI already has 11 and is returned unchanged (byte-identical — the common
+ * transfer-only case is untouched).
+ *
+ * The repair is position-aware (#63): it fills each open slot with a player of
+ * the position the formation is SHORT on (GK first, then DEF/MID/FWD), so a
+ * retired goalkeeper is replaced by the reserve keeper — not by the highest-
+ * rated outfielder — and a non-GK retirement never pulls in a second keeper.
+ * Within a position, the best available (by attribute sum, lower id breaking
+ * ties) wins, keeping it deterministic. Slots with no same-position player left
+ * fall back to the best available of any position so the side always reaches 11.
  */
-function reconcileXI(baseXi: number[], roster: Player[]): number[] {
-  const rosterIds = new Set(roster.map((p) => p.id));
-  const xi = baseXi.filter((id) => rosterIds.has(id));
+function reconcileXI(
+  baseXi: number[],
+  roster: Player[],
+  formation: string,
+): number[] {
+  const byId = new Map(roster.map((p) => [p.id, p]));
+  const xi = baseXi.filter((id) => byId.has(id));
   if (xi.length >= 11) return xi;
+
   const used = new Set(xi);
-  const candidates = roster
-    .filter((p) => !used.has(p.id))
-    .sort((a, b) => attrSum(b) - attrSum(a) || a.id - b.id);
-  for (const p of candidates) {
-    if (xi.length >= 11) break;
-    xi.push(p.id);
+  const pickBest = (pos?: Position): Player | undefined =>
+    roster
+      .filter((p) => !used.has(p.id) && (pos === undefined || p.position === pos))
+      .sort((a, b) => attrSum(b) - attrSum(a) || a.id - b.id)[0];
+
+  const comp = FORMATION_COMPOSITION[formation];
+  if (comp) {
+    // How many of each position the kept starters already supply.
+    const present: Record<Position, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+    for (const id of xi) present[byId.get(id)!.position] += 1;
+    // Fix structural holes first (a missing keeper is the worst), filling the
+    // deficit for each position from that position's best available reserve.
+    const order: Position[] = ["GK", "DEF", "MID", "FWD"];
+    for (const pos of order) {
+      let deficit = comp[pos] - present[pos];
+      while (deficit > 0 && xi.length < 11) {
+        const pick = pickBest(pos);
+        if (!pick) break; // no reserve of this position — handled by fallback
+        used.add(pick.id);
+        xi.push(pick.id);
+        deficit -= 1;
+      }
+    }
+  }
+  // Fallback: any slots still open (unknown formation, or a position with no
+  // reserve left) get the best available regardless of position, so the XI
+  // always reaches 11. No-op once the position pass filled every slot; the
+  // `pickBest()` undefined-guard stops it when the roster is exhausted.
+  while (xi.length < 11) {
+    const pick = pickBest();
+    if (!pick) break;
+    used.add(pick.id);
+    xi.push(pick.id);
   }
   return xi;
 }

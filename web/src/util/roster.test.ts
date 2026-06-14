@@ -7,6 +7,7 @@ import { userTeam } from "./roster";
 import { freshCopa } from "./copa";
 import { ALL_TEAMS } from "../teams";
 import { FIRST_YEAR, STARTING_MONEY, type Career } from "../persistence";
+import type { Player, Position } from "../types";
 
 const team = ALL_TEAMS.find((t) => t.name === "Amazônia do Norte")!;
 
@@ -71,5 +72,54 @@ describe("userTeam", () => {
     // XI and bench stay disjoint.
     const xi = new Set(t.starting_xi);
     for (const id of t.bench ?? []) expect(xi.has(id)).toBe(false);
+  });
+
+  // #63 — position-aware repair: the backfill must respect the formation's
+  // composition, never fielding two goalkeepers or leaving the side keeperless.
+  // Registry squads carry a single GK, so we add a high-rated reserve keeper
+  // (and a reserve defender) — exactly the bait the old position-blind backfill
+  // would grab. attrs picked so the reserve GK is the squad's strongest player,
+  // i.e. the OLD code would have pulled it into any open slot.
+  const mkPlayer = (id: number, position: Position, attr: number): Player => ({
+    id,
+    name: `Reserva ${id}`,
+    age: 24,
+    position,
+    attributes: {
+      pace: attr,
+      technique: attr,
+      passing: attr,
+      defending: attr,
+      finishing: attr,
+      stamina: attr,
+    },
+  });
+  const RESERVE_GK = mkPlayer(9_999_001, "GK", 99);
+  const RESERVE_DEF = mkPlayer(9_999_002, "DEF", 80);
+  const augmented = [...team.roster, RESERVE_GK, RESERVE_DEF];
+  const posOf = (id: number) =>
+    augmented.find((p) => p.id === id)!.position;
+
+  it("replacing a retired outfielder never pulls in a second goalkeeper", () => {
+    // Remove a DEF starter: the open slot is a DEF, so the position-aware repair
+    // takes the reserve DEF — NOT the higher-rated reserve GK the old backfill
+    // would have grabbed (which would have fielded two keepers).
+    const defStarter = team.starting_xi.find((id) => posOf(id) === "DEF")!;
+    const userRoster = augmented.filter((p) => p.id !== defStarter);
+    const t = userTeam(careerWith(userRoster));
+
+    expect(t.starting_xi).toHaveLength(11);
+    expect(t.starting_xi.filter((id) => posOf(id) === "GK").length).toBe(1);
+    expect(t.starting_xi).not.toContain(RESERVE_GK.id);
+  });
+
+  it("replaces a retired GK with the reserve keeper (exactly one, not zero)", () => {
+    const gkStarter = team.starting_xi.find((id) => posOf(id) === "GK")!;
+    const userRoster = augmented.filter((p) => p.id !== gkStarter);
+    const t = userTeam(careerWith(userRoster));
+
+    expect(t.starting_xi).toHaveLength(11);
+    expect(t.starting_xi.filter((id) => posOf(id) === "GK").length).toBe(1);
+    expect(t.starting_xi).toContain(RESERVE_GK.id);
   });
 });
