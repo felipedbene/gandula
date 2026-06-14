@@ -86,6 +86,14 @@ export interface Match {
   events: MatchEvent[];
 }
 
+/** A half-time substitution: take `off` (an on-field player) out, bring `on`
+ *  (a bench player) in. Matches the engine's `HalfTimeSub` shape passed to
+ *  `play_second_half`. */
+export interface HalfTimeSub {
+  off: number;
+  on: number;
+}
+
 export interface Fixture {
   round: number;
   home_idx: number;

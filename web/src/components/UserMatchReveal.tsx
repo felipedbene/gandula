@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { play_first_half, play_second_half } from "../wasm/gandula_wasm.js";
-import type { Match, Team } from "../types";
+import type { HalfTimeSub, Match, Team } from "../types";
 import { eventKindName } from "../types";
 import type { Career, UserTactics } from "../persistence";
 import { findUserDivisionIdxInSeason } from "../persistence";
@@ -109,14 +109,18 @@ export default function UserMatchReveal({
     };
   }, [season.userTactics, firstHalfUser]);
 
-  function runSecondHalf(halftime: UserTactics | null) {
+  function runSecondHalf(halftime: UserTactics | null, subs: HalfTimeSub[]) {
     const secondHalfUser = halftime
       ? applyUserTactics(baseUserTeam, halftime)
       : firstHalfUser;
     const secondHalfOpp = applyRivalHalftime(opponentTeam, tier);
     const home = isUserHome ? secondHalfUser : secondHalfOpp;
     const away = isUserHome ? secondHalfOpp : secondHalfUser;
-    const full = play_second_half(snapshot, home, away) as Match;
+    // The user's subs apply to whichever side they are; the opponent's subs are
+    // left to the AI manager during the second-half loop (empty here).
+    const homeSubs = isUserHome ? subs : [];
+    const awaySubs = isUserHome ? [] : subs;
+    const full = play_second_half(snapshot, home, away, homeSubs, awaySubs) as Match;
     setAtHalfTime(false);
     setShownMatch(full); // MatchReveal resumes from 46' with the full match
     onFinalized(full, halftime);

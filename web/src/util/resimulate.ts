@@ -171,7 +171,9 @@ export function resimulateFromRound(
     const htOpponentTeam = applyRivalHalftime(opponentTeam, tier);
     const home2 = isUserHome ? htUserTeam : htOpponentTeam;
     const away2 = isUserHome ? htOpponentTeam : htUserTeam;
-    newMatches[i] = play_second_half(snapshot, home2, away2) as Match;
+    // Bulk re-sim has no live half-time subs to apply (those are baked into the
+    // already-finalized match for a played round). Empty ⇒ no-sub second half.
+    newMatches[i] = play_second_half(snapshot, home2, away2, [], []) as Match;
   });
 
   const totalRounds = totalRoundsOf(userDiv);
