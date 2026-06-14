@@ -61,6 +61,12 @@ import {
   generateWageDemands,
   type WageDemand,
 } from "../util/contracts";
+import {
+  acceptPoach,
+  generatePoachBid,
+  rejectPoach,
+  type PoachBid,
+} from "../util/poaching";
 import TransferMarketView from "./TransferMarketView";
 import FinancesView from "./FinancesView";
 import SupportView from "./SupportView";
@@ -576,6 +582,37 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
     }
   }
 
+  /**
+   * Pre-season poaching (E.7.b). Accept cashes in the player for the premium
+   * fee; reject keeps them (with a morale dent). Both persist and stay in the
+   * finale; generatePoachBid re-derives null once resolved, so the panel clears.
+   */
+  async function acceptPoachBid(career: Career, bid: PoachBid) {
+    try {
+      const next = acceptPoach(career, bid);
+      await saveCareer(next);
+      onStatus(
+        `${bid.name} vendido ao ${bid.rivalName} · + $ ${formatMoney(bid.fee)}`,
+      );
+      setPhase({ tag: "finale", career: next });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao vender: ${e}`);
+    }
+  }
+
+  async function rejectPoachBid(career: Career, bid: PoachBid) {
+    try {
+      const next = rejectPoach(career, bid);
+      await saveCareer(next);
+      onStatus(`proposta do ${bid.rivalName} por ${bid.name} recusada`);
+      setPhase({ tag: "finale", career: next });
+    } catch (e) {
+      setError(String(e));
+      onStatus(`erro ao recusar proposta: ${e}`);
+    }
+  }
+
   function openFriendly() {
     onStatus("amistoso");
     setPhase({ tag: "friendly" });
@@ -1013,6 +1050,8 @@ export function SeasonView({ onStatus, onTeamName }: SeasonViewProps) {
             onOpenHistory={() => openHistory(phase.career)}
             onAcceptDemand={(d) => acceptWageDemand(phase.career, d)}
             onDenyDemand={(d) => denyWageDemand(phase.career, d)}
+            onAcceptPoach={(b) => acceptPoachBid(phase.career, b)}
+            onRejectPoach={(b) => rejectPoachBid(phase.career, b)}
             onReset={resetCareer}
           />
         );
@@ -1373,6 +1412,8 @@ function SeasonFinale({
   onOpenHistory,
   onAcceptDemand,
   onDenyDemand,
+  onAcceptPoach,
+  onRejectPoach,
   onReset,
 }: {
   career: Career;
@@ -1381,6 +1422,8 @@ function SeasonFinale({
   onOpenHistory: () => void;
   onAcceptDemand: (demand: WageDemand) => void;
   onDenyDemand: (demand: WageDemand) => void;
+  onAcceptPoach: (bid: PoachBid) => void;
+  onRejectPoach: (bid: PoachBid) => void;
   onReset: () => void;
 }) {
   const season = career.currentSeason;
@@ -1614,6 +1657,12 @@ function SeasonFinale({
         title={`Classificação · ${userDiv.name}`}
       />
 
+      <PoachBidPanel
+        career={career}
+        onAccept={onAcceptPoach}
+        onReject={onRejectPoach}
+      />
+
       <WageDemandsPanel
         career={career}
         onAccept={onAcceptDemand}
@@ -1633,6 +1682,58 @@ function SeasonFinale({
         </Button>
       </Group>
     </Stack>
+  );
+}
+
+// ─── Pre-season: rival poaching bid (E.7.b) ──────────────────────────────────
+// A rival's firm, premium bid for the squad's best player. Accept to cash in,
+// recusar to keep them (a morale dent). Derived from the saved career, so it
+// clears once resolved. Hidden when no bid landed this pre-season.
+function PoachBidPanel({
+  career,
+  onAccept,
+  onReject,
+}: {
+  career: Career;
+  onAccept: (bid: PoachBid) => void;
+  onReject: (bid: PoachBid) => void;
+}) {
+  const bid = generatePoachBid(career);
+  if (!bid) return null;
+
+  return (
+    <Panel title="Sondagem · proposta de outro clube">
+      <Stack gap="sm">
+        <Text size="sm">
+          O <Text span fw={700}>{bid.rivalName}</Text> ofereceu{" "}
+          <Text span fw={700} c="gold.5">
+            $ {formatMoney(bid.fee)}
+          </Text>{" "}
+          pelo seu craque{" "}
+          <Text span fw={700}>
+            {bid.name}
+          </Text>{" "}
+          ({bid.position} · {bid.overall}).
+        </Text>
+        <Text size="xs" c="dimmed">
+          Aceitar embolsa a proposta e libera o jogador. Recusar o mantém — mas
+          ele fica descontente por perder a transferência.
+        </Text>
+        <Group gap="xs" justify="flex-end">
+          <Button size="xs" onClick={() => onAccept(bid)}>
+            Vender por $ {formatMoney(bid.fee)}
+          </Button>
+          <Button
+            size="xs"
+            variant="default"
+            color="red"
+            onClick={() => onReject(bid)}
+          >
+            Recusar
+          </Button>
+        </Group>
+      </Stack>
+    </Panel>
   );
 }
 
