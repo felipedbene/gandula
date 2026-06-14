@@ -25,9 +25,9 @@ export function GandulaSplash({
           height: 96,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle at 35% 30%, #ffffff 0%, #cfe0ff 18%, var(--mantine-color-accent-5) 60%, var(--mantine-color-accent-8) 100%)",
+            "radial-gradient(circle at 35% 30%, #ffffff 0%, #c8f5dc 18%, var(--mantine-color-accent-5) 60%, var(--mantine-color-accent-8) 100%)",
           boxShadow:
-            "0 0 32px 6px rgba(31, 116, 255, 0.55), inset 0 0 12px rgba(255,255,255,0.4)",
+            "0 0 32px 6px rgba(21, 184, 101, 0.55), inset 0 0 12px rgba(255,255,255,0.4)",
         }}
       />
 
@@ -37,7 +37,7 @@ export function GandulaSplash({
           fz={{ base: 40, sm: 56 }}
           style={{
             letterSpacing: "-0.03em",
-            textShadow: "0 0 24px rgba(31, 116, 255, 0.5)",
+            textShadow: "0 0 24px rgba(21, 184, 101, 0.5)",
           }}
         >
           Gandula

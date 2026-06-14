@@ -211,7 +211,7 @@ export default function MatchReveal({
         gap={6}
         p="md"
         style={{ 
-          background: "linear-gradient(180deg, rgba(31, 116, 255, 0.15) 0%, rgba(0,0,0,0) 100%)",
+          background: "linear-gradient(180deg, rgba(21, 184, 101, 0.15) 0%, rgba(0,0,0,0) 100%)",
           borderBottom: "1px solid rgba(255, 255, 255, 0.15)",
           clipPath: "polygon(0 0, 100% 0, 100% 85%, 95% 100%, 5% 100%, 0 85%)"
         }}
@@ -242,7 +242,7 @@ export default function MatchReveal({
               style={{ 
                 fontVariantNumeric: "tabular-nums", 
                 lineHeight: 1,
-                textShadow: homeLeading ? "0 0 20px rgba(31, 116, 255, 0.8)" : "none"
+                textShadow: homeLeading ? "0 0 20px rgba(21, 184, 101, 0.8)" : "none"
               }}
             >
               {runningHome}
@@ -259,7 +259,7 @@ export default function MatchReveal({
               style={{ 
                 fontVariantNumeric: "tabular-nums", 
                 lineHeight: 1,
-                textShadow: awayLeading ? "0 0 20px rgba(31, 116, 255, 0.8)" : "none"
+                textShadow: awayLeading ? "0 0 20px rgba(21, 184, 101, 0.8)" : "none"
               }}
             >
               {runningAway}
@@ -405,7 +405,7 @@ function eventStyle(k: string): {
     case "YellowCard":
       return { c: "yellow.5" };
     case "Substitution":
-      return { c: "blue.4", fs: "italic" };
+      return { c: "teal.4", fs: "italic" };
     case "NearMiss":
       return { c: "dimmed", fs: "italic" };
     case "HalfTime":
