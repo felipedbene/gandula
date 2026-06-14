@@ -145,6 +145,26 @@ export type Manager = {
 };
 
 /**
+ * Per-player contract overlay (E.7 — wage demands). Keyed by player id on the
+ * Career. PURELY ADDITIVE and optional: a player with no entry is paid the base
+ * derived wage (avg attributes × SALARY_PER_PLAYER_STRENGTH) at full morale,
+ * exactly as before this feature — so v12 saves stay valid v12 (no schema bump)
+ * and the wage bill is unchanged until the user negotiates a raise.
+ */
+export type PlayerContract = {
+  /** Multiplier on the player's derived base wage. 1.0 = base. A granted raise
+   *  bumps this; it persists across seasons (aging recomputes the base, the
+   *  multiplier rides on top). */
+  wageMultiplier: number;
+  /** 0..100. Denying a demand dents it; a content player sits at 100. */
+  morale: number;
+  /** Season year this player's demand was last resolved (accepted or denied),
+   *  so a player demands at most once per pre-season and the list survives F5 /
+   *  re-mounts without re-prompting. */
+  lastNegotiatedYear?: number;
+};
+
+/**
  * Single transfer-market transaction. Recorded as a flat summary (no
  * full Player snapshot) — undo within a market session lives in
  * TransferMarketView's local state (E.1.e.2), the persisted record only
@@ -334,6 +354,11 @@ export type Career = {
    *  array means "use the JSON registry default" (fresh career; no
    *  transfers yet). Resolved everywhere by util/roster.ts userTeam(). */
   userRoster: Player[];
+  /** Per-player wage contracts (E.7), keyed by player id. Optional and
+   *  additive — absent ids (and the whole field on a pre-E.7 save) bill at the
+   *  base derived wage / full morale, so it needs no schema bump. See
+   *  util/contracts.ts. */
+  contracts?: Record<number, PlayerContract>;
 };
 
 // Schema v6 (E.2 — three-tier pyramid) is a HARD break: the world grew from
