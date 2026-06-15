@@ -3,3 +3,7 @@
 Cargo.lock.bak
 .DS_Store
 .claude/
+
+# Local MCP config (contains an API key) and image-gen output — never commit.
+.mcp.json
+/generated_imgs/

@@ -1,18 +1,18 @@
 import { createTheme, type MantineColorsTuple } from "@mantine/core";
 
-// Electric-blue accent for actions, highlights and the active team. Index 5/6
+// Emerald-green accent for actions, highlights and the active team. Index 5/6
 // are the default primary shades; the brighter low indices read well on dark.
 const accent: MantineColorsTuple = [
-  "#e6f3ff",
-  "#cde3ff",
-  "#9cc4ff",
-  "#66a3ff",
-  "#3d87ff",
-  "#1f74ff", // primary
-  "#0f63f0",
-  "#0a4fc4",
-  "#093f99",
-  "#062c6e",
+  "#e9fbf1",
+  "#c8f5dc",
+  "#97ebbb",
+  "#5fdd95",
+  "#33cb78",
+  "#15b865", // primary
+  "#0fa057",
+  "#0a8446",
+  "#086637",
+  "#054524",
 ];
 
 // Neutral ink ramp: app background (9) → card surfaces (8/7) → text (0/1).

@@ -27,9 +27,9 @@ body {
      grid static lets the browser cache the paint and the backdrop blurs, so
      the page costs ~0% CPU when nothing is happening. */
   background-image:
-    linear-gradient(rgba(31, 116, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 116, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at 50% 0%, rgba(31, 116, 255, 0.15) 0%, transparent 60%),
+    linear-gradient(rgba(21, 184, 101, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21, 184, 101, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(21, 184, 101, 0.15) 0%, transparent 60%),
     radial-gradient(circle at 100% 100%, rgba(138, 43, 226, 0.08) 0%, transparent 50%);
   background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
   background-position: center top;
@@ -63,7 +63,7 @@ body {
   overflow: hidden;
   background: linear-gradient(135deg, var(--mantine-color-accent-6) 0%, var(--mantine-color-accent-8) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 4px 15px rgba(31, 116, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(21, 184, 101, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -81,7 +81,7 @@ body {
 
 .mantine-Button-root[data-variant="filled"]:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(31, 116, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 25px rgba(21, 184, 101, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .mantine-Button-root[data-variant="filled"]:hover::after {
@@ -140,7 +140,7 @@ body {
   }
   100% {
     transform: scale(1);
-    text-shadow: 0 0 20px rgba(31, 116, 255, 0.8);
+    text-shadow: 0 0 20px rgba(21, 184, 101, 0.8);
   }
 }
 
