@@ -4,8 +4,7 @@
 
 **Play at [gandula.debene.dev](https://gandula.debene.dev)**
 
-> 📸 _Screenshot coming soon — the career-mode web UI._
-<!-- When you capture one, replace the line above with: ![Gandula career mode](web/public/screenshot.png) -->
+![Gandula career mode — Série C dashboard: round fixtures, career objectives, and the live table](web/public/screenshot.png)
 
 A text-based football management simulator. The name is the Portuguese word for
 "ball boy" — a deliberate signal that this is a personal, affectionate project,
