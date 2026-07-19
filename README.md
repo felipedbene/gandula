@@ -1,5 +1,12 @@
 # Gandula
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Rust](https://img.shields.io/badge/core-Rust-orange.svg) ![Web](https://img.shields.io/badge/web-React%20%C2%B7%20wasm-61dafb.svg) [![CI](https://github.com/felipedbene/gandula/actions/workflows/deploy.yml/badge.svg)](https://github.com/felipedbene/gandula/actions/workflows/deploy.yml)
+
+**Play at [gandula.debene.dev](https://gandula.debene.dev)**
+
+> 📸 _Screenshot coming soon — the career-mode web UI._
+<!-- When you capture one, replace the line above with: ![Gandula career mode](web/public/screenshot.png) -->
+
 A text-based football management simulator. The name is the Portuguese word for
 "ball boy" — a deliberate signal that this is a personal, affectionate project,
 not a Football Manager competitor.
@@ -226,3 +233,8 @@ See [`ROADMAP.md`](ROADMAP.md) for the structured plan. Manager firing
 priority is the **E.4** economy / squad-strength cluster (balance tiers,
 performance revenue, a richer transfer market), then teaching solvency
 (**E.5**) and policy-driven rivals (**E.3.c**).
+
+---
+### Related
+- [gandula-rl](https://github.com/felipedbene/gandula-rl) — a reinforcement-learning agent that plays Gandula careers headlessly.
+---
