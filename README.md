@@ -199,7 +199,7 @@ cd web && npm run dev
 # Production bundle in web/dist/
 cd web && npm run build
 
-# Run the JS test suite (117 tests covering schema, persistence,
+# Run the JS test suite (172 tests covering schema, persistence,
 # simulation parity, finances, transfer market, components).
 cd web && npm run test:run
 ```
@@ -220,6 +220,9 @@ repo secret. To deploy by hand instead, run `npm run deploy` from `web/`.
 
 ## What's next
 
-See [`ROADMAP.md`](ROADMAP.md) for the structured plan. In short: **E.1.f**
-manager firing (next), then **E.2** player aging/evolution, **E.3** self-play
-rival AIs, plus a polish track (scout reports, live playback).
+See [`ROADMAP.md`](ROADMAP.md) for the structured plan. Manager firing
+(**E.1.f**), the living world (**E.2** aging/evolution), and smarter opponents
+(**E.3.a/b** ManagerConfig + per-club styles) have all shipped. The current
+priority is the **E.4** economy / squad-strength cluster (balance tiers,
+performance revenue, a richer transfer market), then teaching solvency
+(**E.5**) and policy-driven rivals (**E.3.c**).
