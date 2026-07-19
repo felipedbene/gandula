@@ -1,5 +1,9 @@
 # Gandula
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Rust](https://img.shields.io/badge/core-Rust-orange.svg) ![Web](https://img.shields.io/badge/web-React%20%C2%B7%20wasm-61dafb.svg) [![CI](https://github.com/felipedbene/gandula/actions/workflows/deploy.yml/badge.svg)](https://github.com/felipedbene/gandula/actions/workflows/deploy.yml)
+
+![Gandula career mode — Série C dashboard: round fixtures, career objectives, and the live table](web/public/screenshot.png)
+
 A text-based football management simulator. The name is the Portuguese word for
 "ball boy" — a deliberate signal that this is a personal, affectionate project,
 not a Football Manager competitor.
